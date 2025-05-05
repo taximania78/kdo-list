@@ -2,17 +2,22 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   images: {
-    // si ApiAdress pointe sur localhost:3000
-    domains: ['localhost'],
-    // ou, plus finement (Next 13.4+)
     remotePatterns: [
       {
         protocol: 'http',
-        hostname: 'localhost',
-        port: '3000',
+        hostname: 'fastapi', // ⬅ même nom que ci‑dessus
+        port: '8000',
         pathname: '/api/kdos/**',
       },
     ],
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/kdos/:path*',
+        destination: 'http://fastapi:8000/api/kdos/:path*',
+      },
+    ];
   },
 };
 

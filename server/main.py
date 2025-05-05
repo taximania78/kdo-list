@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from pathlib import Path
-from fastapi import FastAPI, Depends, HTTPException, status, Request
+from fastapi import FastAPI, Depends, HTTPException, status, Request, Query
 from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
@@ -527,17 +527,27 @@ async def create_user_api(user_data: UserCreate, token: str = Depends(oauth2_sch
 def auth():
     return {"Hello": "World"}
 
-@app.get("/api/kdos/{kdo_pk}")
-async def fetch_image(kdo_pk: int):
-    image_path = Path("/shared/kdos") / f"{kdo_pk}.jpg"
+@app.get("/api/kdos/{filename:path}")
+async def fetch_image(
+    filename: str,
+    w: int | None = Query(None, ge=1),   # largeur demandée (optionnel)
+    q: int | None = Query(None, ge=1, le=100),  # qualité demandée (optionnel)
+):
+    """
+    Sert le fichier original /shared/kdos/<filename>
+    Les query‑params ?w=…&q=… sont simplement ignorés
+    (c’est Next qui fera la mise à l’échelle/compression).
+    """
+    # Sécurité : empêche les chemins "../../"
+    if ".." in filename or filename.startswith("/"):
+        raise HTTPException(400, "Chemin invalide")
 
-    # Vérifier l'existence et que c'est bien un fichier
-    if not image_path.exists() or not image_path.is_file():
-        raise HTTPException(status_code=404, detail="Image non trouvée")
+    image_path = Path("/shared/kdos") / filename
+    if not image_path.is_file():
+        raise HTTPException(404, "Image non trouvée")
 
-    # Renvoyer le fichier avec le bon Content-Type
     return FileResponse(
-        path=str(image_path),
+        path=image_path,
         media_type="image/jpeg",
-        filename=image_path.name
+        filename=image_path.name,
     )
