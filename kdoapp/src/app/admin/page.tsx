@@ -212,10 +212,10 @@ function Admin() {
           </thead>
           <tbody>
             {kdosList.map((kdo) => (
-              <tr key={kdo.id}>
+              <tr key={kdo.id} className="mt-2">
                 <td className="align-middle text-center">
                   <Image
-                    src={`${ApiAdress}/api/kdos/${kdo.imageDisplay}`}
+                    src={`/api/kdos/${kdo.imageDisplay}`}
                     alt={`Image ${kdo.name}`}
                     width={50}
                     height={50}

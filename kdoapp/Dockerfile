@@ -1,34 +1,37 @@
-# Dockerfile for Next.js application
-FROM node:18-alpine
-
-# Set the working directory
-WORKDIR /app
-
-# Copy package.json and package-lock.json
-COPY package.json package-lock.json ./
-
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the application code
-COPY . .
-
-# Log the contents of the working directory before building
-RUN echo "Contents of /app before build:" && ls -la /app
-
-# Build the application
-RUN npm run build \
-  && echo "==== .next tree ====" \
-  && find .next -maxdepth 3 | sed 's/^/   /'
-
-# Log the contents of the .next directory after building
-RUN echo "Contents of .next after build:" && ls -la .next
-
-# Ensure the build directory is present
-RUN test -d .next || (echo "Build directory not found! Run 'next build' to generate it." && exit 1)
-
-# Expose the port the app runs on
-EXPOSE 3000
-
-# Command to run the application
-CMD ["npm", "start"]
+# --------- Étape 1 : install des dépendances ---------
+  FROM node:18-alpine AS deps
+  WORKDIR /app
+  COPY package.json package-lock.json ./
+  RUN npm ci --frozen-lockfile
+  
+  # --------- Étape 2 : build Next.js -------------------
+  FROM node:18-alpine AS builder
+  WORKDIR /app
+  # Copie des deps installées
+  COPY --from=deps /app/node_modules ./node_modules
+  
+  # Copie du reste du code (y compris config.json, public/, etc.)
+  COPY . .
+  
+  # ───> Si votre build dépend d'une variable :
+  # ARG NEXT_PUBLIC_API_ADDRESS
+  # ENV NEXT_PUBLIC_API_ADDRESS=$NEXT_PUBLIC_API_ADDRESS
+  
+  RUN npm run build && \
+      echo "🗂  .next contenu :" && find .next -maxdepth 2
+  
+  # --------- Étape 3 : image runtime minimale ----------
+  FROM node:18-alpine AS runner
+  WORKDIR /app
+  ENV NODE_ENV=production
+  # Télémetry off, sinon Next demande l'opt‑in
+  ENV NEXT_TELEMETRY_DISABLED=1
+  
+  # Copie uniquement ce qui est nécessaire pour run
+  COPY --from=builder /app/.next ./.next
+  COPY --from=builder /app/public ./public
+  COPY --from=builder /app/node_modules ./node_modules
+  COPY --from=builder /app/package.json ./package.json
+  
+  EXPOSE 3000
+  CMD ["npm", "start"]
