@@ -88,7 +88,7 @@ const KdosList = () => {
           <div>
             <h2 className="text-xl font-bold text-center mb-2">{kdo.name}</h2>
             <Image
-              src={`/kdos/${kdo.imageDisplay}`}
+              src={`${ApiAdress}/api/kdos/${kdo.imageDisplay}`}
               alt={`Image ${kdo.name}`}
               width={500}
               height={500}
