@@ -215,7 +215,7 @@ function Admin() {
               <tr key={kdo.id}>
                 <td className="align-middle text-center">
                   <Image
-                    src={`/kdos/${kdo.imageDisplay}`}
+                    src={`${ApiAdress}/api/kdos/${kdo.imageDisplay}`}
                     alt={`Image ${kdo.name}`}
                     width={50}
                     height={50}

@@ -1,0 +1,22 @@
+services:
+  fastapi:
+    build:
+      context: ./server
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./server:/app
+      - ./kdoapp/public/kdos:/shared/kdos
+
+  nextjs:
+    build:
+      context: ./kdoapp
+    container_name: nextjs_app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./kdoapp:/app
+      - ./kdoapp/public/kdos:/app/public/kdos
+    environment:
+      - NODE_ENV=production
