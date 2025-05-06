@@ -64,7 +64,8 @@ export default function LoginPage() {
           }
         } catch (error) {
           console.error('Token verification error:', error);
-          router.push('/login');
+          localStorage.clear();
+          router.push('/');
           // Gérer l'erreur selon les besoins, par exemple, laisser l'utilisateur se connecter à nouveau
         }
       }
