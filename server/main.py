@@ -21,13 +21,18 @@ from image import get_image, remove_image
 
 from fastapi import FastAPI
 
-app = FastAPI()
+app = FastAPI(
+    docs_url=None,        # désactive Swagger UI (/docs)
+    redoc_url=None,       # désactive ReDoc (/redoc)
+    openapi_url=None  
+)
 
 
 # Autoriser toutes les origines (⚠️ à limiter en production)
 origins = [
     "http://localhost:3000",  # Frontend Next.js en développement
     "http://127.0.0.1:3000",  # Autre variante de localhost
+    "https://kdo.mathieuolivares.com",  # Frontend Next.js en production
 ]
 
 app.add_middleware(
