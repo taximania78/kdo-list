@@ -485,6 +485,14 @@ async def delete_user_api(user_id: int, token: str = Depends(oauth2_scheme), db:
     
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    stmt = update(Idea).where(Idea.takenById == user_id).values(takenById=None, availability=True)
+    await db.execute(stmt)
+    await db.commit()
+
+    stmt = delete(RefreshToken).where(RefreshToken.user_id == user_id)
+    await db.execute(stmt)
+    await db.commit()
 
     # Supprimer l'utilisateur
     stmt = delete(User).where(User.id == user_id)

@@ -2,7 +2,7 @@ services:
   fastapi:
     build:
       context: ./server
-    container_name: fastapi
+    container_name: kdo-api
     ports:
       - "8000:8000"
     volumes:
@@ -12,11 +12,11 @@ services:
   nextjs:
     build:
       context: ./kdoapp
-    container_name: nextjs_app
+    container_name: kdo-frontend
     ports:
       - "3000:3000"
     volumes:
       - ./kdoapp/public/kdos:/app/public/kdos
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_ADDRESS=http://fastapi:8000
+      - NEXT_PUBLIC_API_ADDRESS=http://kdp-api:8000

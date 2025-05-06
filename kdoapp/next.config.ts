@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'http',
-        hostname: 'fastapi', // ⬅ même nom que ci‑dessus
+        hostname: 'kdo-api', // ⬅ même nom que ci‑dessus
         port: '8000',
         pathname: '/api/kdos/**',
       },
