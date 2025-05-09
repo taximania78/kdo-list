@@ -15,7 +15,7 @@
   ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
   ARG NEXT_PUBLIC_THEME
-  ENV NEXT_PUBLIC_THEME=${NNEXT_PUBLIC_THEMEODE_ENV}
+  ENV NEXT_PUBLIC_THEME=${NEXT_PUBLIC_THEME}
   
   # Copie du reste du code (y compris config.json, public/, etc.)
   COPY . .
