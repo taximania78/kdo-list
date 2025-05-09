@@ -10,7 +10,7 @@ import { FaPlus, FaChevronUp, FaChevronDown } from 'react-icons/fa6';
 import * as Select from '@radix-ui/react-select';
 import FormModifyItem from '@/components/FormModifyItem';
 
-const theme = process.env.THEME || 'default';
+const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 /** ---------------------

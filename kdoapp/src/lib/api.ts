@@ -1,9 +1,8 @@
 // api.ts
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import config from '../../config.json';
 
-const ApiAdress = config.apiAddress;
+const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 interface DecodedToken {
   sub: number;

@@ -4,7 +4,7 @@ import { useEffect, FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 
-const theme = process.env.THEME || 'default';
+const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 interface DecodedToken {
