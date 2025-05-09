@@ -3,19 +3,19 @@
   WORKDIR /app
   COPY package.json package-lock.json ./
   RUN npm ci --frozen-lockfile
-
-# Variable d'environnement pour le build
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-
-ARG NEXT_PUBLIC_THEME
-ENV NEXT_PUBLIC_THEME=${NNEXT_PUBLIC_THEMEODE_ENV}
   
   # --------- Étape 2 : build Next.js -------------------
   FROM node:18-alpine AS builder
   WORKDIR /app
   # Copie des deps installées
   COPY --from=deps /app/node_modules ./node_modules
+
+  # Variable d'environnement pour le build
+  ARG NEXT_PUBLIC_API_URL
+  ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
+  ARG NEXT_PUBLIC_THEME
+  ENV NEXT_PUBLIC_THEME=${NNEXT_PUBLIC_THEMEODE_ENV}
   
   # Copie du reste du code (y compris config.json, public/, etc.)
   COPY . .
