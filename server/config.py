@@ -3,6 +3,7 @@ import json
 
 def get_config():
     mode = os.getenv("NODE_ENV", "development")  # Mode d'exécution (développement ou production)
+    print(f"Mode d'exécution : {mode}")
 
     if mode == "production":
         # Chargement de la configuration depuis un l'environnement pour la production
