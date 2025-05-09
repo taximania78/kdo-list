@@ -15,7 +15,7 @@ services:
   nextjs:
     build:
       context: . # on envoie toute la racine
-      dockerfile: nextJS/Dockerfile # le Dockerfile n’a pas bougé
+      dockerfile: kdoapp/Dockerfile # le Dockerfile n’a pas bougé
     env_file: # tu gardes ça pour le runtime
       - .env
     container_name: kdo-frontend
