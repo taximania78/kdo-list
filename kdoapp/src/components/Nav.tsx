@@ -4,7 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
-import config from '../../config.json';
 import { jwtDecode } from 'jwt-decode';
 import { usePathname } from 'next/navigation';
 
@@ -18,8 +17,8 @@ const knewave = Atma({
   subsets: ['latin'],
 });
 
-const ApiAdress = config.apiAddress;
-const theme = config.theme;
+const theme = process.env.THEME || 'default';
+const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 interface DecodedToken {
   sub: number;

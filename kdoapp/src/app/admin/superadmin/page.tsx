@@ -4,7 +4,6 @@ import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
 import { FaPlus } from 'react-icons/fa6';
-import config from '../../../../config.json';
 import api from '@/lib/api';
 
 type User = {
@@ -12,8 +11,8 @@ type User = {
   name: string;
 };
 
-const ApiAdress = config.apiAddress;
-const theme = config.theme;
+const theme = process.env.THEME || 'default';
+const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 const mountains_of_christmas = Mountains_of_Christmas({
   weight: '700',

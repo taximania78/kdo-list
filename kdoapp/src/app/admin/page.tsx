@@ -6,13 +6,12 @@ import api from '@/lib/api';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import config from '../../../config.json';
 import { FaPlus, FaChevronUp, FaChevronDown } from 'react-icons/fa6';
 import * as Select from '@radix-ui/react-select';
 import FormModifyItem from '@/components/FormModifyItem';
 
-const ApiAdress = config.apiAddress;
-const theme = config.theme;
+const theme = process.env.THEME || 'default';
+const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 /** ---------------------
  *  Types & Schemas

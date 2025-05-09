@@ -2,11 +2,10 @@
 
 import { useEffect, FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import config from '../../config.json';
 import { jwtDecode } from 'jwt-decode';
 
-const ApiAdress = config.apiAddress;
-const theme = config.theme;
+const theme = process.env.THEME || 'default';
+const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 interface DecodedToken {
   sub: number;
@@ -21,6 +20,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('API URL utilisée :', ApiAdress);
     const checkAuth = async () => {
       const token = localStorage.getItem('authToken');
       const admin = localStorage.getItem('isAdmin');

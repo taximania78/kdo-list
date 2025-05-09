@@ -4,9 +4,8 @@ import React, { Suspense } from 'react';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
 import KdosList from '@/components/KdosList';
 import { useSearchParams } from 'next/navigation';
-import config from '../../../config.json';
 
-const theme = config.theme;
+const theme = process.env.THEME || 'default';
 
 const mountains_of_christmas = Mountains_of_Christmas({
   weight: '700',

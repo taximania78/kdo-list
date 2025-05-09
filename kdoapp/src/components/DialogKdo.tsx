@@ -1,9 +1,8 @@
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import { useState } from 'react';
-import config from '../../config.json';
 import api from '@/lib/api';
 
-const ApiAdress = config.apiAddress;
+const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 type DialogTakeKdoProps = {
   id: number;
