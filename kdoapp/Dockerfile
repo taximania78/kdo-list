@@ -18,9 +18,7 @@
   # On exporte ces args en ENV pour que Next.js les lise au build
   ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
   ENV NEXT_PUBLIC_THEME=${NEXT_PUBLIC_THEME}
-  
-  #Copie .env
-  COPY .env .env
+
 
   # Copie du reste du code (y compris config.json, public/, etc.)
   COPY . .
