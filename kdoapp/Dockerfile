@@ -11,10 +11,12 @@
   COPY --from=deps /app/node_modules ./node_modules
 
   # Variable d'environnement pour le build
+  # On déclare les build-args
   ARG NEXT_PUBLIC_API_URL
-  ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-
   ARG NEXT_PUBLIC_THEME
+
+  # On exporte ces args en ENV pour que Next.js les lise au build
+  ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
   ENV NEXT_PUBLIC_THEME=${NEXT_PUBLIC_THEME}
   
   # Copie du reste du code (y compris config.json, public/, etc.)
