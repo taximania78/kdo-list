@@ -18,22 +18,27 @@ from auth import (
     verify_password,
 )
 from image import get_image, remove_image
+from config import MODE, URL_CONNECTION
 
 from fastapi import FastAPI
 
 app = FastAPI(
-    docs_url=None,        # désactive Swagger UI (/docs)
-    redoc_url=None,       # désactive ReDoc (/redoc)
-    openapi_url=None  
+    docs_url=None if MODE == "production" else "/docs",        # désactive Swagger UI en production
+    redoc_url=None if MODE == "production" else "/redoc",     # désactive ReDoc en production
+    openapi_url=None if MODE == "production" else "/openapi.json"  # désactive OpenAPI en production
 )
 
 
 # Autoriser toutes les origines (⚠️ à limiter en production)
-origins = [
-    "http://localhost:3000",  # Frontend Next.js en développement
-    "http://127.0.0.1:3000",  # Autre variante de localhost
-    "https://kdo.mathieuolivares.com",  # Frontend Next.js en production
-]
+if MODE == "production":
+    origins = [
+        URL_CONNECTION,  # Frontend Next.js en production
+    ]
+else:
+    origins = [
+        "http://localhost:3000",  # Frontend Next.js en développement
+        "http://127.0.0.1:3000",  # Autre variante de localhost
+    ]
 
 app.add_middleware(
     CORSMiddleware,
