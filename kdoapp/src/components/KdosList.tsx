@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import config from '../../config.json';
 import { useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import router from 'next/router';
@@ -28,8 +27,8 @@ interface DecodedToken {
   exp: number; // Timestamp d'expiration
 }
 
-const ApiAdress = config.apiAddress;
-const theme = config.theme;
+const theme = process.env.THEME || 'default';
+const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 const KdosList = () => {
   const searchParams = useSearchParams();

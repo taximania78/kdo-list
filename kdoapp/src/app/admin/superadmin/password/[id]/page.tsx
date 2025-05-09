@@ -5,11 +5,10 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import config from '../../../../../../config.json';
 import api from '@/lib/api';
 import { use } from 'react';
 
-const ApiAdress = config.apiAddress;
+const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 const formSchema = z.object({
   newPassword: z

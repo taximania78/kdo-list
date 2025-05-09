@@ -7,11 +7,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import * as Accordion from '@radix-ui/react-accordion';
 import { z } from 'zod';
-import config from '../../config.json';
 import api from '@/lib/api';
 import { FaChevronDown } from 'react-icons/fa6';
 
-const ApiAdress = config.apiAddress;
+const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 const formSchema = z.object({
   id: z.number(),

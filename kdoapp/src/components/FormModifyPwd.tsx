@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import config from '../../config.json';
 import api from '@/lib/api';
 import { useState } from 'react';
 import { FaRegCircleCheck, FaRegCircleXmark } from 'react-icons/fa6';
@@ -22,8 +21,8 @@ interface ApiErrorResponse {
 }
 
 export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
-  const ApiAdress = config.apiAddress;
-  const theme = config.theme;
+  const theme = process.env.THEME || 'default';
+  const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
   const [errorMessage, setErrorMessage] = useState<string | null>(null); // État pour le message d'erreur
 
   const formSchema = z.object({

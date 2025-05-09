@@ -3,13 +3,12 @@
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
 import { useRouter } from 'next/navigation';
 import React from 'react';
-import config from '../../../../config.json';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 
-const theme = config.theme;
-const ApiAdress = config.apiAddress;
+const theme = process.env.THEME || 'default';
+const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 const mountains_of_christmas = Mountains_of_Christmas({
   weight: '700',
