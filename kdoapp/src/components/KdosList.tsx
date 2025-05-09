@@ -27,7 +27,7 @@ interface DecodedToken {
   exp: number; // Timestamp d'expiration
 }
 
-const theme = process.env.THEME || 'default';
+const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 const KdosList = () => {

@@ -5,7 +5,7 @@ import { Mountains_of_Christmas, Atma } from 'next/font/google';
 import KdosList from '@/components/KdosList';
 import { useSearchParams } from 'next/navigation';
 
-const theme = process.env.THEME || 'default';
+const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 
 const mountains_of_christmas = Mountains_of_Christmas({
   weight: '700',

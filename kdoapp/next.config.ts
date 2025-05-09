@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'http',
-        hostname: 'kdo-api', // ⬅ même nom que ci‑dessus
+        hostname:
+          process.env.NODE_ENV === 'production' ? 'kdo-api' : 'localhost',
         port: '8000',
         pathname: '/api/kdos/**',
       },
@@ -15,7 +16,10 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/kdos/:path*',
-        destination: 'http://fastapi:8000/api/kdos/:path*',
+        destination:
+          process.env.NODE_ENV === 'production'
+            ? 'http://fastapi:8000/api/kdos/:path*'
+            : 'http://localhost:8000/api/kdos/:path*',
       },
     ];
   },

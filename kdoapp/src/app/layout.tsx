@@ -3,7 +3,7 @@ import { Nav } from '@/components/Nav';
 import { Geist, Geist_Mono, Mountains_of_Christmas } from 'next/font/google';
 import './globals.css';
 
-const theme = process.env.THEME || 'default';
+const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
