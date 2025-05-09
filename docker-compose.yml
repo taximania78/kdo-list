@@ -14,11 +14,12 @@ services:
 
   nextjs:
     build:
-      context: ./kdoapp
+      context: . # on envoie toute la racine
+      dockerfile: nextJS/Dockerfile # le Dockerfile n’a pas bougé
+    env_file: # tu gardes ça pour le runtime
+      - .env
     container_name: kdo-frontend
     ports:
       - "3001:3000"
     volumes:
       - ./kdoapp/public/kdos:/app/public/kdos
-    env_file:
-      - .env
