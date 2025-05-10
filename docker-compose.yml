@@ -18,6 +18,8 @@ services:
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
         NEXT_PUBLIC_THEME: ${NEXT_PUBLIC_THEME}
+    depends_on:
+      - fastapi
     container_name: kdo-frontend
     ports:
       - "3001:3000"
