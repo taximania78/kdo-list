@@ -9,8 +9,19 @@ services:
     volumes:
       - ./server:/app
       - ./kdoapp/public/kdos:/shared/kdos
-    env_file:
-      - .env
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      URL_CONNECTION: ${URL_CONNECTION}
+      DEBUG: ${DEBUG}
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_NAME: ${DATABASE_NAME}
 
   nextjs:
     build:
@@ -25,5 +36,9 @@ services:
       - "3001:3000"
     volumes:
       - ./kdoapp/public/kdos:/app/public/kdos
-    env_file:
-      - .env
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      URL_CONNECTION: ${URL_CONNECTION}
+      DEBUG: ${DEBUG}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_THEME: ${NEXT_PUBLIC_THEME}
