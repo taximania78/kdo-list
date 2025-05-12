@@ -50,7 +50,7 @@ services:
       NEXT_PUBLIC_THEME: ${NEXT_PUBLIC_THEME}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.kdo.rule=Host(`kdo.mathieuolivares.com`)"
+      - "traefik.http.routers.kdo.rule=Host(`kdo.mathieuolivares.com`) && !PathPrefix(`/api`)"
       - "traefik.http.routers.kdo.entrypoints=websecure"
       - "traefik.http.routers.kdo.tls.certresolver=le"
       - "traefik.http.services.kdo.loadbalancer.server.port=3000"
