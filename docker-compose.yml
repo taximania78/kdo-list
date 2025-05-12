@@ -21,6 +21,14 @@ services:
       DATABASE_HOST: ${DATABASE_HOST}
       DATABASE_PORT: ${DATABASE_PORT}
       DATABASE_NAME: ${DATABASE_NAME}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kdo.rule=Host(`kdo.mathieuolivares.com`)"
+      - "traefik.http.routers.kdo.entrypoints=websecure"
+      - "traefik.http.routers.kdo.tls.certresolver=le"
+      - "traefik.http.services.kdo.loadbalancer.server.port=3001"
+      - "traefik.http.middlewares.kdo-headers.headers.customResponseHeaders.X-Robots-Tag=noindex, nofollow, nosnippet, noarchive"
+      - "traefik.http.routers.kdo.middlewares=kdo-headers"
 
   nextjs:
     build:
@@ -41,3 +49,9 @@ services:
       DEBUG: ${DEBUG}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       NEXT_PUBLIC_THEME: ${NEXT_PUBLIC_THEME}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kdo-api.rule=Host(`kdo.mathieuolivares.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.kdo-api.entrypoints=websecure"
+      - "traefik.http.routers.kdo-api.tls.certresolver=le"
+      - "traefik.http.services.kdo-api.loadbalancer.server.port=8000"
