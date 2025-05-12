@@ -24,6 +24,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.kdo-api.rule=Host(`kdo.mathieuolivares.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.kdo-api.priority=100"
       - "traefik.http.routers.kdo-api.entrypoints=websecure"
       - "traefik.http.routers.kdo-api.tls.certresolver=le"
       - "traefik.http.services.kdo-api.loadbalancer.server.port=8000"
