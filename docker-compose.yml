@@ -52,6 +52,6 @@ services:
       - "traefik.http.routers.kdo.rule=Host(`kdo.mathieuolivares.com`)"
       - "traefik.http.routers.kdo.entrypoints=websecure"
       - "traefik.http.routers.kdo.tls.certresolver=le"
-      - "traefik.http.services.kdo.loadbalancer.server.port=3001"
+      - "traefik.http.services.kdo.loadbalancer.server.port=3000"
       - "traefik.http.middlewares.kdo-headers.headers.customResponseHeaders.X-Robots-Tag=noindex, nofollow, nosnippet, noarchive"
       - "traefik.http.routers.kdo.middlewares=kdo-headers"
