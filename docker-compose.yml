@@ -28,6 +28,8 @@ services:
       - "traefik.http.routers.kdo-api.entrypoints=websecure"
       - "traefik.http.routers.kdo-api.tls.certresolver=le"
       - "traefik.http.services.kdo-api.loadbalancer.server.port=8000"
+    networks:
+      - proxy
 
   nextjs:
     build:
@@ -56,3 +58,9 @@ services:
       - "traefik.http.services.kdo-front.loadbalancer.server.port=3000"
       - "traefik.http.middlewares.kdo-headers.headers.customResponseHeaders.X-Robots-Tag=noindex, nofollow, nosnippet, noarchive"
       - "traefik.http.routers.kdo-front.middlewares=kdo-headers"
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
