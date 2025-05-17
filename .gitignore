@@ -4,5 +4,3 @@ server/dev
 static/
 .DS_Store
 .env
-
-docker-compose.yml
