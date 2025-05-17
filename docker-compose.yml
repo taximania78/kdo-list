@@ -2,7 +2,7 @@ version: "3.3"
 services:
   fastapi:
     build:
-      context: ./server
+      context: ./serverd
     container_name: kdo-api
     ports:
       - "8000:8000"
@@ -50,9 +50,9 @@ services:
       NEXT_PUBLIC_THEME: ${NEXT_PUBLIC_THEME}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.kdo.rule=Host(`kdo.mathieuolivares.com`) && !PathPrefix(`/api`)"
-      - "traefik.http.routers.kdo.entrypoints=websecure"
-      - "traefik.http.routers.kdo.tls.certresolver=le"
-      - "traefik.http.services.kdo.loadbalancer.server.port=3000"
+      - "traefik.http.routers.kdo-front.rule=Host(`kdo.mathieuolivares.com`) && !PathPrefix(`/api`)"
+      - "traefik.http.routers.kdo-front.entrypoints=websecure"
+      - "traefik.http.routers.kdo-front.tls.certresolver=le"
+      - "traefik.http.services.kdo-front.loadbalancer.server.port=3000"
       - "traefik.http.middlewares.kdo-headers.headers.customResponseHeaders.X-Robots-Tag=noindex, nofollow, nosnippet, noarchive"
-      - "traefik.http.routers.kdo.middlewares=kdo-headers"
+      - "traefik.http.routers.kdo-front.middlewares=kdo-headers"
