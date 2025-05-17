@@ -2,7 +2,7 @@ version: "3.3"
 services:
   fastapi:
     build:
-      context: ./serverd
+      context: ./server
     container_name: kdo-api
     ports:
       - "8000:8000"
