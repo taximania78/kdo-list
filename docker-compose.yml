@@ -60,8 +60,7 @@ services:
       - "traefik.http.routers.kdo-front.tls.certresolver=tls"
       - "traefik.http.services.kdo-front.loadbalancer.server.port=3000"
       - "traefik.http.middlewares.kdo-headers.headers.customResponseHeaders.X-Robots-Tag=noindex, nofollow, nosnippet, noarchive"
-      - "traefik.http.routers.kdo-front.middlewares=crowdsec@file"
-      - "traefik.http.routers.kdo-front.middlewares=kdo-headers"
+      - "traefik.http.routers.kdo-front.middlewares=crowdsec@file,kdo-headers"
     networks:
       - proxy
 
