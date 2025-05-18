@@ -28,7 +28,7 @@ services:
       - "traefik.http.routers.kdo-api.priority=100"
       - "traefik.http.routers.kdo-api.entrypoints=websecure"
       - "traefik.http.routers.kdo-api.tls.certresolver=tls"
-      - "traefik.http.routers.nextcloud.middlewares=crowdsec@file"
+      - "traefik.http.routers.kdo-api.middlewares=crowdsec@file"
       - "traefik.http.services.kdo-api.loadbalancer.server.port=8000"
     networks:
       - proxy
@@ -60,7 +60,7 @@ services:
       - "traefik.http.routers.kdo-front.tls.certresolver=tls"
       - "traefik.http.services.kdo-front.loadbalancer.server.port=3000"
       - "traefik.http.middlewares.kdo-headers.headers.customResponseHeaders.X-Robots-Tag=noindex, nofollow, nosnippet, noarchive"
-      - "traefik.http.routers.nextcloud.middlewares=crowdsec@file"
+      - "traefik.http.routers.kdo-front.middlewares=crowdsec@file"
       - "traefik.http.routers.kdo-front.middlewares=kdo-headers"
     networks:
       - proxy
