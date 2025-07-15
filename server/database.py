@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from config import get_config, DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD, DATABASE_HOST, DATABASE_NAME
 import os
 
-DATABASE_URL = f"postgresql+asyncpg://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
+DATABASE_URL = f"postgresql+asyncpg://{DATABASE_USER}:{DATABASE_PASSWORD}@kdo-db:5432/{DATABASE_NAME}"
 
 engine = create_async_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)

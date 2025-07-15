@@ -4,6 +4,8 @@ services:
     build:
       context: ./server
       network: host
+    depends_on:
+      - db
     container_name: kdo-api
     ports:
       - "8000:8000"
