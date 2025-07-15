@@ -9,6 +9,7 @@ services:
       - "8000:8000"
     volumes:
       - ./kdoapp/public/kdos:/shared/kdos
+    restart: unless-stopped
     environment:
       NODE_ENV: ${NODE_ENV}
       URL_CONNECTION: ${URL_CONNECTION}
@@ -43,6 +44,7 @@ services:
     depends_on:
       - fastapi
     container_name: kdo-frontend
+    restart: unless-stopped
     ports:
       - "3001:3000"
     volumes:
@@ -61,6 +63,21 @@ services:
       - "traefik.http.services.kdo-front.loadbalancer.server.port=3000"
       - "traefik.http.middlewares.kdo-headers.headers.customResponseHeaders.X-Robots-Tag=noindex, nofollow, nosnippet, noarchive"
       - "traefik.http.routers.kdo-front.middlewares=crowdsec@file,kdo-headers"
+    networks:
+      - proxy
+
+  db:
+    image: postgres:latest
+    container_name: kdo-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: mydatabase
+    volumes:
+      - ./db:/var/lib/postgresql/data
     networks:
       - proxy
 
