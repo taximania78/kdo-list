@@ -80,6 +80,8 @@ services:
       POSTGRES_DB: mydatabase
     volumes:
       - ./db:/var/lib/postgresql/data
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     networks:
       - proxy
 
