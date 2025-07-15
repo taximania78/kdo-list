@@ -80,7 +80,8 @@ services:
       POSTGRES_DB: mydatabase
     volumes:
       - ./db:/var/lib/postgresql/data
-
+    networks:
+      - proxy
 
 networks:
   proxy:
