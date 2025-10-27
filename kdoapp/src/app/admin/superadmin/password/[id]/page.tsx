@@ -341,6 +341,7 @@ export default function Password({
           <div
             className={`
               relative
+              z-50
               max-w-md w-full
               backdrop-blur-lg
               ${
