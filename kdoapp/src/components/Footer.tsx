@@ -1,7 +1,7 @@
 'use client';
 
 import { Mountains_of_Christmas } from 'next/font/google';
-import { Heart, Gift, Sparkles, Star } from 'lucide-react';
+import { Heart, Gift, Sparkles } from 'lucide-react';
 
 const mountains_of_christmas = Mountains_of_Christmas({
   weight: '700',

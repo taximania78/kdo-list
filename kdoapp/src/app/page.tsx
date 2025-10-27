@@ -115,7 +115,7 @@ export default function LoginPage() {
         setError("Nom d'utilisateur ou mot de passe invalide.");
         setIsLoading(false);
       }
-    } catch (err) {
+    } catch {
       setError(`Une erreur s'est produite. Veuillez réessayer.`);
       setIsLoading(false);
     }
@@ -208,7 +208,7 @@ export default function LoginPage() {
             {/* Username input */}
             <div className="relative">
               <label htmlFor="username" className="sr-only">
-                Nom d'utilisateur
+                Nom d&apos;utilisateur
               </label>
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <User className="h-5 w-5 text-white/60" />
