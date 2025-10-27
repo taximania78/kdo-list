@@ -167,7 +167,7 @@ function Admin() {
       </Select.Trigger>
 
       <Select.Portal>
-        <Select.Content className="overflow-hidden rounded-xl bg-white/90 backdrop-blur-lg shadow-2xl border border-white/20">
+        <Select.Content className="overflow-hidden rounded-xl bg-white/90 backdrop-blur-lg shadow-2xl border border-white/20 z-50">
           <Select.ScrollUpButton className="flex h-6 items-center justify-center bg-white/50">
             <ChevronUp className="w-4 h-4" />
           </Select.ScrollUpButton>

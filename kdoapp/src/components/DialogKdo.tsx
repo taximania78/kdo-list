@@ -125,7 +125,7 @@ const DialogKdo = ({
         </button>
       </AlertDialog.Trigger>
       <AlertDialog.Portal>
-        <AlertDialog.Overlay className="fixed inset-0 bg-black/90 data-[state=open]:animate-overlayShow" />
+        <AlertDialog.Overlay className="fixed inset-0 bg-black/90 z-50 data-[state=open]:animate-overlayShow" />
         <AlertDialog.Content
           className={`
             fixed
@@ -136,6 +136,7 @@ const DialogKdo = ({
             max-h-[85vh]
             w-[90vw]
             max-w-[500px]
+            z-50
             backdrop-blur-lg
             ${
               theme === 'christmas'
