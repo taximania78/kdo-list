@@ -147,7 +147,7 @@ export default function FormModifyItem({
       </AlertDialog.Trigger>
 
       <AlertDialog.Portal>
-        <AlertDialog.Overlay className="fixed inset-0 bg-black/90 data-[state=open]:animate-overlayShow" />
+        <AlertDialog.Overlay className="fixed inset-0 bg-black/90 z-50 data-[state=open]:animate-overlayShow" />
         <AlertDialog.Content
           className={`
             fixed
@@ -158,6 +158,7 @@ export default function FormModifyItem({
             max-h-[85vh]
             w-[90vw]
             max-w-[600px]
+            z-50
             overflow-y-auto
             backdrop-blur-lg
             ${

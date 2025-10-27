@@ -283,7 +283,7 @@ function Superadmin() {
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           {/* Overlay */}
           <div
-            className="fixed inset-0 bg-black/90 animate-overlayShow"
+            className="fixed inset-0 bg-black/90 z-50 animate-overlayShow"
             onClick={handleDeleteCancel}
           />
 
