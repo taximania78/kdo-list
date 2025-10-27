@@ -69,13 +69,6 @@ export const Footer = () => {
                 ${theme === 'christmas' ? 'text-red-500' : 'text-sky-500'}
               `}
             />
-            <span
-              className={
-                theme === 'christmas' ? 'text-red-700' : 'text-sky-700'
-              }
-            >
-              pour partager la joie des cadeaux
-            </span>
           </div>
 
           {/* Copyright */}
