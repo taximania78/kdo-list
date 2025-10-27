@@ -6,6 +6,15 @@ import { useEffect, useState } from 'react';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
 import { jwtDecode } from 'jwt-decode';
 import { usePathname } from 'next/navigation';
+import {
+  Menu,
+  X,
+  LogOut,
+  List,
+  Settings,
+  Shield,
+  Gift,
+} from 'lucide-react';
 
 const mountains_of_christmas = Mountains_of_Christmas({
   weight: '700',
@@ -100,8 +109,25 @@ export const Nav = () => {
   };
 
   return (
-    <header className="w-full border-b border-gray-300 relative">
-      <div className="px-4">
+    <header
+      className={`
+        w-full
+        backdrop-blur-md
+        bg-white/70
+        border-b
+        ${
+          theme === 'christmas'
+            ? 'border-red-200/50 shadow-lg shadow-red-100/20'
+            : 'border-sky-200/50 shadow-lg shadow-sky-100/20'
+        }
+        sticky
+        top-0
+        z-50
+        transition-all
+        duration-300
+      `}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div
           className={
             theme === 'christmas'
@@ -110,127 +136,355 @@ export const Nav = () => {
           }
         >
           <nav className="flex items-center justify-between py-4">
-            <div>
+            {/* Logo section */}
+            <div className="flex-shrink-0">
               {isAdmin === 'false' || !isAdmin ? (
                 <Link
                   href={`${isUserLoggedIn ? '/list' : '/'}`}
-                  className="flex gap-2 items-center"
+                  className="flex gap-3 items-center group"
                 >
-                  <Image
-                    src={
-                      theme === 'christmas' ? 'logo-christmas.svg' : 'logo.svg'
-                    }
-                    alt="KDO liste logo"
-                    width={40}
-                    height={40}
-                    className="object-contain"
-                  />
-                  <p className="text-2xl logo_text">{`${theme == 'christmas' ? 'Liste de Noël' : "Liste d'anniversaire"}`}</p>
+                  <div className="relative">
+                    <Image
+                      src={
+                        theme === 'christmas'
+                          ? 'logo-christmas.svg'
+                          : 'logo.svg'
+                      }
+                      alt="KDO liste logo"
+                      width={50}
+                      height={50}
+                      className="object-contain transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12"
+                    />
+                  </div>
+                  <p
+                    className={`
+                      text-2xl
+                      sm:text-3xl
+                      font-bold
+                      transition-colors
+                      duration-200
+                      ${
+                        theme === 'christmas'
+                          ? 'text-red-700 group-hover:text-green-700'
+                          : 'text-sky-700 group-hover:text-indigo-700'
+                      }
+                    `}
+                  >
+                    {theme === 'christmas'
+                      ? '🎄 Liste de Noël'
+                      : "Liste d'anniversaire"}
+                  </p>
                 </Link>
               ) : username === 'Mathieu' ? (
                 <Link
                   href={`${isUserLoggedIn ? '/list?user=Personne' : '/'}`}
-                  className="flex gap-2 items-center"
+                  className="flex gap-3 items-center group"
                 >
-                  <Image
-                    src={
-                      theme === 'christmas' ? 'logo-christmas.svg' : 'logo.svg'
-                    }
-                    alt="KDO liste logo"
-                    width={40}
-                    height={40}
-                    className="object-contain"
-                  />
-                  <p className="text-2xl logo_text">{`${theme == 'christmas' ? 'Liste de Noël' : "Liste d'anniversaire"}`}</p>
+                  <div className="relative">
+                    <Image
+                      src={
+                        theme === 'christmas'
+                          ? 'logo-christmas.svg'
+                          : 'logo.svg'
+                      }
+                      alt="KDO liste logo"
+                      width={50}
+                      height={50}
+                      className="object-contain transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12"
+                    />
+                  </div>
+                  <p
+                    className={`
+                      text-2xl
+                      sm:text-3xl
+                      font-bold
+                      transition-colors
+                      duration-200
+                      ${
+                        theme === 'christmas'
+                          ? 'text-red-700 group-hover:text-green-700'
+                          : 'text-sky-700 group-hover:text-indigo-700'
+                      }
+                    `}
+                  >
+                    {theme === 'christmas'
+                      ? '🎄 Liste de Noël'
+                      : "Liste d'anniversaire"}
+                  </p>
                 </Link>
               ) : (
                 <Link
                   href={`${isUserLoggedIn ? '/list?user=Mathieu' : '/'}`}
-                  className="flex gap-2 items-center"
+                  className="flex gap-3 items-center group"
                 >
-                  <Image
-                    src={
-                      theme === 'christmas' ? 'logo-christmas.svg' : 'logo.svg'
-                    }
-                    alt="KDO liste logo"
-                    width={40}
-                    height={40}
-                    className="object-contain"
-                  />
-                  <p className="text-2xl logo_text">{`${theme == 'christmas' ? 'Liste de Noël' : "Liste d'anniversaire"}`}</p>
+                  <div className="relative">
+                    <Image
+                      src={
+                        theme === 'christmas'
+                          ? 'logo-christmas.svg'
+                          : 'logo.svg'
+                      }
+                      alt="KDO liste logo"
+                      width={50}
+                      height={50}
+                      className="object-contain transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12"
+                    />
+                  </div>
+                  <p
+                    className={`
+                      text-2xl
+                      sm:text-3xl
+                      font-bold
+                      transition-colors
+                      duration-200
+                      ${
+                        theme === 'christmas'
+                          ? 'text-red-700 group-hover:text-green-700'
+                          : 'text-sky-700 group-hover:text-indigo-700'
+                      }
+                    `}
+                  >
+                    {theme === 'christmas'
+                      ? '🎄 Liste de Noël'
+                      : "Liste d'anniversaire"}
+                  </p>
                 </Link>
               )}
             </div>
+
+            {/* Desktop Navigation */}
             {isUserLoggedIn && (
               <>
+                {/* Mobile menu button */}
                 <div className="md:hidden">
-                  <button onClick={toggleMenu} className="p-2 text-gray-600">
-                    {isMenuOpen ? 'Fermer' : 'Menu'}
+                  <button
+                    onClick={toggleMenu}
+                    className={`
+                      p-2
+                      rounded-lg
+                      transition-all
+                      duration-200
+                      ${
+                        theme === 'christmas'
+                          ? 'text-red-700 hover:bg-red-100/50'
+                          : 'text-sky-700 hover:bg-sky-100/50'
+                      }
+                    `}
+                    aria-label="Toggle menu"
+                  >
+                    {isMenuOpen ? (
+                      <X className="w-6 h-6" />
+                    ) : (
+                      <Menu className="w-6 h-6" />
+                    )}
                   </button>
                 </div>
-                <div className="hidden md:flex gap-8">
+
+                {/* Desktop menu */}
+                <div className="hidden md:flex items-center gap-2">
                   {isAdmin === 'false' ? (
                     <>
                       <Link
                         href="/list"
-                        className="block px-4 py-2 hover:bg-gray-100"
+                        className={`
+                          flex
+                          items-center
+                          gap-2
+                          px-4
+                          py-2
+                          rounded-lg
+                          font-medium
+                          transition-all
+                          duration-200
+                          ${
+                            theme === 'christmas'
+                              ? 'text-red-700 hover:bg-red-100/50'
+                              : 'text-sky-700 hover:bg-sky-100/50'
+                          }
+                        `}
                       >
+                        <List className="w-4 h-4" />
                         Liste complète
                       </Link>
                       <Link
                         href="/list?user=Personne"
-                        className="block px-4 py-2 hover:bg-gray-100"
+                        className={`
+                          flex
+                          items-center
+                          gap-2
+                          px-4
+                          py-2
+                          rounded-lg
+                          font-medium
+                          transition-all
+                          duration-200
+                          ${
+                            theme === 'christmas'
+                              ? 'text-red-700 hover:bg-red-100/50'
+                              : 'text-sky-700 hover:bg-sky-100/50'
+                          }
+                        `}
                       >
-                        Liste Personne
+                        <Gift className="w-4 h-4" />
+                        Personne
                       </Link>
                       <Link
                         href="/list?user=Mathieu"
-                        className="block px-4 py-2 hover:bg-gray-100"
+                        className={`
+                          flex
+                          items-center
+                          gap-2
+                          px-4
+                          py-2
+                          rounded-lg
+                          font-medium
+                          transition-all
+                          duration-200
+                          ${
+                            theme === 'christmas'
+                              ? 'text-red-700 hover:bg-red-100/50'
+                              : 'text-sky-700 hover:bg-sky-100/50'
+                          }
+                        `}
                       >
-                        Liste Mathieu
+                        <Gift className="w-4 h-4" />
+                        Mathieu
                       </Link>
                     </>
                   ) : username === 'Mathieu' ? (
                     <>
                       <Link
                         href="/admin/superadmin"
-                        className="block px-4 py-2 hover:bg-gray-100"
+                        className={`
+                          flex
+                          items-center
+                          gap-2
+                          px-4
+                          py-2
+                          rounded-lg
+                          font-medium
+                          transition-all
+                          duration-200
+                          ${
+                            theme === 'christmas'
+                              ? 'text-red-700 hover:bg-red-100/50'
+                              : 'text-sky-700 hover:bg-sky-100/50'
+                          }
+                        `}
                       >
+                        <Shield className="w-4 h-4" />
                         Admin
                       </Link>
                       <Link
                         href="/admin"
-                        className="block px-4 py-2 hover:bg-gray-100"
+                        className={`
+                          flex
+                          items-center
+                          gap-2
+                          px-4
+                          py-2
+                          rounded-lg
+                          font-medium
+                          transition-all
+                          duration-200
+                          ${
+                            theme === 'christmas'
+                              ? 'text-red-700 hover:bg-red-100/50'
+                              : 'text-sky-700 hover:bg-sky-100/50'
+                          }
+                        `}
                       >
-                        Modifier la liste
+                        <Settings className="w-4 h-4" />
+                        Modifier
                       </Link>
                       <Link
                         href="/list?user=Personne"
-                        className="block px-4 py-2 hover:bg-gray-100"
+                        className={`
+                          flex
+                          items-center
+                          gap-2
+                          px-4
+                          py-2
+                          rounded-lg
+                          font-medium
+                          transition-all
+                          duration-200
+                          ${
+                            theme === 'christmas'
+                              ? 'text-red-700 hover:bg-red-100/50'
+                              : 'text-sky-700 hover:bg-sky-100/50'
+                          }
+                        `}
                       >
-                        Liste Personne
+                        <Gift className="w-4 h-4" />
+                        Personne
                       </Link>
                     </>
                   ) : (
                     <>
                       <Link
                         href="/admin"
-                        className="block px-4 py-2 hover:bg-gray-100"
+                        className={`
+                          flex
+                          items-center
+                          gap-2
+                          px-4
+                          py-2
+                          rounded-lg
+                          font-medium
+                          transition-all
+                          duration-200
+                          ${
+                            theme === 'christmas'
+                              ? 'text-red-700 hover:bg-red-100/50'
+                              : 'text-sky-700 hover:bg-sky-100/50'
+                          }
+                        `}
                       >
-                        Modifier la liste
+                        <Settings className="w-4 h-4" />
+                        Modifier
                       </Link>
                       <Link
                         href="/list?user=Mathieu"
-                        className="block px-4 py-2 hover:bg-gray-100"
+                        className={`
+                          flex
+                          items-center
+                          gap-2
+                          px-4
+                          py-2
+                          rounded-lg
+                          font-medium
+                          transition-all
+                          duration-200
+                          ${
+                            theme === 'christmas'
+                              ? 'text-red-700 hover:bg-red-100/50'
+                              : 'text-sky-700 hover:bg-sky-100/50'
+                          }
+                        `}
                       >
-                        Liste Mathieu
+                        <Gift className="w-4 h-4" />
+                        Mathieu
                       </Link>
                     </>
                   )}
                   <button
                     onClick={handleLogout}
-                    className="block px-4 py-2 text-red-500 hover:bg-gray-100"
+                    className="
+                      flex
+                      items-center
+                      gap-2
+                      px-4
+                      py-2
+                      rounded-lg
+                      font-medium
+                      text-red-600
+                      hover:bg-red-100/50
+                      transition-all
+                      duration-200
+                    "
                   >
+                    <LogOut className="w-4 h-4" />
                     Déconnexion
                   </button>
                 </div>
@@ -239,33 +493,99 @@ export const Nav = () => {
           </nav>
         </div>
       </div>
+
+      {/* Mobile menu dropdown */}
       {isUserLoggedIn && (
         <div
-          className={`mobile-menu ${isMenuOpen ? 'block' : 'hidden'} md:hidden absolute top-full left-0 right-0 z-10`}
+          className={`
+            md:hidden
+            overflow-hidden
+            transition-all
+            duration-300
+            ease-in-out
+            ${isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}
+          `}
         >
-          <div className="bg-white shadow-md rounded-b-md">
-            <div className="px-4 py-2">
+          <div
+            className={`
+              backdrop-blur-lg
+              ${
+                theme === 'christmas'
+                  ? 'bg-red-50/80 border-t border-red-200/50'
+                  : 'bg-sky-50/80 border-t border-sky-200/50'
+              }
+            `}
+          >
+            <div className="px-4 py-3 space-y-1">
               {isAdmin === 'false' ? (
                 <>
                   <Link
                     href="/list"
                     onClick={toggleMenu}
-                    className="block px-4 py-2 hover:bg-gray-100"
+                    className={`
+                      flex
+                      items-center
+                      gap-3
+                      px-4
+                      py-3
+                      rounded-lg
+                      font-medium
+                      transition-all
+                      duration-200
+                      ${
+                        theme === 'christmas'
+                          ? 'text-red-700 hover:bg-red-100/50'
+                          : 'text-sky-700 hover:bg-sky-100/50'
+                      }
+                    `}
                   >
+                    <List className="w-5 h-5" />
                     Liste complète
                   </Link>
                   <Link
                     href="/list?user=Personne"
                     onClick={toggleMenu}
-                    className="block px-4 py-2 hover:bg-gray-100"
+                    className={`
+                      flex
+                      items-center
+                      gap-3
+                      px-4
+                      py-3
+                      rounded-lg
+                      font-medium
+                      transition-all
+                      duration-200
+                      ${
+                        theme === 'christmas'
+                          ? 'text-red-700 hover:bg-red-100/50'
+                          : 'text-sky-700 hover:bg-sky-100/50'
+                      }
+                    `}
                   >
+                    <Gift className="w-5 h-5" />
                     Liste Personne
                   </Link>
                   <Link
                     href="/list?user=Mathieu"
                     onClick={toggleMenu}
-                    className="block px-4 py-2 hover:bg-gray-100"
+                    className={`
+                      flex
+                      items-center
+                      gap-3
+                      px-4
+                      py-3
+                      rounded-lg
+                      font-medium
+                      transition-all
+                      duration-200
+                      ${
+                        theme === 'christmas'
+                          ? 'text-red-700 hover:bg-red-100/50'
+                          : 'text-sky-700 hover:bg-sky-100/50'
+                      }
+                    `}
                   >
+                    <Gift className="w-5 h-5" />
                     Liste Mathieu
                   </Link>
                 </>
@@ -273,22 +593,71 @@ export const Nav = () => {
                 <>
                   <Link
                     href="/admin/superadmin"
-                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={toggleMenu}
+                    className={`
+                      flex
+                      items-center
+                      gap-3
+                      px-4
+                      py-3
+                      rounded-lg
+                      font-medium
+                      transition-all
+                      duration-200
+                      ${
+                        theme === 'christmas'
+                          ? 'text-red-700 hover:bg-red-100/50'
+                          : 'text-sky-700 hover:bg-sky-100/50'
+                      }
+                    `}
                   >
+                    <Shield className="w-5 h-5" />
                     Admin
                   </Link>
                   <Link
                     href="/admin"
                     onClick={toggleMenu}
-                    className="block px-4 py-2 hover:bg-gray-100"
+                    className={`
+                      flex
+                      items-center
+                      gap-3
+                      px-4
+                      py-3
+                      rounded-lg
+                      font-medium
+                      transition-all
+                      duration-200
+                      ${
+                        theme === 'christmas'
+                          ? 'text-red-700 hover:bg-red-100/50'
+                          : 'text-sky-700 hover:bg-sky-100/50'
+                      }
+                    `}
                   >
+                    <Settings className="w-5 h-5" />
                     Modif. liste
                   </Link>
                   <Link
                     href="/list?user=Personne"
                     onClick={toggleMenu}
-                    className="block px-4 py-2 hover:bg-gray-100"
+                    className={`
+                      flex
+                      items-center
+                      gap-3
+                      px-4
+                      py-3
+                      rounded-lg
+                      font-medium
+                      transition-all
+                      duration-200
+                      ${
+                        theme === 'christmas'
+                          ? 'text-red-700 hover:bg-red-100/50'
+                          : 'text-sky-700 hover:bg-sky-100/50'
+                      }
+                    `}
                   >
+                    <Gift className="w-5 h-5" />
                     Liste Personne
                   </Link>
                 </>
@@ -297,23 +666,69 @@ export const Nav = () => {
                   <Link
                     href="/admin"
                     onClick={toggleMenu}
-                    className="block px-4 py-2 hover:bg-gray-100"
+                    className={`
+                      flex
+                      items-center
+                      gap-3
+                      px-4
+                      py-3
+                      rounded-lg
+                      font-medium
+                      transition-all
+                      duration-200
+                      ${
+                        theme === 'christmas'
+                          ? 'text-red-700 hover:bg-red-100/50'
+                          : 'text-sky-700 hover:bg-sky-100/50'
+                      }
+                    `}
                   >
+                    <Settings className="w-5 h-5" />
                     Modif. liste
                   </Link>
                   <Link
                     href="/list?user=Mathieu"
                     onClick={toggleMenu}
-                    className="block px-4 py-2 hover:bg-gray-100"
+                    className={`
+                      flex
+                      items-center
+                      gap-3
+                      px-4
+                      py-3
+                      rounded-lg
+                      font-medium
+                      transition-all
+                      duration-200
+                      ${
+                        theme === 'christmas'
+                          ? 'text-red-700 hover:bg-red-100/50'
+                          : 'text-sky-700 hover:bg-sky-100/50'
+                      }
+                    `}
                   >
+                    <Gift className="w-5 h-5" />
                     Liste Mathieu
                   </Link>
                 </>
               )}
               <button
                 onClick={handleLogout}
-                className="block w-full px-4 py-2 text-red-500 hover:bg-gray-100"
+                className="
+                  flex
+                  items-center
+                  gap-3
+                  w-full
+                  px-4
+                  py-3
+                  rounded-lg
+                  font-medium
+                  text-red-600
+                  hover:bg-red-100/50
+                  transition-all
+                  duration-200
+                "
               >
+                <LogOut className="w-5 h-5" />
                 Déconnexion
               </button>
             </div>
