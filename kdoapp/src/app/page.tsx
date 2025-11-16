@@ -2,80 +2,29 @@
 
 import { useEffect, FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { jwtDecode } from 'jwt-decode';
+import { useAuth } from '@/hooks/useAuth';
 import { User, Lock, LogIn, Gift, Sparkles } from 'lucide-react';
 import Snowflakes from '@/components/Snowflakes';
 
 const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
-interface DecodedToken {
-  sub: number;
-  username: string;
-  isAdmin: boolean;
-  isMegaAdmin: boolean;
-  exp: number; // Timestamp d'expiration
-}
-
 export default function LoginPage() {
   const router = useRouter();
+  const { isAuthenticated, user } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    console.log('API URL utilisée :', ApiAdress);
-    const checkAuth = async () => {
-      const token = localStorage.getItem('authToken');
-      const admin = localStorage.getItem('isAdmin');
-      if (token) {
-        try {
-          const decoded = jwtDecode<DecodedToken>(token);
-          const isExpired = decoded.exp < Date.now() / 1000;
-
-          if (isExpired) {
-            const refreshToken = localStorage.getItem('refreshToken');
-            if (!refreshToken) {
-              localStorage.clear();
-              router.push('/');
-              return;
-            }
-            const isExpired = decoded.exp < Date.now() / 1000;
-            if (isExpired) {
-              localStorage.clear();
-              router.push('/');
-              return;
-            }
-            const response = await fetch(`${ApiAdress}/api/refresh/`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ refresh_token: refreshToken }),
-            });
-            if (!response.ok) {
-              localStorage.clear();
-              router.push('/');
-              return;
-            }
-            const data = await response.json();
-            localStorage.setItem('accessToken', data.access_token);
-            localStorage.setItem('refreshToken', data.refresh_token);
-          } else {
-            if (admin == 'true') {
-              router.push('/admin');
-            } else {
-              router.push('/list');
-            }
-          }
-        } catch (error) {
-          console.error('Token verification error:', error);
-          localStorage.clear();
-          router.push('/');
-          // Gérer l'erreur selon les besoins, par exemple, laisser l'utilisateur se connecter à nouveau
-        }
+    if (isAuthenticated && user) {
+      // User already logged in, redirect based on role
+      if (user.isAdmin) {
+        router.push('/admin');
+      } else {
+        router.push('/list');
       }
-    };
-
-    checkAuth();
-  }, [router]);
+    }
+  }, [isAuthenticated, user, router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -102,6 +51,8 @@ export default function LoginPage() {
 
         const firstConnection = data.firstConnection;
         if (firstConnection) {
+          // Set temporary flag for first-connection page validation
+          sessionStorage.setItem('requirePasswordChange', 'true');
           router.push('/first-connection');
           return;
         }

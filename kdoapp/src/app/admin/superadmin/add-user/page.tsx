@@ -1,8 +1,10 @@
 'use client';
 
+import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { UserPlus, User, Lock, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
@@ -45,6 +47,19 @@ type FormData = z.infer<typeof formSchema>;
 
 export default function Password() {
   const router = useRouter();
+  const { isAuthenticated, user, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        console.log('🚫 [ADD-USER] Not authenticated, redirecting to login');
+        router.push('/');
+      } else if (user && !user.isMegaAdmin && user.username !== 'Mathieu') {
+        console.log('🚫 [ADD-USER] Not super admin, redirecting to admin');
+        router.push('/admin');
+      }
+    }
+  }, [isAuthenticated, user, isLoading, router]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),

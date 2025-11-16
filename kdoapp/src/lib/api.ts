@@ -41,29 +41,37 @@ let refreshPromise: Promise<void> | null = null;
  * Appel à l'endpoint /api/refresh
  */
 async function refreshAccessToken() {
-  console.log('Refreshing token...');
+  console.log('🔄 [AUTH] Token refresh initiated at:', new Date().toISOString());
+
   if (isRefreshing) {
-    // Si on est déjà en cours de refresh, on attend la fin
+    console.log('⏳ [AUTH] Token refresh already in progress, waiting...');
     return refreshPromise;
   }
+
   isRefreshing = true;
 
   refreshPromise = (async () => {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) return;
+      if (!refreshToken) {
+        console.warn('⚠️ [AUTH] No refresh token found');
+        return;
+      }
 
       // Appel vers /api/refresh/ avec refresh_token
-      const response = await axios.post(`http://localhost:8000/api/refresh/`, {
+      const response = await axios.post(`${ApiAdress}/api/refresh/`, {
         refresh_token: refreshToken,
       });
-      console.log('Token refreshed:');
+
+      console.log('✅ [AUTH] Token refreshed successfully at:', new Date().toISOString());
+      console.log('📅 [AUTH] New token expires:', new Date(jwtDecode<DecodedToken>(response.data.access_token).exp * 1000).toISOString());
 
       // On stocke les nouveaux tokens
       localStorage.setItem('authToken', response.data.access_token);
       localStorage.setItem('refreshToken', response.data.refresh_token);
     } catch (err) {
-      console.error('Échec du refresh token => redirection vers /', err);
+      console.error('❌ [AUTH] Token refresh failed:', err);
+      console.log('🚪 [AUTH] Logging out user due to refresh failure');
       localStorage.clear();
       window.location.href = '/';
     } finally {
@@ -83,8 +91,7 @@ api.interceptors.request.use(
   async (config) => {
     const accessToken = localStorage.getItem('authToken');
     if (accessToken) {
-      // Vérifier expiration proche
-      console.log('Token expiring soon?', isTokenExpiringSoon(accessToken));
+      // Vérifier expiration proche et rafraîchir si nécessaire
       if (isTokenExpiringSoon(accessToken)) {
         await refreshAccessToken();
       }

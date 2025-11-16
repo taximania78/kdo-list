@@ -4,3 +4,4 @@ server/dev
 static/
 .DS_Store
 .env
+kdoapp/public/kdos

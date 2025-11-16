@@ -3,11 +3,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Key, Lock, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 import api from '@/lib/api';
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import Snowflakes from '@/components/Snowflakes';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
 
@@ -47,12 +48,25 @@ export default function Password({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
+  const { isAuthenticated, user, isLoading } = useAuth();
   const searchParams = useSearchParams();
   const name = searchParams.get('name') || 'Utilisateur inconnu';
   const { id } = use(params);
   const userId = parseInt(id, 10);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingData, setPendingData] = useState<FormData | null>(null);
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        console.log('🚫 [RESET-PASSWORD] Not authenticated, redirecting to login');
+        router.push('/');
+      } else if (user && !user.isMegaAdmin && user.username !== 'Mathieu') {
+        console.log('🚫 [RESET-PASSWORD] Not super admin, redirecting to admin');
+        router.push('/admin');
+      }
+    }
+  }, [isAuthenticated, user, isLoading, router]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),

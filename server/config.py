@@ -12,7 +12,7 @@ def get_config():
             #TOKEN
             "SECRET_KEY": os.getenv("SECRET_KEY", "1234567890"),  # Clé secrète pour JWT
             "ALGORITHM": os.getenv("ALGORITHM", "HS256"),  # Algorithme de cryptage
-            "ACCESS_TOKEN_EXPIRE_MINUTES": int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 15)),  # Durée d'expiration du token d'accès
+            "ACCESS_TOKEN_EXPIRE_MINUTES": int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30)),  # Durée d'expiration du token d'accès
             "REFRESH_TOKEN_EXPIRE_DAYS": int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7)),  # Durée d'expiration du token de rafraîchissement
             #DATABASE
             "DATABASE_USER": os.getenv("DATABASE_USER", "admin"),  # Nom d'utilisateur de la base de données
@@ -33,7 +33,7 @@ def get_config():
                 #TOKEN
                 "SECRET_KEY": config.get("SECRET_KEY", "1234567890"),  # Clé secrète pour JWT
                 "ALGORITHM": config.get("ALGORITHM", "HS256"),  # Algorithme de cryptage
-                "ACCESS_TOKEN_EXPIRE_MINUTES": int(config.get("ACCESS_TOKEN_EXPIRE_MINUTES", 15)),  # Durée d'expiration du token d'accès
+                "ACCESS_TOKEN_EXPIRE_MINUTES": int(config.get("ACCESS_TOKEN_EXPIRE_MINUTES", 30)),  # Durée d'expiration du token d'accès
                 "REFRESH_TOKEN_EXPIRE_DAYS": int(config.get("REFRESH_TOKEN_EXPIRE_DAYS", 7)),  # Durée d'expiration du token de rafraîchissement
                 #DATABASE
                 "DATABASE_USER": config.get("DATABASE_USER", "admin"),  # Nom d'utilisateur de la base de données
