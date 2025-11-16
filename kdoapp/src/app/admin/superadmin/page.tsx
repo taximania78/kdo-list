@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
 import { Shield, UserPlus, Trash2, Key, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
@@ -26,6 +28,8 @@ const knewave = Atma({
 });
 
 function Superadmin() {
+  const router = useRouter();
+  const { isAuthenticated, user, isLoading } = useAuth();
   const [usersList, setUsersList] = useState<User[] | null>(null);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -33,6 +37,18 @@ function Superadmin() {
     id: number;
     name: string;
   } | null>(null);
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        console.log('🚫 [SUPERADMIN] Not authenticated, redirecting to login');
+        router.push('/');
+      } else if (user && !user.isMegaAdmin && user.username !== 'Mathieu') {
+        console.log('🚫 [SUPERADMIN] Not super admin, redirecting to admin');
+        router.push('/admin');
+      }
+    }
+  }, [isAuthenticated, user, isLoading, router]);
 
   const fetchUsers = async () => {
     const apiUrl = `${ApiAdress}/api/users/`;

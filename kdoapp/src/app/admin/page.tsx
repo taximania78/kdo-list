@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { jwtDecode } from 'jwt-decode';
+import { useAuth } from '@/hooks/useAuth';
 import api from '@/lib/api';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -29,74 +29,27 @@ type Kdo = {
   imageDisplay?: string | null;
 };
 
-interface DecodedToken {
-  sub: number;
-  username: string;
-  isAdmin: boolean;
-  isMegaAdmin: boolean;
-  exp: number; // Timestamp d'expiration
-}
-
 /** ---------------------
  *  Composant Admin
  * --------------------- */
 
 function Admin() {
   const router = useRouter();
+  const { isAuthenticated, user, isLoading } = useAuth();
   const [kdosList, setKdosList] = useState<Kdo[] | null>(null);
 
-  // Fonction de vérification du token
-  const checkAuth = async () => {
-    const token = localStorage.getItem('authToken');
-    const admin = localStorage.getItem('isAdmin');
-
-    if (token) {
-      try {
-        const decoded = jwtDecode<DecodedToken>(token);
-        const isExpired = decoded.exp < Date.now() / 1000;
-        if (isExpired) {
-          const refreshToken = localStorage.getItem('refreshToken');
-          if (!refreshToken) {
-            localStorage.clear();
-            router.push('/');
-            return;
-          }
-          const response = await fetch(`${ApiAdress}/api/refresh/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refresh_token: refreshToken }),
-          });
-          if (!response.ok) {
-            localStorage.clear();
-            router.push('/');
-            return;
-          }
-          const data = await response.json();
-          localStorage.setItem('authToken', data.access_token);
-          localStorage.setItem('refreshToken', data.refresh_token);
-        } else {
-          if (admin !== 'true') {
-            // Non admin => redirection vers /list
-            console.log("L'utilisateur n'est pas admin => /list");
-            router.push('/list');
-          } else {
-            console.log('Utilisateur admin => on reste sur la page admin');
-          }
-        }
-      } catch (error) {
-        console.error('Token verification error:', error);
-        localStorage.clear();
-        router.push('/');
-      }
-    } else {
-      console.log("Aucun token => retour vers l'accueil pour authentification");
-      router.push('/');
-    }
-  };
-
   useEffect(() => {
-    checkAuth();
-  }, [router]);
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        console.log('🚫 [ADMIN] Not authenticated, redirecting to login');
+        router.push('/');
+      } else if (user && !user.isAdmin) {
+        console.log('🚫 [ADMIN] Not admin, redirecting to list');
+        router.push('/list');
+      }
+      // If admin, stay on page
+    }
+  }, [isAuthenticated, user, isLoading, router]);
 
   const [selectedUser, setSelectedUser] = useState('Personne');
 

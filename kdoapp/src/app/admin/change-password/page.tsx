@@ -1,5 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import FormModifyPwd from '@/components/FormModifyPwd';
 import { Lock } from 'lucide-react';
 import Snowflakes from '@/components/Snowflakes';
@@ -7,6 +10,36 @@ import Snowflakes from '@/components/Snowflakes';
 const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 
 export default function ChangePassword() {
+  const router = useRouter();
+  const { isAuthenticated, user, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        console.log('🚫 [CHANGE-PASSWORD] Not authenticated, redirecting to login');
+        router.push('/');
+      } else if (user && !user.isAdmin) {
+        console.log('🚫 [CHANGE-PASSWORD] Not admin, redirecting to list');
+        router.push('/list');
+      }
+    }
+  }, [isAuthenticated, user, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-400 to-indigo-600">
+        <div className="backdrop-blur-lg bg-white/10 rounded-2xl p-8 border border-white/20">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <p className="text-white text-lg font-medium">Chargement...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return null;
+
   return (
     <div
       className={`
