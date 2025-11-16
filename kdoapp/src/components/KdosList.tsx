@@ -3,10 +3,17 @@ import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import router from 'next/router';
-import { jwtDecode } from 'jwt-decode';
+import { getUserInfo } from '@/lib/auth';
 import DialogKdo from './DialogKdo';
 import Link from 'next/link';
-import { ExternalLink, Euro, User, MessageCircle, CheckCircle, XCircle } from 'lucide-react';
+import {
+  ExternalLink,
+  Euro,
+  User,
+  MessageCircle,
+  CheckCircle,
+  XCircle,
+} from 'lucide-react';
 
 type Kdo = {
   id: number;
@@ -19,14 +26,6 @@ type Kdo = {
   availability: boolean;
   takenBy: string;
 };
-
-interface DecodedToken {
-  sub: number;
-  username: string;
-  isAdmin: boolean;
-  isMegaAdmin: boolean;
-  exp: number; // Timestamp d'expiration
-}
 
 const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
@@ -58,14 +57,10 @@ const KdosList = () => {
     }
   };
 
-  const fetchUsername = async () => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      const decoded = jwtDecode<DecodedToken>(token);
-      const isExpired = decoded.exp < Date.now() / 1000;
-      if (!isExpired) {
-        setUserLogged(decoded.username);
-      }
+  const fetchUsername = () => {
+    const userInfo = getUserInfo();
+    if (userInfo) {
+      setUserLogged(userInfo.username);
     }
   };
 
