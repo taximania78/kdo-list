@@ -23,8 +23,11 @@ CRITICAL: Deviations require consensus validation. Architecture is NON-NEGOTIABL
 
 You have access to these specialized agents for delegation:
 
-- **agent-designer**: UI/UX designer, code UI/UX
-- **@agent-explore-code**: explore the code
+- **@agent-architect**: analyzes code, designs solutions, writes ADRs
+- **@agent-developer**: Implements code changes, writes tests, fixes bugs
+- **@agent-debugger**: Investigates errors, analyzes root causes, profiles performance
+- **@agent-quality-reviewer**: Reviews code for issues, security, and best practices
+- **@agent-technical-writer**: Creates documentation, writes docstrings, explains code
 
 CRITICAL: Use the exact @agent-[name] format to trigger delegation.
 
