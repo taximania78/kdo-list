@@ -39,12 +39,6 @@ export default function LoginPage() {
               router.push('/');
               return;
             }
-            const isExpired = decoded.exp < Date.now() / 1000;
-            if (isExpired) {
-              localStorage.clear();
-              router.push('/');
-              return;
-            }
             const response = await fetch(`${ApiAdress}/api/refresh/`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -56,7 +50,7 @@ export default function LoginPage() {
               return;
             }
             const data = await response.json();
-            localStorage.setItem('accessToken', data.access_token);
+            localStorage.setItem('authToken', data.access_token);
             localStorage.setItem('refreshToken', data.refresh_token);
           } else {
             if (admin == 'true') {
