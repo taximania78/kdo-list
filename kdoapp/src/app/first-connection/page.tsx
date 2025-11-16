@@ -1,12 +1,54 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import FormModifyPwd from '@/components/FormModifyPwd';
 import { KeyRound, Gift, Sparkles } from 'lucide-react';
 import Snowflakes from '@/components/Snowflakes';
 
 const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 
-export default function firstConnection() {
+export default function FirstConnection() {
+  const router = useRouter();
+  const { isAuthenticated, user, isLoading } = useAuth();
+  const [shouldShowPage, setShouldShowPage] = useState(false);
+
+  useEffect(() => {
+    if (isLoading) return; // Wait for auth check
+
+    // Check if this is a legitimate first-connection flow
+    const requirePasswordChange = sessionStorage.getItem('requirePasswordChange');
+
+    if (!isAuthenticated) {
+      // Not logged in → redirect to login
+      console.log('🚫 [FIRST-CONNECTION] Not authenticated, redirecting to login');
+      router.push('/');
+    } else if (!requirePasswordChange) {
+      // Logged in but not first-connection → redirect to normal page
+      console.log('🚫 [FIRST-CONNECTION] No password change required, redirecting');
+      router.push(user?.isAdmin ? '/admin' : '/list');
+    } else {
+      // Valid first-connection flow
+      console.log('✅ [FIRST-CONNECTION] Valid first-connection flow');
+      setShouldShowPage(true);
+    }
+  }, [isAuthenticated, user, isLoading, router]);
+
+  // Show loading during auth check
+  if (isLoading || !shouldShowPage) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-400 to-indigo-600">
+        <div className="backdrop-blur-lg bg-white/10 rounded-2xl p-8 border border-white/20">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <p className="text-white text-lg font-medium">Chargement...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`

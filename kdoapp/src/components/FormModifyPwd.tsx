@@ -107,6 +107,10 @@ export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
       if (response.status < 200 || response.status >= 300) {
         throw new Error('La réponse réseau n\'était pas OK');
       }
+      // Clear first-connection flag after successful password change
+      if (firstConnection) {
+        sessionStorage.removeItem('requirePasswordChange');
+      }
       router.push('/');
     } catch (error) {
       console.error('Erreur:', error);
