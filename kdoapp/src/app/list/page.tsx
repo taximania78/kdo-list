@@ -1,6 +1,8 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
 import KdosList from '@/components/KdosList';
 import { useSearchParams } from 'next/navigation';
@@ -20,8 +22,33 @@ const knewave = Atma({
 });
 
 function List() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
   const searchParams = useSearchParams();
   const userQuery = searchParams.get('user');
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      console.log('🚫 [LIST] Not authenticated, redirecting to login');
+      router.push('/');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  // Show loading during auth check
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-400 to-indigo-600">
+        <div className="backdrop-blur-lg bg-white/10 rounded-2xl p-8 border border-white/20">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <p className="text-white text-lg font-medium">Chargement...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return null;
   let textList: string;
   if (userQuery == 'Mathieu') {
     textList = 'Liste de Mathieu';
