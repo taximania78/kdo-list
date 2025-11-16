@@ -5,6 +5,7 @@ import React from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import api from '@/lib/api';
 import {
   Plus,
   DollarSign,
@@ -16,7 +17,6 @@ import {
 import Snowflakes from '@/components/Snowflakes';
 
 const theme = process.env.NEXT_PUBLIC_THEME || 'default';
-const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 const formSchema = z.object({
   name: z.string().min(2),
@@ -35,28 +35,24 @@ function AddItem() {
     resolver: zodResolver(formSchema),
   });
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log('Form values:', values);
-    const token = localStorage.getItem('authToken');
-    const apiUrl = `${ApiAdress}/api/add-item/`;
+    console.log('📝 [ADD-ITEM] Submitting form:', values);
+
     try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values), // Convertir les valeurs en JSON
-      });
+      // api instance automatically:
+      // - Adds Bearer token
+      // - Handles Content-Type
+      // - Refreshes token if needed
+      // - Throws on error (no response.ok check needed)
+      const response = await api.post('/api/add-item/', values);
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+      // Axios stores response data in response.data (not response.json())
+      const data = response.data;
+      console.log('✅ [ADD-ITEM] Success:', data);
 
-      const data = await response.json();
-      console.log('Success:', data);
       router.push('/admin');
     } catch (error) {
-      console.error('Error:', error);
+      console.error('❌ [ADD-ITEM] Error:', error);
+      // TODO: Show error message to user
     }
   }
 

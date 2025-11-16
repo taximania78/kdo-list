@@ -4,8 +4,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
-import { jwtDecode } from 'jwt-decode';
 import { usePathname } from 'next/navigation';
+import {
+  isTokenDecodable,
+  decodeToken,
+  clearAuthStorage,
+} from '@/lib/auth';
 import {
   Menu,
   X,
@@ -29,14 +33,6 @@ const knewave = Atma({
 const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
-interface DecodedToken {
-  sub: number;
-  username: string;
-  isAdmin: boolean;
-  isMegaAdmin: boolean;
-  exp: number; // Timestamp d'expiration
-}
-
 export const Nav = () => {
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -45,28 +41,26 @@ export const Nav = () => {
   const pathname = usePathname();
 
   useEffect(() => {
-    const checkToken = async () => {
+    const checkToken = () => {
       const token = localStorage.getItem('authToken');
 
       if (token) {
-        try {
-          const decoded = jwtDecode<DecodedToken>(token);
-          const isExpired = decoded.exp < Date.now() / 1000;
-
-          if (!isExpired) {
+        // Only check if token is decodable, NOT if expired
+        if (isTokenDecodable(token)) {
+          const decoded = decodeToken(token);
+          if (decoded) {
             setIsUserLoggedIn(true);
-            setUsername(localStorage.getItem('user'));
-            setIsAdmin(localStorage.getItem('isAdmin'));
+            setUsername(decoded.username);
+            setIsAdmin(decoded.isAdmin ? 'true' : 'false');
           } else {
+            // Shouldn't happen if isTokenDecodable returned true, but safety check
             setIsUserLoggedIn(false);
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('isAdmin');
-            localStorage.removeItem('user');
           }
-        } catch (error) {
-          console.error('Erreur lors de la vérification du token:', error);
+        } else {
+          // Token is corrupted/invalid (not just expired)
+          console.warn('⚠️ [NAV] Token is corrupted but not deleting it');
           setIsUserLoggedIn(false);
+          // DON'T delete tokens - user might be mid-refresh
         }
       } else {
         setIsUserLoggedIn(false);
@@ -83,23 +77,21 @@ export const Nav = () => {
         const response = await fetch(`${ApiAdress}/api/auth/logout/`, {
           method: 'POST',
           headers: {
-            Authorization: `Token ${token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
         if (response.ok) {
-          console.log('Déconnexion validée');
+          console.log('✅ [NAV] Logout successful');
         } else {
-          console.log('Réponse invalide lors de la déconnexion');
+          console.warn('⚠️ [NAV] Logout response not OK');
         }
       } catch (error) {
-        console.error('Erreur lors de la déconnexion:', error);
+        console.error('❌ [NAV] Logout error:', error);
       }
     }
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('isAdmin');
-    localStorage.removeItem('user');
+
+    clearAuthStorage(); // Use centralized function
     setIsUserLoggedIn(false);
     window.location.href = '/';
   };
