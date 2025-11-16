@@ -328,8 +328,12 @@ async def modify_item_api(update_data: IdeaUpdate, token: str = Depends(oauth2_s
     if update_values.get("url") is not None:
         update_values["url"] = str(update_values["url"])
     if update_values.get("image") is not None and update_values.get("image") != "":
-        update_values["image"] = str(update_values["image"])
-        update_values["imageDisplay"] = get_image(update_values["image"], str(update_data.id) + ".jpg")
+        new_image_url = str(update_values["image"])
+        update_values["image"] = new_image_url
+
+        # Télécharger uniquement si l'URL a changé
+        if new_image_url != idea.image:
+            update_values["imageDisplay"] = get_image(new_image_url, str(update_data.id) + ".jpg")
 
     if update_values:  # Vérifie si des modifications ont été faites
         stmt = (
