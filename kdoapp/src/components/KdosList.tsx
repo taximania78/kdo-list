@@ -126,16 +126,16 @@ const KdosList = () => {
             </h2>
 
             {/* Image */}
-            <div className="relative overflow-hidden rounded-xl">
+            <div className="relative overflow-hidden rounded-xl aspect-square">
               <Image
                 src={`/api/kdos/${kdo.imageDisplay}`}
                 alt={`Image ${kdo.name}`}
                 width={500}
                 height={500}
                 className={`
-                  object-contain
+                  object-cover
                   w-full
-                  h-auto
+                  h-full
                   transition-all
                   duration-300
                   ${!kdo.availability ? 'grayscale blur-sm group-hover:blur-none' : 'group-hover:scale-105'}
