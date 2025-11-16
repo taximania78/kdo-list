@@ -133,7 +133,7 @@ const KdosList = () => {
                 width={500}
                 height={500}
                 className={`
-                  object-cover
+                  object-contain
                   w-full
                   h-full
                   transition-all
