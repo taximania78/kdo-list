@@ -91,8 +91,7 @@ api.interceptors.request.use(
   async (config) => {
     const accessToken = localStorage.getItem('authToken');
     if (accessToken) {
-      // Vérifier expiration proche
-      console.log('Token expiring soon?', isTokenExpiringSoon(accessToken));
+      // Vérifier expiration proche et rafraîchir si nécessaire
       if (isTokenExpiringSoon(accessToken)) {
         await refreshAccessToken();
       }
