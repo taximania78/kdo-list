@@ -136,6 +136,7 @@ const KdosList = () => {
                   object-contain
                   w-full
                   h-full
+                  rounded-xl
                   transition-all
                   duration-300
                   ${!kdo.availability ? 'grayscale blur-sm group-hover:blur-none' : 'group-hover:scale-105'}
