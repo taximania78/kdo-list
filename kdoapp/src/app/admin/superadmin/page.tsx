@@ -7,7 +7,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
 import { Shield, UserPlus, Trash2, Key, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
-import Snowflakes from '@/components/Snowflakes';
 
 type User = {
   id: number;
@@ -105,22 +104,13 @@ function Superadmin() {
 
   return (
     <div
-      className={`
-        ${theme === 'christmas' ? 'min-h-[calc(100vh+7rem)]' : 'min-h-screen'}
-        px-4 sm:px-6 lg:px-8
+      className="
+        px-4
+        sm:px-6
+        lg:px-8
         py-8
-        relative overflow-hidden
-        ${
-          theme === 'christmas'
-            ? 'bg-gradient-to-br from-red-700 via-green-800 to-red-900'
-            : 'bg-gradient-to-br from-sky-400 via-indigo-500 to-violet-600'
-        }
-        animate-gradient
-      `}
+      "
     >
-      {/* Snowflakes for Christmas theme */}
-      {theme === 'christmas' && <Snowflakes />}
-
       {/* Main container */}
       <div className="max-w-6xl mx-auto z-10 relative">
         {/* Header with glassmorphism */}
