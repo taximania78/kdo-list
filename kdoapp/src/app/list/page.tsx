@@ -61,7 +61,7 @@ function List() {
     <Suspense fallback={<div>Loading...</div>}>
       <div
         className={`
-          min-h-screen
+          ${theme === 'christmas' ? 'min-h-[calc(100vh+7rem)]' : 'min-h-screen'}
           px-4
           sm:px-6
           lg:px-8
