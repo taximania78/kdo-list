@@ -15,11 +15,11 @@ export default function Snowflakes() {
 
   useEffect(() => {
     // Generate 50 snowflakes with random properties
-    const flakes: Snowflake[] = Array.from({ length: 50 }, (_, i) => ({
+    const flakes: Snowflake[] = Array.from({ length: 250 }, (_, i) => ({
       id: i,
       left: Math.random() * 100, // Random horizontal position (0-100%)
       animationDuration: 3 + Math.random() * 7, // Random fall duration (3-10s)
-      opacity: 0.3 + Math.random() * 0.7, // Random opacity (0.3-1)
+      opacity: 0.9 + Math.random() * 0.1, // Random opacity (0.7-1)
       size: 2 + Math.random() * 4, // Random size (2-6px)
     }));
 

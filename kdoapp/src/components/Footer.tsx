@@ -18,18 +18,114 @@ export const Footer = () => {
       className={`
         mt-auto
         w-full
-        backdrop-blur-md
-        bg-white/50
-        border-t
         ${
           theme === 'christmas'
-            ? 'border-red-200/50 shadow-lg shadow-red-100/20'
-            : 'border-sky-200/50 shadow-lg shadow-sky-100/20'
+            ? 'bg-white shadow-lg shadow-red-100/20'
+            : 'backdrop-blur-md bg-white/50 border-t border-sky-200/50 shadow-lg shadow-sky-100/20'
         }
         transition-all
         duration-300
+        relative
       `}
     >
+      {/* Wavy snow border for Christmas theme */}
+      {theme === 'christmas' && (
+        <div className="absolute top-0 left-0 w-full overflow-hidden leading-none -translate-y-[99%]">
+          <svg
+            className="relative block w-full h-20 md:h-24"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 1200 120"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              {/* Gradient for snow depth effect */}
+              <linearGradient id="snowGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style={{ stopColor: '#f0f9ff', stopOpacity: 1 }} />
+                <stop offset="50%" style={{ stopColor: '#ffffff', stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: '#ffffff', stopOpacity: 1 }} />
+              </linearGradient>
+              {/* Subtle shadow for depth */}
+              <filter id="snowShadow">
+                <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#e0e7ff" floodOpacity="0.4"/>
+              </filter>
+            </defs>
+            {/* Main snow pile - fully opaque with gradient */}
+            <path
+              d="M0,0 C120,70 240,20 360,50 C480,80 600,30 720,60 C840,90 960,40 1080,65 C1140,80 1200,75 1200,75 L1200,120 L0,120 Z"
+              fill="url(#snowGradient)"
+              filter="url(#snowShadow)"
+            />
+            {/* Top highlights for irregularity - pure white */}
+            <path
+              d="M0,10 C100,60 200,15 300,45 C400,75 500,25 600,50 C700,80 800,35 900,55 C1000,75 1100,40 1200,60 L1200,120 L0,120 Z"
+              fill="#ffffff"
+              opacity="0.9"
+            />
+          </svg>
+
+          {/* Christmas decorations on the snow pile */}
+          <div className="absolute inset-0 w-full h-full pointer-events-none">
+            {/* Snowmen - 1/5 (4 bonhommes) */}
+            <div className="absolute text-2xl md:text-3xl" style={{ left: '15%', top: '28%' }}>
+              ⛄
+            </div>
+            <div className="absolute text-3xl md:text-4xl" style={{ left: '38%', top: '22%' }}>
+              ⛄
+            </div>
+            <div className="absolute text-2xl md:text-3xl" style={{ left: '62%', top: '30%' }}>
+              ⛄
+            </div>
+            <div className="absolute text-2xl md:text-3xl hidden sm:block" style={{ left: '88%', top: '25%' }}>
+              ⛄
+            </div>
+
+            {/* Christmas trees - 4/5 (14 sapins) */}
+            <div className="absolute text-3xl md:text-4xl" style={{ left: '5%', top: '32%' }}>
+              🎄
+            </div>
+            <div className="absolute text-2xl md:text-3xl" style={{ left: '10%', top: '20%' }}>
+              🎄
+            </div>
+            <div className="absolute text-3xl md:text-4xl" style={{ left: '22%', top: '25%' }}>
+              🎄
+            </div>
+            <div className="absolute text-2xl md:text-3xl" style={{ left: '30%', top: '35%' }}>
+              🎄
+            </div>
+            <div className="absolute text-3xl md:text-4xl" style={{ left: '45%', top: '18%' }}>
+              🎄
+            </div>
+            <div className="absolute text-2xl md:text-3xl" style={{ left: '52%', top: '30%' }}>
+              🎄
+            </div>
+            <div className="absolute text-3xl md:text-4xl" style={{ left: '58%', top: '20%' }}>
+              🎄
+            </div>
+            <div className="absolute text-2xl md:text-3xl" style={{ left: '68%', top: '28%' }}>
+              🎄
+            </div>
+            <div className="absolute text-3xl md:text-4xl" style={{ left: '75%', top: '22%' }}>
+              🎄
+            </div>
+            <div className="absolute text-2xl md:text-3xl hidden sm:block" style={{ left: '82%', top: '33%' }}>
+              🎄
+            </div>
+            <div className="absolute text-3xl md:text-4xl hidden sm:block" style={{ left: '90%', top: '18%' }}>
+              🎄
+            </div>
+            <div className="absolute text-2xl md:text-3xl hidden md:block" style={{ left: '95%', top: '28%' }}>
+              🎄
+            </div>
+            <div className="absolute text-xl md:text-2xl hidden md:block" style={{ left: '3%', top: '22%' }}>
+              🎄
+            </div>
+            <div className="absolute text-xl md:text-2xl hidden lg:block" style={{ left: '48%', top: '35%' }}>
+              🎄
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Christmas special message */}
         {theme === 'christmas' && (
