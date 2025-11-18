@@ -7,7 +7,6 @@ import { Mountains_of_Christmas, Atma } from 'next/font/google';
 import KdosList from '@/components/KdosList';
 import { useSearchParams } from 'next/navigation';
 import { Gift, Sparkles } from 'lucide-react';
-import Snowflakes from '@/components/Snowflakes';
 
 const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 
@@ -60,25 +59,13 @@ function List() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <div
-        className={`
-          ${theme === 'christmas' ? 'min-h-[calc(100vh+7rem)]' : 'min-h-screen'}
+        className="
           px-4
           sm:px-6
           lg:px-8
           py-8
-          relative
-          overflow-hidden
-          ${
-            theme === 'christmas'
-              ? 'bg-gradient-to-br from-red-700 via-green-800 to-red-900'
-              : 'bg-gradient-to-br from-sky-400 via-indigo-500 to-violet-600'
-          }
-          animate-gradient
-        `}
+        "
       >
-        {/* Snowflakes for Christmas theme */}
-        {theme === 'christmas' && <Snowflakes />}
-
         {/* Main content container */}
         <div className="relative z-10 max-w-7xl mx-auto">
           {/* Header section */}

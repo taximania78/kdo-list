@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import FormModifyPwd from '@/components/FormModifyPwd';
 import { KeyRound, Gift, Sparkles } from 'lucide-react';
-import Snowflakes from '@/components/Snowflakes';
 
 const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 
@@ -51,27 +50,15 @@ export default function FirstConnection() {
 
   return (
     <div
-      className={`
-        ${theme === 'christmas' ? 'min-h-[calc(100vh+7rem)]' : 'min-h-screen'}
+      className="
         flex
         items-center
         justify-center
         px-4
         sm:px-6
         lg:px-8
-        relative
-        overflow-hidden
-        ${
-          theme === 'christmas'
-            ? 'bg-gradient-to-br from-red-700 via-green-800 to-red-900'
-            : 'bg-gradient-to-br from-sky-400 via-indigo-500 to-violet-600'
-        }
-        animate-gradient
-      `}
+      "
     >
-      {/* Snowflakes for Christmas theme */}
-      {theme === 'christmas' && <Snowflakes />}
-
       {/* Main card container with fade-in animation */}
       <div className="w-full max-w-md z-10 animate-fadeInUp">
         {/* Glassmorphism card */}

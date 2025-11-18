@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Nav } from '@/components/Nav';
 import { Footer } from '@/components/Footer';
+import Snowflakes from '@/components/Snowflakes';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 
@@ -32,7 +33,25 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
         <Nav />
-        <main className="flex-1">{children}</main>
+        <div
+          className={`
+            flex-1
+            flex
+            flex-col
+            relative
+            overflow-hidden
+            ${
+              theme === 'christmas'
+                ? 'bg-gradient-to-br from-red-700 via-green-800 to-red-900'
+                : 'bg-gradient-to-br from-sky-400 via-indigo-500 to-violet-600'
+            }
+            animate-gradient
+          `}
+        >
+          {theme === 'christmas' && <Snowflakes />}
+          <main className="flex-1">{children}</main>
+          {theme === 'christmas' && <div className="h-28" />}
+        </div>
         <Footer />
       </body>
     </html>

@@ -9,7 +9,6 @@ import { useRouter } from 'next/navigation';
 import { Plus, ChevronDown, ChevronUp, Settings } from 'lucide-react';
 import * as Select from '@radix-ui/react-select';
 import FormModifyItem from '@/components/FormModifyItem';
-import Snowflakes from '@/components/Snowflakes';
 
 const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
@@ -179,25 +178,13 @@ function Admin() {
 
   return (
     <div
-      className={`
-        ${theme === 'christmas' ? 'min-h-[calc(100vh+7rem)]' : 'min-h-screen'}
+      className="
         px-4
         sm:px-6
         lg:px-8
         py-8
-        relative
-        overflow-hidden
-        ${
-          theme === 'christmas'
-            ? 'bg-gradient-to-br from-red-700 via-green-800 to-red-900'
-            : 'bg-gradient-to-br from-sky-400 via-indigo-500 to-violet-600'
-        }
-        animate-gradient
-      `}
+      "
     >
-      {/* Snowflakes for Christmas theme */}
-      {theme === 'christmas' && <Snowflakes />}
-
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header with title and controls */}
         <div
