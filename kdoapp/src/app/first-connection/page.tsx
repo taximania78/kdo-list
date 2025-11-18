@@ -52,7 +52,7 @@ export default function FirstConnection() {
   return (
     <div
       className={`
-        min-h-screen
+        ${theme === 'christmas' ? 'min-h-[calc(100vh+7rem)]' : 'min-h-screen'}
         flex
         items-center
         justify-center
