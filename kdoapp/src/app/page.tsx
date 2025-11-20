@@ -78,6 +78,7 @@ export default function LoginPage() {
         items-center
         justify-center
         px-4
+        py-8
         sm:px-6
         lg:px-8
         relative
