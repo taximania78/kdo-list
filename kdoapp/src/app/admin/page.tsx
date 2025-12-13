@@ -6,7 +6,7 @@ import api from '@/lib/api';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, ChevronDown, ChevronUp, Settings } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Settings, Download } from 'lucide-react';
 import * as Select from '@radix-ui/react-select';
 import FormModifyItem from '@/components/FormModifyItem';
 
@@ -74,6 +74,25 @@ function Admin() {
     } catch (error) {
       console.error('Failed to fetch kdos:', error);
       router.push('/');
+    }
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      const response = await api.get(`${ApiAdress}/api/export-csv/`, {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'ideas_export.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to export CSV:', error);
     }
   };
 
@@ -210,6 +229,33 @@ function Admin() {
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <SelectUser />
+              <button
+                onClick={handleExportCSV}
+                className={`
+                  flex
+                  items-center
+                  justify-center
+                  gap-2
+                  py-3
+                  px-6
+                  rounded-xl
+                  text-white
+                  font-semibold
+                  transition-all
+                  duration-200
+                  transform
+                  hover:scale-[1.02]
+                  active:scale-[0.98]
+                  ${
+                    theme === 'christmas'
+                      ? 'bg-gradient-to-r from-green-600 to-red-600 hover:from-green-700 hover:to-red-700 shadow-lg shadow-green-500/50'
+                      : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg shadow-indigo-500/50'
+                  }
+                `}
+              >
+                <Download className="w-5 h-5" />
+                Export CSV
+              </button>
               <Link
                 href="/admin/add/"
                 className={`

@@ -1,7 +1,9 @@
+import csv
+import io
 from datetime import datetime, timezone
 from pathlib import Path
 from fastapi import FastAPI, Depends, HTTPException, status, Request, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import delete, or_, update
@@ -575,4 +577,39 @@ async def fetch_image(
         path=image_path,
         media_type="image/jpeg",
         filename=image_path.name,
+    )
+
+@app.get("/api/export-csv/")
+async def export_ideas_csv(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+    payload = decode_jwt(token)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
+
+    if not payload.get("isAdmin"):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
+
+    user_owner = aliased(User)
+    query = select(
+        Idea.name,
+        Idea.url,
+        user_owner.name.label("user")
+    ).join(user_owner, Idea.userId == user_owner.id)
+
+    result = await db.execute(query)
+    rows = result.mappings().all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Nom de l'idée", "URL", "Pour qui"])
+
+    for row in rows:
+        writer.writerow([row["name"], row["url"] or "", row["user"]])
+
+    csv_content = output.getvalue()
+    output.close()
+
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=ideas_export.csv"}
     )
