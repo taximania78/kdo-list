@@ -1,11 +1,11 @@
 # --------- Étape 1 : install des dépendances ---------
-FROM node:18-alpine AS deps
+FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --frozen-lockfile
 
 # --------- Étape 2 : build Next.js -------------------
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 # Copie des deps installées
 COPY --from=deps /app/node_modules ./node_modules
@@ -26,7 +26,7 @@ RUN npm run build && \
     echo "🗂  .next contenu :" && find .next -maxdepth 2
 
 # --------- Étape 3 : image runtime minimale ----------
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 # Télémetry off, sinon Next demande l'opt‑in
