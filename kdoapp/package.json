@@ -24,15 +24,15 @@
     "zod": "^4.2.1"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
+    "@eslint/eslintrc": "3.3.3",
+    "@tailwindcss/postcss": "4.1.18",
     "@types/node": "^25",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
-    "eslint": "^9",
+    "eslint": "9.39.2",
     "eslint-config-next": "16.0.10",
     "prettier": "3.7.4",
-    "tailwindcss": "^4",
+    "tailwindcss": "4.1.18",
     "typescript": "^5"
   },
   "overrides": {
