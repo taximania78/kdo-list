@@ -1,5 +1,9 @@
+import csv
+import io
 from datetime import datetime, timezone
-from fastapi import FastAPI, Depends, HTTPException, status, Request
+from pathlib import Path
+from fastapi import FastAPI, Depends, HTTPException, status, Request, Query
+from fastapi.responses import FileResponse, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import delete, or_, update
@@ -16,17 +20,27 @@ from auth import (
     verify_password,
 )
 from image import get_image, remove_image
+from config import MODE, URL_CONNECTION
 
 from fastapi import FastAPI
 
-app = FastAPI()
+app = FastAPI(
+    docs_url=None if MODE == "production" else "/docs",        # désactive Swagger UI en production
+    redoc_url=None if MODE == "production" else "/redoc",     # désactive ReDoc en production
+    openapi_url=None if MODE == "production" else "/openapi.json"  # désactive OpenAPI en production
+)
 
 
 # Autoriser toutes les origines (⚠️ à limiter en production)
-origins = [
-    "http://localhost:3000",  # Frontend Next.js en développement
-    "http://127.0.0.1:3000",  # Autre variante de localhost
-]
+if MODE == "production":
+    origins = [
+        URL_CONNECTION,  # Frontend Next.js en production
+    ]
+else:
+    origins = [
+        "http://localhost:3000",  # Frontend Next.js en développement
+        "http://127.0.0.1:3000",  # Autre variante de localhost
+    ]
 
 app.add_middleware(
     CORSMiddleware,
@@ -316,8 +330,12 @@ async def modify_item_api(update_data: IdeaUpdate, token: str = Depends(oauth2_s
     if update_values.get("url") is not None:
         update_values["url"] = str(update_values["url"])
     if update_values.get("image") is not None and update_values.get("image") != "":
-        update_values["image"] = str(update_values["image"])
-        update_values["imageDisplay"] = get_image(update_values["image"], str(update_data.id) + ".jpg")
+        new_image_url = str(update_values["image"])
+        update_values["image"] = new_image_url
+
+        # Télécharger uniquement si l'URL a changé
+        if new_image_url != idea.image:
+            update_values["imageDisplay"] = get_image(new_image_url, str(update_data.id) + ".jpg")
 
     if update_values:  # Vérifie si des modifications ont été faites
         stmt = (
@@ -483,6 +501,14 @@ async def delete_user_api(user_id: int, token: str = Depends(oauth2_scheme), db:
     
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    stmt = update(Idea).where(Idea.takenById == user_id).values(takenById=None, availability=True)
+    await db.execute(stmt)
+    await db.commit()
+
+    stmt = delete(RefreshToken).where(RefreshToken.user_id == user_id)
+    await db.execute(stmt)
+    await db.commit()
 
     # Supprimer l'utilisateur
     stmt = delete(User).where(User.id == user_id)
@@ -524,3 +550,66 @@ async def create_user_api(user_data: UserCreate, token: str = Depends(oauth2_sch
 @app.get("/api/auth/")
 def auth():
     return {"Hello": "World"}
+
+@app.get("/api/kdos/{filename:path}")
+async def fetch_image(
+    filename: str,
+    w: int | None = Query(None, ge=1),   # largeur demandée (optionnel)
+    q: int | None = Query(None, ge=1, le=100),  # qualité demandée (optionnel)
+):
+    """
+    Sert le fichier original /shared/kdos/<filename>
+    Les query‑params ?w=…&q=… sont simplement ignorés
+    (c’est Next qui fera la mise à l’échelle/compression).
+    """
+    # Sécurité : empêche les chemins "../../"
+    if ".." in filename or filename.startswith("/"):
+        raise HTTPException(400, "Chemin invalide")
+
+    if MODE == "production":
+        image_path = Path("/shared/kdos") / filename
+    else:
+        image_path = Path("../kdoapp/public/kdos") / filename
+    if not image_path.is_file():
+        raise HTTPException(404, "Image non trouvée")
+
+    return FileResponse(
+        path=image_path,
+        media_type="image/jpeg",
+        filename=image_path.name,
+    )
+
+@app.get("/api/export-csv/")
+async def export_ideas_csv(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+    payload = decode_jwt(token)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
+
+    if not payload.get("isAdmin"):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
+
+    user_owner = aliased(User)
+    query = select(
+        Idea.name,
+        Idea.url,
+        user_owner.name.label("user")
+    ).join(user_owner, Idea.userId == user_owner.id)
+
+    result = await db.execute(query)
+    rows = result.mappings().all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Nom de l'idée", "URL", "Pour qui"])
+
+    for row in rows:
+        writer.writerow([row["name"], row["url"] or "", row["user"]])
+
+    csv_content = output.getvalue()
+    output.close()
+
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=ideas_export.csv"}
+    )

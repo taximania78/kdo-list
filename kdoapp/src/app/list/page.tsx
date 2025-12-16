@@ -1,12 +1,14 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
 import KdosList from '@/components/KdosList';
 import { useSearchParams } from 'next/navigation';
-import config from '../../../config.json';
+import { Gift, Sparkles } from 'lucide-react';
 
-const theme = config.theme;
+const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 
 const mountains_of_christmas = Mountains_of_Christmas({
   weight: '700',
@@ -19,8 +21,33 @@ const knewave = Atma({
 });
 
 function List() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
   const searchParams = useSearchParams();
   const userQuery = searchParams.get('user');
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      console.log('🚫 [LIST] Not authenticated, redirecting to login');
+      router.push('/');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  // Show loading during auth check
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-400 to-indigo-600">
+        <div className="backdrop-blur-lg bg-white/10 rounded-2xl p-8 border border-white/20">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <p className="text-white text-lg font-medium">Chargement...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return null;
   let textList: string;
   if (userQuery == 'Mathieu') {
     textList = 'Liste de Mathieu';
@@ -31,19 +58,51 @@ function List() {
   }
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <div className="container mx-auto p-2">
-        <h1 className="sm:text-4xl text-3xl font-bold text-center">
-          <span
-            className={
-              theme === 'christmas'
-                ? mountains_of_christmas.className
-                : knewave.className
-            }
-          >
-            {textList}
-          </span>
-        </h1>
-        <KdosList />
+      <div
+        className="
+          px-4
+          sm:px-6
+          lg:px-8
+          py-8
+        "
+      >
+        {/* Main content container */}
+        <div className="relative z-10 max-w-7xl mx-auto">
+          {/* Header section */}
+          <div className="text-center mb-8 animate-fadeInUp">
+            <div className="flex justify-center mb-4">
+              {theme === 'christmas' ? (
+                <Gift className="w-16 h-16 text-white drop-shadow-lg" />
+              ) : (
+                <Sparkles className="w-16 h-16 text-white drop-shadow-lg" />
+              )}
+            </div>
+            <h1
+              className={`
+                text-3xl
+                sm:text-4xl
+                font-bold
+                text-white
+                drop-shadow-lg
+                ${
+                  theme === 'christmas'
+                    ? mountains_of_christmas.className
+                    : knewave.className
+                }
+              `}
+            >
+              {theme === 'christmas' ? '🎄 ' : ''}
+              {textList}
+              {theme === 'christmas' ? ' 🎄' : ''}
+            </h1>
+            <p className="mt-2 text-white/80 text-sm">
+              Découvrez les idées cadeaux et réservez vos préférés
+            </p>
+          </div>
+
+          {/* Gift list component */}
+          <KdosList />
+        </div>
       </div>
     </Suspense>
   );
