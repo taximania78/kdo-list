@@ -1,7 +1,9 @@
 import jwt
 from datetime import datetime, timedelta, timezone
 from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
-from passlib.context import CryptContext
+from pwdlib import PasswordHash
+from pwdlib.hashers.argon2 import Argon2Hasher
+from pwdlib.hashers.bcrypt import BcryptHasher
 
 # Générer un Access Token
 def create_access_token(data: dict):
@@ -27,7 +29,7 @@ def decode_jwt(token: str):
     except jwt.InvalidTokenError:
         return None  # Token invalide
     
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = PasswordHash((Argon2Hasher(), BcryptHasher()))
 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
