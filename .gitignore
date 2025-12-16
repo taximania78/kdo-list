@@ -5,3 +5,4 @@ static/
 .DS_Store
 .env
 kdoapp/public/kdos
+.env.local
