@@ -18,6 +18,7 @@ from auth import (
     decode_jwt,
     hash_password,
     verify_password,
+    verify_and_update_password,
 )
 from image import get_image, remove_image
 from config import MODE, URL_CONNECTION
@@ -148,12 +149,34 @@ async def login_api(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncS
     # Chercher l'utilisateur par username
     result = await db.execute(select(User).filter(User.name == form_data.username))
     user = result.scalars().first()
-    if not user or not verify_password(form_data.password, user.password):
+
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Identifiants incorrects",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Vérifier le mot de passe
+    valid, new_hash = verify_and_update_password(form_data.password, user.password)
+    if not valid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Identifiants incorrects",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if new_hash:
+        user.password = new_hash
+        stmt = (
+            update(User)
+            .where(User.id == user.id)
+            .values(password=new_hash)
+        )
+        await db.execute(stmt)
+        await db.commit()
+        print('Mise à jour du mot de passe')
+    
     # Générer un Access Token et un Refresh Token
     access_token = create_access_token({"sub": str(user.id), "username": user.name, "isAdmin": user.isAdmin, "isMegaAdmin": user.isMegaAdmin})
     refresh_token,expire = create_refresh_token({"sub": str(user.id)})

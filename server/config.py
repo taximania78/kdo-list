@@ -17,8 +17,8 @@ def get_config():
             #DATABASE
             "DATABASE_USER": os.getenv("DATABASE_USER", "admin"),  # Nom d'utilisateur de la base de données
             "DATABASE_PASSWORD": os.getenv("DATABASE_PASSWORD", "admin"),  # Mot de passe de la base de données
-            "DATABASE_HOST": os.getenv("DATABASE_HOST", "localhost"),
-            "DATABASE_PORT": os.getenv("DATABASE_PORT", "5433"),  # Port de la base de données
+            "DATABASE_HOST": os.getenv("DATABASE_HOST", "127.0.0.1"),
+            "DATABASE_PORT": os.getenv("DATABASE_PORT", "5432"),  # Port de la base de données
             "DATABASE_NAME": os.getenv("DATABASE_NAME", "kdo"),  # Nom de la base de données 
             #URL
             "URL_CONNECTION": os.getenv("URL_CONNECTION", ""),  # URL de connexion
@@ -39,7 +39,7 @@ def get_config():
                 "DATABASE_USER": config.get("DATABASE_USER", "admin"),  # Nom d'utilisateur de la base de données
                 "DATABASE_PASSWORD": config.get("DATABASE_PASSWORD", "admin"),  # Mot de passe de la base de données
                 "DATABASE_HOST": config.get("DATABASE_HOST", "localhost"),
-                "DATABASE_PORT": config.get("DATABASE_PORT", "5433"),  # Port de la base de données
+                "DATABASE_PORT": config.get("DATABASE_PORT", "5432"),  # Port de la base de données
                 "DATABASE_NAME": config.get("DATABASE_NAME", "kdo"),  # Nom de la base de données 
                 #URL
                 "URL_CONNECTION": config.get("URL_CONNECTION", ""),  # URL de connexion
