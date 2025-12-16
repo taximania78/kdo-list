@@ -1,12 +1,87 @@
-import FormModifyPwd from '@/components/FormModifyPwd';
+'use client';
 
-export default function firstConnection() {
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import FormModifyPwd from '@/components/FormModifyPwd';
+import { Lock } from 'lucide-react';
+
+const theme = process.env.NEXT_PUBLIC_THEME || 'default';
+
+export default function ChangePassword() {
+  const router = useRouter();
+  const { isAuthenticated, user, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        console.log('🚫 [CHANGE-PASSWORD] Not authenticated, redirecting to login');
+        router.push('/');
+      } else if (user && !user.isAdmin) {
+        console.log('🚫 [CHANGE-PASSWORD] Not admin, redirecting to list');
+        router.push('/list');
+      }
+    }
+  }, [isAuthenticated, user, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-400 to-indigo-600">
+        <div className="backdrop-blur-lg bg-white/10 rounded-2xl p-8 border border-white/20">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <p className="text-white text-lg font-medium">Chargement...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return null;
+
   return (
-    <div className="container mx-auto p-2 w-full max-w-lg mt-4">
-      <h1 className="sm:text-4xl text-3xl font-bold text-center mb-4">
-        Modifier mon mot de passe
-      </h1>
-      <FormModifyPwd />
+    <div
+      className="
+        flex
+        items-center
+        justify-center
+        px-4
+        sm:px-6
+        lg:px-8
+        py-8
+      "
+    >
+      <div className="w-full max-w-md z-10">
+        {/* Glassmorphism card */}
+        <div
+          className={`
+            backdrop-blur-lg
+            bg-white/10
+            rounded-3xl
+            shadow-2xl
+            p-8
+            border
+            border-white/20
+            ${theme === 'christmas' ? 'animate-glow' : ''}
+          `}
+        >
+          {/* Header with icon */}
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-4">
+              <Lock className="w-16 h-16 text-white drop-shadow-lg" />
+            </div>
+            <h1 className="text-3xl font-bold text-white drop-shadow-lg">
+              Modifier mon mot de passe
+            </h1>
+            <p className="mt-2 text-white/80 text-sm">
+              Saisissez votre nouveau mot de passe
+            </p>
+          </div>
+
+          {/* Form component */}
+          <FormModifyPwd />
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,7 @@
 server/__pycache__/
 server/venv/
+server/dev
 static/
 .DS_Store
+.env
+kdoapp/public/kdos

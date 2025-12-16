@@ -1,9 +1,9 @@
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import { useState } from 'react';
-import config from '../../config.json';
 import api from '@/lib/api';
+import { Gift, CheckCircle, X } from 'lucide-react';
 
-const ApiAdress = config.apiAddress;
+const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 type DialogTakeKdoProps = {
   id: number;
@@ -74,56 +74,142 @@ const DialogKdo = ({
         <button
           onClick={() => setIsDialogOpen(true)}
           disabled={!availability && takenBy !== userLogged}
-          className={`w-full text-white p-2 rounded-lg 
+          className={`
+            w-full
+            flex
+            items-center
+            justify-center
+            gap-2
+            p-3
+            rounded-lg
+            font-semibold
+            transition-all
+            duration-200
+            transform
+            hover:scale-[1.02]
+            active:scale-[0.98]
+            disabled:opacity-50
+            disabled:cursor-not-allowed
+            disabled:hover:scale-100
             ${
               availability
                 ? theme === 'christmas'
-                  ? 'bg-green-800 hover:bg-green-900'
-                  : 'bg-blue-600 hover:bg-blue-700'
+                  ? 'bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-900/30'
+                  : 'bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-900/30'
                 : takenBy !== userLogged
                   ? theme === 'christmas'
-                    ? 'bg-red-400'
-                    : 'bg-slate-400'
+                    ? 'bg-red-400 text-white cursor-not-allowed'
+                    : 'bg-slate-400 text-white cursor-not-allowed'
                   : theme === 'christmas'
-                    ? 'bg-red-600 hover:bg-red-700'
-                    : 'bg-slate-600 hover:bg-slate-700'
+                    ? 'bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-900/30'
+                    : 'bg-slate-600 hover:bg-slate-700 text-white shadow-lg shadow-slate-900/30'
             }
-          }`}
+          `}
         >
-          {!availability
-            ? takenBy === userLogged
-              ? 'Je ne souhaite plus prendre cette idée'
-              : `Non disponible - Pris par ${takenBy}`
-            : 'Je prends !'}
+          {availability ? (
+            <>
+              <Gift className="w-5 h-5" />
+              Je prends !
+            </>
+          ) : takenBy === userLogged ? (
+            <>
+              <X className="w-5 h-5" />
+              Je ne souhaite plus prendre cette idée
+            </>
+          ) : (
+            <>
+              <X className="w-5 h-5" />
+              Non disponible - Pris par {takenBy}
+            </>
+          )}
         </button>
       </AlertDialog.Trigger>
       <AlertDialog.Portal>
-        <AlertDialog.Overlay className="fixed inset-0 bg-black data-[state=open]:animate-overlayShow opacity-90" />
-        <AlertDialog.Content className="fixed left-1/2 top-1/2 max-h-[85vh] w-[90vw] max-w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-md bg-gray-100 p-[25px] shadow-[var(--shadow-6)] focus:outline-none data-[state=open]:animate-contentShow">
-          <AlertDialog.Title className="text-md font-bold mb-4">
-            Confirmes-tu ton choix?
-          </AlertDialog.Title>
-          <AlertDialog.Description className="mb-4">
+        <AlertDialog.Overlay className="fixed inset-0 bg-black/90 z-50 data-[state=open]:animate-overlayShow" />
+        <AlertDialog.Content
+          className={`
+            fixed
+            left-1/2
+            top-1/2
+            -translate-x-1/2
+            -translate-y-1/2
+            max-h-[85vh]
+            w-[90vw]
+            max-w-[500px]
+            z-50
+            backdrop-blur-lg
+            ${
+              theme === 'christmas'
+                ? 'bg-red-900/90'
+                : 'bg-indigo-900/90'
+            }
+            rounded-2xl
+            p-8
+            border
+            border-white/20
+            shadow-2xl
+            focus:outline-none
+            data-[state=open]:animate-contentShow
+          `}
+        >
+          <AlertDialog.Title className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
             {availability ? (
               <>
-                <span className="font-bold">Produit : </span>
-                {name}
-                <br />
-                <span className="font-bold">Commentaire : </span>
-                {comment}
+                <Gift className="w-6 h-6" />
+                Confirmes-tu ton choix?
               </>
             ) : (
               <>
-                {name} sera de nouveau disponible pour d&apos;autres personnes.
+                <CheckCircle className="w-6 h-6" />
+                Libérer cette idée?
               </>
             )}
+          </AlertDialog.Title>
+          <AlertDialog.Description className="text-white/90 mb-6 space-y-3">
+            {availability ? (
+              <div className="space-y-2 p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                <div>
+                  <span className="font-semibold text-white">Produit : </span>
+                  <span className="text-white/90">{name}</span>
+                </div>
+                {comment && (
+                  <div>
+                    <span className="font-semibold text-white">
+                      Commentaire :{' '}
+                    </span>
+                    <span className="text-white/90">{comment}</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                <p className="text-white/90">
+                  <span className="font-semibold text-white">{name}</span> sera
+                  de nouveau disponible pour d&apos;autres personnes.
+                </p>
+              </div>
+            )}
           </AlertDialog.Description>
-          <div className="mt-4 flex justify-end gap-2">
+          <div className="flex gap-3">
             <AlertDialog.Cancel asChild>
               <button
                 type="button"
-                onClick={() => setIsDialogOpen(false)} // Fermer le dialogue
-                className="px-6 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
+                onClick={() => setIsDialogOpen(false)}
+                className="
+                  flex-1
+                  px-4
+                  py-3
+                  rounded-lg
+                  bg-white/20
+                  hover:bg-white/30
+                  text-white
+                  font-medium
+                  transition-all
+                  duration-200
+                  backdrop-blur-sm
+                  border
+                  border-white/30
+                "
               >
                 Non
               </button>
@@ -137,16 +223,40 @@ const DialogKdo = ({
                   untakeKdo();
                 }
               }}
-              className={
-                `rounded-lg text-white px-6 py-2 transition-colors bg-gradient-to-r ` +
-                (theme === 'christmas'
-                  ? 'from-green-600 to-red-600 hover:from-green-700 hover:to-red-700'
-                  : 'from-sky-600 to-red-600 hover:from-sky-700 hover:to-red-700')
-              }
+              className={`
+                flex-1
+                flex
+                items-center
+                justify-center
+                gap-2
+                px-4
+                py-3
+                rounded-lg
+                text-white
+                font-semibold
+                transition-all
+                duration-200
+                transform
+                hover:scale-[1.02]
+                active:scale-[0.98]
+                ${
+                  theme === 'christmas'
+                    ? 'bg-gradient-to-r from-green-600 to-red-600 hover:from-green-700 hover:to-red-700 shadow-lg shadow-green-500/30'
+                    : 'bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 shadow-lg shadow-sky-500/30'
+                }
+              `}
             >
-              {availability
-                ? 'Oui, je prends !'
-                : 'Oui, je ne prends plus cette idée !'}
+              {availability ? (
+                <>
+                  <CheckCircle className="w-5 h-5" />
+                  Oui, je prends !
+                </>
+              ) : (
+                <>
+                  <X className="w-5 h-5" />
+                  Oui, libérer
+                </>
+              )}
             </button>
           </div>
         </AlertDialog.Content>

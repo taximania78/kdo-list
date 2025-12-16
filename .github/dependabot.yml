@@ -1,0 +1,28 @@
+version: 2
+updates:
+  # Configuration pour le Frontend (NextJS / npm)
+  - package-ecosystem: "npm"
+    # Indiquez ici le dossier où se trouve package.json
+    directory: "/kdoapp"
+    # Vérifier les mises à jour tous les lundis matin
+    schedule:
+      interval: "daily"
+      time: "09:00"
+    # Limite le nombre de PR ouvertes en même temps pour ne pas être submergé
+    open-pull-requests-limit: 5
+    # Optionnel : Ajouter des labels pour trier facilement sur GitHub
+    labels:
+      - "frontend"
+      - "dependencies"
+
+  # Configuration pour le Backend (FastAPI / pip)
+  # NOTE: Si vous utilisez Poetry, remplacez "pip" par "pip" (Dependabot détecte Poetry via pip)
+  - package-ecosystem: "pip"
+    directory: "/server"
+    schedule:
+      interval: "daily"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "backend"
+      - "dependencies"

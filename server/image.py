@@ -1,18 +1,21 @@
 import os
 
 import requests # request img from web
-import shutil # save img locally
+import shutil
+from config import MODE
 
 
 def get_image(url, name):
     res = requests.get(url, stream = True)
     print(res.status_code)
     # pour version local
-    file_path = "../kdoapp/public/kdos/" + name
-    #file_path = "../static/images/" + name
+    #file_path = "../kdoapp/public/kdos/" + name
+    #OLD file_path = "../static/images/" + name
 
-    #pour prod
-    #file_path = "/var/www/html/static/images/" + name
+    if MODE == "production":
+        file_path = "/shared/kdos/" + name
+    else:
+        file_path = "../kdoapp/public/kdos" + name
 
     if res.status_code == 200:
         with open(file_path,'wb') as f:
@@ -24,8 +27,10 @@ def get_image(url, name):
         return 'unknown.jpg'
 
 def remove_image(pk):
-    #path = "/var/www/html/static/images/" + str(pk) + ".jpg"
-    path = "../kdoapp/public/kdos/" + str(pk) + ".jpg"
+    if MODE == "production":
+        path = "/shared/kdos/" + str(pk) + ".jpg"
+    else:
+        path = "../kdoapp/public/kdos" + str(pk) + ".jpg"
     if os.path.exists(path):
         os.remove(path)
 

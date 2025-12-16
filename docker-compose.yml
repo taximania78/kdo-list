@@ -1,0 +1,90 @@
+version: "3.3"
+services:
+  fastapi:
+    build:
+      context: ./server
+      network: host
+    depends_on:
+      - db
+    container_name: kdo-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./kdoapp/public/kdos:/shared/kdos
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      URL_CONNECTION: ${URL_CONNECTION}
+      DEBUG: ${DEBUG}
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_HOST: ${DATABASE_HOST}
+      DATABASE_PORT: ${DATABASE_PORT}
+      DATABASE_NAME: ${DATABASE_NAME}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kdo-api.rule=Host(`kdo.mathieuolivares.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.kdo-api.priority=100"
+      - "traefik.http.routers.kdo-api.entrypoints=websecure"
+      - "traefik.http.routers.kdo-api.tls.certresolver=tls"
+      - "traefik.http.routers.kdo-api.middlewares=crowdsec@file"
+      - "traefik.http.services.kdo-api.loadbalancer.server.port=8000"
+    networks:
+      - proxy
+
+  nextjs:
+    build:
+      context: ./kdoapp
+      network: host
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_THEME: ${NEXT_PUBLIC_THEME}
+    depends_on:
+      - fastapi
+    container_name: kdo-frontend
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./kdoapp/public/kdos:/app/public/kdos
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      URL_CONNECTION: ${URL_CONNECTION}
+      DEBUG: ${DEBUG}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_THEME: ${NEXT_PUBLIC_THEME}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kdo-front.rule=Host(`kdo.mathieuolivares.com`)"
+      - "traefik.http.routers.kdo-front.entrypoints=websecure"
+      - "traefik.http.routers.kdo-front.tls.certresolver=tls"
+      - "traefik.http.services.kdo-front.loadbalancer.server.port=3000"
+      - "traefik.http.middlewares.kdo-headers.headers.customResponseHeaders.X-Robots-Tag=noindex, nofollow, nosnippet, noarchive"
+      - "traefik.http.routers.kdo-front.middlewares=crowdsec@file,kdo-headers"
+    networks:
+      - proxy
+
+  db:
+    image: postgres:latest
+    container_name: kdo-db
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: mydatabase
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true

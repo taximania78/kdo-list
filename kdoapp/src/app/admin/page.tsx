@@ -1,18 +1,17 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { jwtDecode } from 'jwt-decode';
+import { useAuth } from '@/hooks/useAuth';
 import api from '@/lib/api';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import config from '../../../config.json';
-import { FaPlus, FaChevronUp, FaChevronDown } from 'react-icons/fa6';
+import { Plus, ChevronDown, ChevronUp, Settings, Download } from 'lucide-react';
 import * as Select from '@radix-ui/react-select';
 import FormModifyItem from '@/components/FormModifyItem';
 
-const ApiAdress = config.apiAddress;
-const theme = config.theme;
+const theme = process.env.NEXT_PUBLIC_THEME || 'default';
+const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 /** ---------------------
  *  Types & Schemas
@@ -29,80 +28,27 @@ type Kdo = {
   imageDisplay?: string | null;
 };
 
-interface DecodedToken {
-  sub: number;
-  username: string;
-  isAdmin: boolean;
-  isMegaAdmin: boolean;
-  exp: number; // Timestamp d'expiration
-}
-
 /** ---------------------
  *  Composant Admin
  * --------------------- */
 
 function Admin() {
   const router = useRouter();
+  const { isAuthenticated, user, isLoading } = useAuth();
   const [kdosList, setKdosList] = useState<Kdo[] | null>(null);
 
-  // Fonction de vérification du token
-  const checkAuth = async () => {
-    const token = localStorage.getItem('authToken');
-    const admin = localStorage.getItem('isAdmin');
-
-    if (token) {
-      try {
-        const decoded = jwtDecode<DecodedToken>(token);
-        const isExpired = decoded.exp < Date.now() / 1000;
-        if (isExpired) {
-          const refreshToken = localStorage.getItem('refreshToken');
-          if (!refreshToken) {
-            localStorage.clear();
-            router.push('/');
-            return;
-          }
-          const isExpired = decoded.exp < Date.now() / 1000;
-          if (isExpired) {
-            localStorage.clear();
-            router.push('/');
-            return;
-          }
-          const response = await fetch(`${ApiAdress}/api/refresh/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refresh_token: refreshToken }),
-          });
-          if (!response.ok) {
-            localStorage.clear();
-            router.push('/');
-            return;
-          }
-          const data = await response.json();
-          localStorage.setItem('accessToken', data.access_token);
-          localStorage.setItem('refreshToken', data.refresh_token);
-        } else {
-          if (admin !== 'true') {
-            // Non admin => redirection vers /list
-            console.log("L'utilisateur n'est pas admin => /list");
-            router.push('/list');
-          } else {
-            console.log('Utilisateur admin => on reste sur la page admin');
-          }
-        }
-      } catch (error) {
-        console.error('Token verification error:', error);
-        localStorage.clear();
-        router.push('/');
-      }
-    } else {
-      console.log("Aucun token => retour vers l'accueil pour authentification");
-      router.push('/');
-    }
-  };
-
   useEffect(() => {
-    checkAuth();
-  }, [router]);
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        console.log('🚫 [ADMIN] Not authenticated, redirecting to login');
+        router.push('/');
+      } else if (user && !user.isAdmin) {
+        console.log('🚫 [ADMIN] Not admin, redirecting to list');
+        router.push('/list');
+      }
+      // If admin, stay on page
+    }
+  }, [isAuthenticated, user, isLoading, router]);
 
   const [selectedUser, setSelectedUser] = useState('Marie-Eve');
 
@@ -131,6 +77,25 @@ function Admin() {
     }
   };
 
+  const handleExportCSV = async () => {
+    try {
+      const response = await api.get(`${ApiAdress}/api/export-csv/`, {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'ideas_export.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Failed to export CSV:', error);
+    }
+  };
+
   /** ---------------------
    *  Composant Dropdown List
    * --------------------- */
@@ -138,40 +103,87 @@ function Admin() {
   const SelectUser = () => (
     <Select.Root value={selectedUser} onValueChange={handleValueChange}>
       <Select.Trigger
-        className="w-[180px] inline-flex items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm
-                     hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-white"
+        className={`
+          w-[180px]
+          inline-flex
+          items-center
+          justify-between
+          rounded-xl
+          px-4
+          py-3
+          bg-white/20
+          backdrop-blur-sm
+          border
+          border-white/30
+          text-white
+          focus:outline-none
+          focus:ring-2
+          focus:ring-white/50
+          transition-all
+          duration-200
+          hover:bg-white/30
+        `}
         aria-label="Sélectionner l'utilisateur"
       >
-        {/* Affiche la valeur sélectionnée */}
         <Select.Value placeholder="Utilisateur..." />
         <Select.Icon>
-          <FaChevronDown />
+          <ChevronDown className="w-4 h-4" />
         </Select.Icon>
       </Select.Trigger>
 
       <Select.Portal>
-        <Select.Content className="overflow-hidden rounded-md bg-white shadow-lg">
-          <Select.ScrollUpButton className="flex h-6 items-center justify-center bg-white">
-            <FaChevronUp />
+        <Select.Content className="overflow-hidden rounded-xl bg-white/90 backdrop-blur-lg shadow-2xl border border-white/20 z-50">
+          <Select.ScrollUpButton className="flex h-6 items-center justify-center bg-white/50">
+            <ChevronUp className="w-4 h-4" />
           </Select.ScrollUpButton>
 
-          <Select.Viewport className="p-1">
+          <Select.Viewport className="p-2">
             <Select.Item
               value="Marie-Eve"
-              className="relative flex cursor-pointer select-none items-center rounded-md px-2 py-1 hover:bg-gray-100"
+              className={`
+                relative
+                flex
+                cursor-pointer
+                select-none
+                items-center
+                rounded-lg
+                px-4
+                py-2
+                transition-colors
+                ${
+                  theme === 'christmas'
+                    ? 'hover:bg-red-100 text-red-900'
+                    : 'hover:bg-sky-100 text-sky-900'
+                }
+              `}
             >
               <Select.ItemText>Marie-Eve</Select.ItemText>
             </Select.Item>
             <Select.Item
               value="Mathieu"
-              className="relative flex cursor-pointer select-none items-center rounded-md px-2 py-1 hover:bg-gray-100"
+              className={`
+                relative
+                flex
+                cursor-pointer
+                select-none
+                items-center
+                rounded-lg
+                px-4
+                py-2
+                transition-colors
+                ${
+                  theme === 'christmas'
+                    ? 'hover:bg-red-100 text-red-900'
+                    : 'hover:bg-sky-100 text-sky-900'
+                }
+              `}
             >
               <Select.ItemText>Mathieu</Select.ItemText>
             </Select.Item>
           </Select.Viewport>
 
-          <Select.ScrollDownButton className="flex h-6 items-center justify-center bg-white">
-            <FaChevronDown />
+          <Select.ScrollDownButton className="flex h-6 items-center justify-center bg-white/50">
+            <ChevronDown className="w-4 h-4" />
           </Select.ScrollDownButton>
         </Select.Content>
       </Select.Portal>
@@ -184,59 +196,180 @@ function Admin() {
   }, []);
 
   return (
-    <div className="container mx-auto p-2">
-      <div className="flex items-center gap-4">
-        <SelectUser />
-        <Link
-          href="/admin/add/"
-          className={`rounded-lg text-white px-6 py-2 transition-colors flex items-center space-x-2 bg-gradient-to-r ${theme == 'christmas' ? 'from-green-600 to-red-600 hover:from-green-700 hover:to-red-700' : 'from-sky-600 to-red-600 hover:from-sky-700 hover:to-red-700'}  `}
+    <div
+      className="
+        px-4
+        sm:px-6
+        lg:px-8
+        py-8
+      "
+    >
+      <div className="max-w-7xl mx-auto relative z-10">
+        {/* Header with title and controls */}
+        <div
+          className={`
+            backdrop-blur-lg
+            bg-white/10
+            rounded-3xl
+            shadow-2xl
+            p-6
+            sm:p-8
+            border
+            border-white/20
+            mb-8
+            ${theme === 'christmas' ? 'animate-glow' : ''}
+          `}
         >
-          <FaPlus className="mr-2" /> Ajouter une idée
-        </Link>
-      </div>
-      <br />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Settings className="w-8 h-8 text-white" />
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">
+                Modifier mes idées
+              </h1>
+            </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <SelectUser />
+              <button
+                onClick={handleExportCSV}
+                className={`
+                  flex
+                  items-center
+                  justify-center
+                  gap-2
+                  py-3
+                  px-6
+                  rounded-xl
+                  text-white
+                  font-semibold
+                  transition-all
+                  duration-200
+                  transform
+                  hover:scale-[1.02]
+                  active:scale-[0.98]
+                  ${
+                    theme === 'christmas'
+                      ? 'bg-gradient-to-r from-green-600 to-red-600 hover:from-green-700 hover:to-red-700 shadow-lg shadow-green-500/50'
+                      : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg shadow-indigo-500/50'
+                  }
+                `}
+              >
+                <Download className="w-5 h-5" />
+                Export CSV
+              </button>
+              <Link
+                href="/admin/add/"
+                className={`
+                  flex
+                  items-center
+                  justify-center
+                  gap-2
+                  py-3
+                  px-6
+                  rounded-xl
+                  text-white
+                  font-semibold
+                  transition-all
+                  duration-200
+                  transform
+                  hover:scale-[1.02]
+                  active:scale-[0.98]
+                  ${
+                    theme === 'christmas'
+                      ? 'bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 shadow-lg shadow-red-500/50'
+                      : 'bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 shadow-lg shadow-sky-500/50'
+                  }
+                `}
+              >
+                <Plus className="w-5 h-5" />
+                Ajouter une idée
+              </Link>
+            </div>
+          </div>
+        </div>
 
-      {!kdosList && <p>Chargement des données...</p>}
-      {kdosList && kdosList.length === 0 && (
-        <p>Aucun cadeau trouvé pour cet utilisateur.</p>
-      )}
-      {kdosList && kdosList.length != 0 && (
-        <table className="table-auto w-full">
-          <thead>
-            <tr>
-              <th className="align-middle text-center">Image</th>
-              <th className="align-middle text-center">Idée</th>
-              <th className="align-middle text-center">Pour</th>
-              <th className="align-middle text-center">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {kdosList.map((kdo) => (
-              <tr key={kdo.id}>
-                <td className="align-middle text-center">
-                  <Image
-                    src={`/kdos/${kdo.imageDisplay}`}
-                    alt={`Image ${kdo.name}`}
-                    width={50}
-                    height={50}
-                    className="inline-block align-middle object-contain"
-                  />
-                </td>
-                <td className="align-middle text-center">{kdo.name}</td>
-                <td className="align-middle text-center">{kdo.user}</td>
-                <td className="align-middle text-center">
-                  <FormModifyItem
-                    kdo={kdo}
-                    id={kdo.id}
-                    theme={theme}
-                    onFormSubmit={() => fetchKdos(kdo.user)}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+        {/* Content */}
+        {!kdosList && (
+          <div className="backdrop-blur-lg bg-white/10 rounded-2xl p-8 border border-white/20 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin" />
+            </div>
+            <p className="text-white text-lg">Chargement des données...</p>
+          </div>
+        )}
+
+        {kdosList && kdosList.length === 0 && (
+          <div className="backdrop-blur-lg bg-white/10 rounded-2xl p-8 border border-white/20 text-center">
+            <p className="text-white text-lg">
+              Aucun cadeau trouvé pour cet utilisateur.
+            </p>
+          </div>
+        )}
+
+        {kdosList && kdosList.length !== 0 && (
+          <div className="backdrop-blur-lg bg-white/10 rounded-2xl border border-white/20 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead
+                  className={`
+                    ${
+                      theme === 'christmas'
+                        ? 'bg-red-900/30'
+                        : 'bg-indigo-900/30'
+                    }
+                    backdrop-blur-sm
+                  `}
+                >
+                  <tr>
+                    <th className="px-6 py-4 text-left text-white font-semibold">
+                      Image
+                    </th>
+                    <th className="px-6 py-4 text-left text-white font-semibold">
+                      Idée
+                    </th>
+                    <th className="px-6 py-4 text-left text-white font-semibold">
+                      Pour
+                    </th>
+                    <th className="px-6 py-4 text-center text-white font-semibold">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/10">
+                  {kdosList.map((kdo) => (
+                    <tr
+                      key={kdo.id}
+                      className="hover:bg-white/5 transition-colors"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-white/10 backdrop-blur-sm">
+                          <Image
+                            src={`/api/kdos/${kdo.imageDisplay}`}
+                            alt={`Image ${kdo.name}`}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-white font-medium">
+                        {kdo.name}
+                      </td>
+                      <td className="px-6 py-4 text-white">{kdo.user}</td>
+                      <td className="px-6 py-4 text-center">
+                        <FormModifyItem
+                          kdo={kdo}
+                          id={kdo.id}
+                          theme={theme}
+                          onFormSubmit={() => fetchKdos(kdo.user)}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
