@@ -37,5 +37,8 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
+def verify_and_update_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify_and_update(plain_password, hashed_password)
+
 if __name__ == "__main__":
     print(decode_jwt("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzQxNzE5NzkxfQ.myvudr7BC534FtMLTCQOaONBJnoSpeomeu8fr5uvhw8"))
