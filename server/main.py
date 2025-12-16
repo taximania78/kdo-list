@@ -175,7 +175,6 @@ async def login_api(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncS
         )
         await db.execute(stmt)
         await db.commit()
-        print('Mise à jour du mot de passe')
     
     # Générer un Access Token et un Refresh Token
     access_token = create_access_token({"sub": str(user.id), "username": user.name, "isAdmin": user.isAdmin, "isMegaAdmin": user.isMegaAdmin})
