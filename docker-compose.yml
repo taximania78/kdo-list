@@ -68,7 +68,7 @@ services:
       - proxy
 
   db:
-    image: postgres:latest
+    image: postgres:17
     container_name: kdo-db
     restart: unless-stopped
     ports:
@@ -76,7 +76,7 @@ services:
     environment:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: mydatabase
+      POSTGRES_DB: ${DATABASE_NAME}
     volumes:
       - ./db:/var/lib/postgresql/data
     labels:
