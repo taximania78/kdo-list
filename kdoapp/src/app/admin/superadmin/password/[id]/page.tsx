@@ -91,7 +91,7 @@ export default function Password({
 
     try {
       const response = await api.patch(
-        `${ApiAdress}/api/modify-password-admin/${userId}/`,
+        `${ApiAdress}/api/modify-password-admin/${userId}`,
         { password: pendingData.newPassword }
       );
       if (response.status < 200 || response.status >= 300) {

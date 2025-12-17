@@ -73,7 +73,7 @@ function Superadmin() {
   const handleDeleteConfirm = async () => {
     if (!userToDelete) return;
 
-    const apiUrl = `${ApiAdress}/api/delete-user/${userToDelete.id}/`;
+    const apiUrl = `${ApiAdress}/api/delete-user/${userToDelete.id}`;
     setIsDeleting(userToDelete.id);
 
     try {
