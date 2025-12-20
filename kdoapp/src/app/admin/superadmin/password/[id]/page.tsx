@@ -10,8 +10,8 @@ import { Key, Lock, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 import api from '@/lib/api';
 import { use, useState, useEffect } from 'react';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
+import { isChristmas } from '@/lib/theme';
 
-const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 const mountains_of_christmas = Mountains_of_Christmas({
@@ -124,40 +124,36 @@ export default function Password({
     >
       {/* Main card container with fade-in animation */}
       <div className="w-full max-w-md z-10 animate-fadeInUp">
-        {/* Glassmorphism card */}
+        {/* Card */}
         <div
-          className={`
-            backdrop-blur-lg
-            bg-white/10
+          className="
             rounded-3xl
-            shadow-2xl
+            shadow-xl
             p-8
             border
-            border-white/20
-            ${theme === 'christmas' ? 'animate-glow' : ''}
-          `}
+            surface-card
+            border-[var(--border)]
+          "
         >
           {/* Header with icon */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <Key className="w-16 h-16 text-white drop-shadow-lg" />
+              <Key className={`w-16 h-16 ${isChristmas ? 'text-white drop-shadow-lg' : 'text-[var(--primary)]'}`} />
             </div>
             <h2
               className={`
                 text-3xl
                 font-bold
-                text-white
-                drop-shadow-lg
                 ${
-                  theme === 'christmas'
-                    ? mountains_of_christmas.className
-                    : knewave.className
+                  isChristmas
+                    ? `text-white drop-shadow-lg ${mountains_of_christmas.className}`
+                    : `text-[var(--text-primary)] ${knewave.className}`
                 }
               `}
             >
               Réinitialiser le mot de passe
             </h2>
-            <p className="mt-2 text-white/80 text-sm">
+            <p className={`mt-2 text-sm ${isChristmas ? 'text-white/80' : 'text-[var(--text-muted)]'}`}>
               Utilisateur : <span className="font-bold">{name}</span>
             </p>
           </div>
@@ -166,41 +162,38 @@ export default function Password({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Password input */}
             <div>
-              <label htmlFor="newPassword" className="block text-white font-medium mb-2">
+              <label htmlFor="newPassword" className={`block font-medium mb-2 ${isChristmas ? 'text-white' : 'text-[var(--text-secondary)]'}`}>
                 Nouveau mot de passe
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-white/60" />
+                  <Lock className={`h-5 w-5 ${isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]'}`} />
                 </div>
                 <input
                   {...form.register('newPassword')}
                   id="newPassword"
                   type="password"
-                  className="
+                  className={`
                     block
                     w-full
                     pl-12
                     pr-4
                     py-3
-                    bg-white/20
-                    backdrop-blur-sm
-                    border
-                    border-white/30
                     rounded-xl
-                    text-white
-                    placeholder-white/60
                     focus:outline-none
                     focus:ring-2
-                    focus:ring-white/50
                     transition-all
                     duration-200
-                  "
+                    ${isChristmas
+                      ? 'bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-white/60 focus:ring-white/50'
+                      : 'bg-[var(--input-bg)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:ring-[var(--input-focus)]'
+                    }
+                  `}
                   placeholder="Entrer le nouveau mot de passe"
                 />
               </div>
               {form.formState.errors.newPassword && (
-                <p className="mt-2 text-red-300 text-sm animate-shake backdrop-blur-sm bg-red-500/20 p-2 rounded-lg">
+                <p className="mt-2 text-[var(--error)] text-sm animate-shake bg-[var(--error-bg)] p-2 rounded-lg">
                   {form.formState.errors.newPassword.message}
                 </p>
               )}
@@ -208,48 +201,48 @@ export default function Password({
 
             {/* Password requirements */}
             {password && (
-              <div className="backdrop-blur-sm bg-white/10 p-4 rounded-xl border border-white/20">
-                <p className="text-white font-medium mb-2 text-sm">
+              <div className={`p-4 rounded-xl border ${isChristmas ? 'backdrop-blur-sm bg-white/10 border-white/20' : 'bg-[var(--input-bg)] border-[var(--border)]'}`}>
+                <p className={`font-medium mb-2 text-sm ${isChristmas ? 'text-white' : 'text-[var(--text-secondary)]'}`}>
                   Exigences du mot de passe :
                 </p>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-sm">
                     {passwordChecks.minLength ? (
-                      <CheckCircle className={`w-4 h-4 ${theme === 'christmas' ? 'text-green-300' : 'text-green-300'}`} />
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
                     ) : (
-                      <XCircle className="w-4 h-4 text-red-300" />
+                      <XCircle className="w-4 h-4 text-[var(--error)]" />
                     )}
-                    <span className={passwordChecks.minLength ? 'text-white' : 'text-white/60'}>
+                    <span className={passwordChecks.minLength ? (isChristmas ? 'text-white' : 'text-[var(--text-primary)]') : (isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]')}>
                       Au moins 8 caractères
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     {passwordChecks.hasUpperCase ? (
-                      <CheckCircle className={`w-4 h-4 ${theme === 'christmas' ? 'text-green-300' : 'text-green-300'}`} />
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
                     ) : (
-                      <XCircle className="w-4 h-4 text-red-300" />
+                      <XCircle className="w-4 h-4 text-[var(--error)]" />
                     )}
-                    <span className={passwordChecks.hasUpperCase ? 'text-white' : 'text-white/60'}>
+                    <span className={passwordChecks.hasUpperCase ? (isChristmas ? 'text-white' : 'text-[var(--text-primary)]') : (isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]')}>
                       Une lettre majuscule
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     {passwordChecks.hasNumber ? (
-                      <CheckCircle className={`w-4 h-4 ${theme === 'christmas' ? 'text-green-300' : 'text-green-300'}`} />
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
                     ) : (
-                      <XCircle className="w-4 h-4 text-red-300" />
+                      <XCircle className="w-4 h-4 text-[var(--error)]" />
                     )}
-                    <span className={passwordChecks.hasNumber ? 'text-white' : 'text-white/60'}>
+                    <span className={passwordChecks.hasNumber ? (isChristmas ? 'text-white' : 'text-[var(--text-primary)]') : (isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]')}>
                       Un chiffre
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     {passwordChecks.hasSpecialChar ? (
-                      <CheckCircle className={`w-4 h-4 ${theme === 'christmas' ? 'text-green-300' : 'text-green-300'}`} />
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
                     ) : (
-                      <XCircle className="w-4 h-4 text-red-300" />
+                      <XCircle className="w-4 h-4 text-[var(--error)]" />
                     )}
-                    <span className={passwordChecks.hasSpecialChar ? 'text-white' : 'text-white/60'}>
+                    <span className={passwordChecks.hasSpecialChar ? (isChristmas ? 'text-white' : 'text-[var(--text-primary)]') : (isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]')}>
                       Un caractère spécial
                     </span>
                   </div>
@@ -261,7 +254,7 @@ export default function Password({
             <div className="flex gap-4 pt-2">
               <Link
                 href="/admin/superadmin"
-                className="
+                className={`
                   flex-1
                   flex
                   items-center
@@ -270,16 +263,14 @@ export default function Password({
                   py-3
                   px-4
                   rounded-xl
-                  bg-white/20
-                  hover:bg-white/30
-                  text-white
                   font-semibold
                   transition-all
                   duration-200
-                  backdrop-blur-sm
                   hover:scale-[1.02]
                   active:scale-[0.98]
-                "
+                  border
+                  surface-card hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] border-[var(--border)]
+                `}
               >
                 <ArrowLeft className="w-5 h-5" />
                 Retour
@@ -306,9 +297,9 @@ export default function Password({
                   disabled:cursor-not-allowed
                   disabled:hover:scale-100
                   ${
-                    theme === 'christmas'
-                      ? 'bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 shadow-lg shadow-red-500/50'
-                      : 'bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 shadow-lg shadow-sky-500/50'
+                    isChristmas
+                      ? 'bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 shadow-lg'
+                      : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)] shadow-[var(--shadow-primary)]'
                   }
                 `}
               >
@@ -334,35 +325,29 @@ export default function Password({
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           {/* Overlay */}
           <div
-            className="fixed inset-0 bg-black/90 z-50 animate-overlayShow"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-overlayShow"
             onClick={handleCancelConfirm}
           />
 
           {/* Dialog content */}
           <div
-            className={`
+            className="
               relative
               z-50
               max-w-md w-full
-              backdrop-blur-lg
-              ${
-                theme === 'christmas'
-                  ? 'bg-red-900/90'
-                  : 'bg-indigo-900/90'
-              }
               rounded-2xl
               p-8
-              border border-white/20
-              shadow-2xl
+              shadow-xl
               animate-fadeInUp
-            `}
+              dialog-surface
+            "
           >
-            <h3 className="text-xl font-bold text-white mb-4">
+            <h3 className="text-xl font-bold mb-4 text-[var(--text-primary)]">
               Confirmer la modification
             </h3>
-            <p className="text-white/80 mb-6">
+            <p className="mb-6 text-[var(--text-secondary)]">
               Êtes-vous sûr de vouloir modifier le mot de passe de{' '}
-              <span className="font-bold text-white">&quot;{name}&quot;</span> ?
+              <span className="font-bold text-[var(--text-primary)]">&quot;{name}&quot;</span> ?
             </p>
             <div className="flex gap-4 justify-end">
               <button
@@ -371,13 +356,10 @@ export default function Password({
                 className="
                   px-6 py-2
                   rounded-lg
-                  bg-white/20
-                  hover:bg-white/30
-                  text-white
                   transition-all duration-200
-                  backdrop-blur-sm
                   disabled:opacity-50
                   disabled:cursor-not-allowed
+                  bg-[var(--surface-hover)] hover:bg-[var(--surface-muted)] text-[var(--text-secondary)]
                 "
               >
                 Annuler
@@ -394,9 +376,9 @@ export default function Password({
                   disabled:opacity-50
                   disabled:cursor-not-allowed
                   ${
-                    theme === 'christmas'
-                      ? 'bg-green-600 hover:bg-green-700'
-                      : 'bg-sky-600 hover:bg-sky-700'
+                    isChristmas
+                      ? 'bg-[var(--secondary)] hover:bg-[var(--secondary-hover)]'
+                      : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)]'
                   }
                 `}
               >

@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { Lock, Check, X } from 'lucide-react';
 import Link from 'next/link';
 import axios, { AxiosError } from 'axios';
+import { isChristmas } from '@/lib/theme';
 
 interface FormModifyPwdProps {
   firstConnection?: boolean;
@@ -21,7 +22,6 @@ interface ApiErrorResponse {
 }
 
 export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
-  const theme = process.env.NEXT_PUBLIC_THEME || 'default';
   const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -105,9 +105,8 @@ export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
         firstConnection,
       });
       if (response.status < 200 || response.status >= 300) {
-        throw new Error('La réponse réseau n\'était pas OK');
+        throw new Error("La réponse réseau n'était pas OK");
       }
-      // Clear first-connection flag after successful password change
       if (firstConnection) {
         sessionStorage.removeItem('requirePasswordChange');
       }
@@ -117,7 +116,6 @@ export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
       setIsLoading(false);
 
       if (axios.isAxiosError<ApiErrorResponse>(error)) {
-        // 3) C'est bien une erreur Axios, on peut extraire safe la réponse
         const err = error as AxiosError<ApiErrorResponse>;
         const detail =
           err.response?.data?.detail ??
@@ -126,51 +124,37 @@ export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
         setErrorMessage(detail);
         console.error('Erreur Axios:', detail);
       } else {
-        // Ce n'était pas une erreur Axios, on remonte un message générique
         console.error('Erreur non-Axios:', error);
         setErrorMessage('Une erreur inattendue est survenue.');
       }
     }
   };
 
+  const inputClasses =
+    'block w-full pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:ring-[var(--input-focus)]';
+
+  const getRequirementClasses = (met: boolean) =>
+    met ? 'text-emerald-500' : 'text-[var(--text-muted)]';
+
   return (
-    <div className={`w-full ${firstConnection ? '' : 'container mx-auto p-4 max-w-md'}`}>
+    <div
+      className={`w-full ${firstConnection ? '' : 'container mx-auto p-4 max-w-md'}`}
+    >
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {!firstConnection && (
           <div className="relative">
             <label
-              className="block text-white font-medium mb-2"
+              className="block font-medium mb-2 text-[var(--text-secondary)]"
               htmlFor="currentPassword"
             >
               Votre mot de passe actuel
             </label>
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none mt-8">
-              <Lock className="h-5 w-5 text-white/60" />
+              <Lock className="h-5 w-5 text-[var(--text-muted)]" />
             </div>
             <input
               {...form.register('currentPassword')}
-              className="
-                block
-                w-full
-                pl-12
-                pr-4
-                py-3
-                bg-white/20
-                backdrop-blur-sm
-                border
-                border-white/30
-                rounded-xl
-                text-white
-                placeholder-white/60
-                focus:outline-none
-                focus:ring-2
-                focus:ring-white/50
-                focus:border-transparent
-                transition-all
-                duration-200
-                disabled:opacity-50
-                disabled:cursor-not-allowed
-              "
+              className={inputClasses}
               type="password"
               id="currentPassword"
               name="currentPassword"
@@ -181,36 +165,18 @@ export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
         )}
 
         <div className="relative">
-          <label className="block text-white font-medium mb-2" htmlFor="password">
+          <label
+            className="block font-medium mb-2 text-[var(--text-secondary)]"
+            htmlFor="password"
+          >
             Nouveau mot de passe
           </label>
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none mt-8">
-            <Lock className="h-5 w-5 text-white/60" />
+            <Lock className="h-5 w-5 text-[var(--text-muted)]" />
           </div>
           <input
             {...form.register('password')}
-            className="
-              block
-              w-full
-              pl-12
-              pr-4
-              py-3
-              bg-white/20
-              backdrop-blur-sm
-              border
-              border-white/30
-              rounded-xl
-              text-white
-              placeholder-white/60
-              focus:outline-none
-              focus:ring-2
-              focus:ring-white/50
-              focus:border-transparent
-              transition-all
-              duration-200
-              disabled:opacity-50
-              disabled:cursor-not-allowed
-            "
+            className={inputClasses}
             type="password"
             id="password"
             name="password"
@@ -219,7 +185,7 @@ export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
             disabled={isLoading}
           />
           {form.formState.errors.password && (
-            <p className="text-red-300 text-sm mt-2 font-medium">
+            <p className="text-[var(--danger)] text-sm mt-2 font-medium">
               {form.formState.errors.password.message}
             </p>
           )}
@@ -227,38 +193,17 @@ export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
 
         <div className="relative">
           <label
-            className="block text-white font-medium mb-2"
+            className="block font-medium mb-2 text-[var(--text-secondary)]"
             htmlFor="passwordConfirmation"
           >
             Confirmer votre mot de passe
           </label>
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none mt-8">
-            <Lock className="h-5 w-5 text-white/60" />
+            <Lock className="h-5 w-5 text-[var(--text-muted)]" />
           </div>
           <input
             {...form.register('passwordConfirmation')}
-            className="
-              block
-              w-full
-              pl-12
-              pr-4
-              py-3
-              bg-white/20
-              backdrop-blur-sm
-              border
-              border-white/30
-              rounded-xl
-              text-white
-              placeholder-white/60
-              focus:outline-none
-              focus:ring-2
-              focus:ring-white/50
-              focus:border-transparent
-              transition-all
-              duration-200
-              disabled:opacity-50
-              disabled:cursor-not-allowed
-            "
+            className={inputClasses}
             type="password"
             id="passwordConfirmation"
             name="passwordConfirmation"
@@ -267,23 +212,19 @@ export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
             disabled={isLoading}
           />
           {form.formState.errors.passwordConfirmation && (
-            <p className="text-red-300 text-sm mt-2 font-medium">
+            <p className="text-[var(--danger)] text-sm mt-2 font-medium">
               {form.formState.errors.passwordConfirmation.message}
             </p>
           )}
         </div>
 
-        <div className="space-y-3 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-          <p className="text-white/90 text-sm font-medium">
+        <div className="space-y-3 p-4 rounded-xl border bg-[var(--surface-hover)] border-[var(--border-light)]">
+          <p className="text-sm font-medium text-[var(--text-secondary)]">
             Le mot de passe doit :
           </p>
           <ul className="space-y-2">
             <li
-              className={`text-sm flex items-center gap-2 transition-colors duration-200 ${
-                passwordRequirements.minLength
-                  ? 'text-green-400'
-                  : 'text-white/70'
-              }`}
+              className={`text-sm flex items-center gap-2 transition-colors duration-200 ${getRequirementClasses(passwordRequirements.minLength)}`}
             >
               {passwordRequirements.minLength ? (
                 <Check className="w-4 h-4 flex-shrink-0" />
@@ -293,11 +234,7 @@ export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
               Contenir au moins 8 caractères
             </li>
             <li
-              className={`text-sm flex items-center gap-2 transition-colors duration-200 ${
-                passwordRequirements.hasUppercase
-                  ? 'text-green-400'
-                  : 'text-white/70'
-              }`}
+              className={`text-sm flex items-center gap-2 transition-colors duration-200 ${getRequirementClasses(passwordRequirements.hasUppercase)}`}
             >
               {passwordRequirements.hasUppercase ? (
                 <Check className="w-4 h-4 flex-shrink-0" />
@@ -307,11 +244,7 @@ export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
               Contenir au moins une lettre majuscule
             </li>
             <li
-              className={`text-sm flex items-center gap-2 transition-colors duration-200 ${
-                passwordRequirements.hasNumber
-                  ? 'text-green-400'
-                  : 'text-white/70'
-              }`}
+              className={`text-sm flex items-center gap-2 transition-colors duration-200 ${getRequirementClasses(passwordRequirements.hasNumber)}`}
             >
               {passwordRequirements.hasNumber ? (
                 <Check className="w-4 h-4 flex-shrink-0" />
@@ -321,11 +254,7 @@ export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
               Contenir au moins un chiffre
             </li>
             <li
-              className={`text-sm flex items-center gap-2 transition-colors duration-200 ${
-                passwordRequirements.hasSpecialChar
-                  ? 'text-green-400'
-                  : 'text-white/70'
-              }`}
+              className={`text-sm flex items-center gap-2 transition-colors duration-200 ${getRequirementClasses(passwordRequirements.hasSpecialChar)}`}
             >
               {passwordRequirements.hasSpecialChar ? (
                 <Check className="w-4 h-4 flex-shrink-0" />
@@ -338,7 +267,7 @@ export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
         </div>
 
         {errorMessage && (
-          <div className="p-4 bg-red-500/90 text-white rounded-lg text-center font-medium animate-shake backdrop-blur-sm">
+          <div className="p-4 bg-[var(--danger)] text-[var(--on-primary)] rounded-lg text-center font-medium animate-shake backdrop-blur-sm">
             {errorMessage}
           </div>
         )}
@@ -347,7 +276,7 @@ export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
           {!firstConnection ? (
             <Link
               href="/"
-              className="flex-1 text-center cursor-pointer text-white rounded-xl px-6 py-3 transition-all duration-200 bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/30 font-medium"
+              className="flex-1 text-center cursor-pointer rounded-xl px-6 py-3 transition-all duration-200 border font-medium text-[var(--text-primary)] bg-[var(--surface-hover)] hover:bg-[var(--surface-muted)] border-[var(--border)]"
             >
               Retour
             </Link>
@@ -355,31 +284,11 @@ export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className={`
-              ${firstConnection ? 'w-full' : 'flex-1'}
-              flex
-              items-center
-              justify-center
-              gap-2
-              py-3
-              px-6
-              rounded-xl
-              text-white
-              font-semibold
-              transition-all
-              duration-200
-              transform
-              hover:scale-[1.02]
-              active:scale-[0.98]
-              disabled:opacity-50
-              disabled:cursor-not-allowed
-              disabled:hover:scale-100
-              ${
-                theme === 'christmas'
-                  ? 'bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 shadow-lg shadow-red-500/50'
-                  : 'bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 shadow-lg shadow-sky-500/50'
-              }
-            `}
+            className={`${firstConnection ? 'w-full' : 'flex-1'} flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-[var(--on-primary)] font-semibold transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-[var(--shadow-primary)] ${
+              isChristmas
+                ? 'bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700'
+                : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)]'
+            }`}
           >
             {isLoading ? (
               <>

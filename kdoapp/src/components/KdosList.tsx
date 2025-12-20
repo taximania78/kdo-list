@@ -27,7 +27,6 @@ type Kdo = {
   takenBy: string;
 };
 
-const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 const KdosList = () => {
@@ -67,15 +66,15 @@ const KdosList = () => {
   useEffect(() => {
     fetchKdos();
     fetchUsername();
-  }, [userQuery]); // Le tableau vide signifie que l'effet ne s'exécute qu'une fois, au montage du composant
+  }, [userQuery]);
 
   if (!kdosList)
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="backdrop-blur-lg bg-white/10 rounded-2xl p-8 border border-white/20">
+        <div className="surface-card rounded-2xl p-8 shadow-lg">
           <div className="flex items-center gap-3">
-            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            <p className="text-white text-lg font-medium">
+            <div className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+            <p className="text-[var(--text-primary)] text-lg font-medium">
               Chargement de la liste en cours...
             </p>
           </div>
@@ -86,8 +85,8 @@ const KdosList = () => {
   if (kdosList.length === 0)
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="backdrop-blur-lg bg-white/10 rounded-2xl p-8 border border-white/20 text-center">
-          <p className="text-white text-lg font-medium">
+        <div className="surface-card rounded-2xl p-8 shadow-lg text-center">
+          <p className="text-[var(--text-primary)] text-lg font-medium">
             Aucun cadeau n&apos;a été trouvé.
           </p>
         </div>
@@ -99,29 +98,13 @@ const KdosList = () => {
       {kdosList.map((kdo, index) => (
         <div
           key={index}
-          className={`
-            backdrop-blur-lg
-            bg-white/10
-            rounded-2xl
-            shadow-2xl
-            p-6
-            border
-            border-white/20
-            flex
-            flex-col
-            justify-between
-            transition-all
-            duration-300
-            hover:scale-[1.02]
-            hover:bg-white/15
-            group
-            ${theme === 'christmas' ? 'hover:shadow-red-500/20' : 'hover:shadow-sky-500/20'}
-            ${!kdo.availability ? 'opacity-75' : ''}
-          `}
+          className={`surface-card rounded-2xl shadow-lg p-6 flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group ${
+            !kdo.availability ? 'opacity-75' : ''
+          }`}
         >
           <div className="space-y-4">
             {/* Title */}
-            <h2 className="text-xl font-bold text-center text-white drop-shadow-lg">
+            <h2 className="text-xl font-bold text-center text-[var(--text-primary)]">
               {kdo.name}
             </h2>
 
@@ -132,37 +115,27 @@ const KdosList = () => {
                 alt={`Image ${kdo.name}`}
                 width={500}
                 height={500}
-                className={`
-                  object-contain
-                  w-full
-                  h-full
-                  rounded-xl
-                  transition-all
-                  duration-300
-                  ${!kdo.availability ? 'grayscale blur-sm group-hover:blur-none' : 'group-hover:scale-105'}
-                `}
+                className={`object-contain w-full h-full rounded-xl transition-all duration-300 ${
+                  !kdo.availability ? 'grayscale blur-sm group-hover:blur-none' : 'group-hover:scale-105'
+                }`}
               />
             </div>
 
             {/* Details */}
-            <div className="space-y-3 text-white">
+            <div className="space-y-3 text-[var(--text-primary)]">
               {/* Availability */}
               <div className="flex items-center gap-2">
                 {kdo.availability ? (
                   <>
-                    <CheckCircle
-                      className={`w-5 h-5 flex-shrink-0 ${
-                        theme === 'christmas' ? 'text-green-400' : 'text-sky-400'
-                      }`}
-                    />
-                    <span className="text-sm font-medium text-white/90">
+                    <CheckCircle className="w-5 h-5 flex-shrink-0 text-[var(--success)]" />
+                    <span className="text-sm font-medium text-[var(--text-secondary)]">
                       Disponible
                     </span>
                   </>
                 ) : (
                   <>
-                    <XCircle className="w-5 h-5 flex-shrink-0 text-red-400" />
-                    <span className="text-sm font-medium text-white/90">
+                    <XCircle className="w-5 h-5 flex-shrink-0 text-[var(--danger)]" />
+                    <span className="text-sm font-medium text-[var(--text-secondary)]">
                       Déjà réservé
                     </span>
                   </>
@@ -171,7 +144,7 @@ const KdosList = () => {
 
               {/* Price */}
               <div className="flex items-center gap-2">
-                <Euro className="w-5 h-5 flex-shrink-0 text-white/70" />
+                <Euro className="w-5 h-5 flex-shrink-0 text-[var(--text-muted)]" />
                 <span className="text-sm">
                   <span className="font-semibold">{kdo.price}€</span>
                 </span>
@@ -179,31 +152,20 @@ const KdosList = () => {
 
               {/* User */}
               <div className="flex items-center gap-2">
-                <User className="w-5 h-5 flex-shrink-0 text-white/70" />
+                <User className="w-5 h-5 flex-shrink-0 text-[var(--text-muted)]" />
                 <span className="text-sm">
-                  <span className="text-white/70">Pour :</span>{' '}
+                  <span className="text-[var(--text-muted)]">Pour :</span>{' '}
                   <span className="font-medium">{kdo.user}</span>
                 </span>
               </div>
 
               {/* Link */}
               <div className="flex items-start gap-2">
-                <ExternalLink className="w-5 h-5 flex-shrink-0 text-white/70 mt-0.5" />
+                <ExternalLink className="w-5 h-5 flex-shrink-0 text-[var(--text-muted)] mt-0.5" />
                 <Link
                   href={kdo.url}
                   target="_blank"
-                  className={`
-                    text-sm
-                    underline
-                    hover:no-underline
-                    transition-colors
-                    duration-200
-                    ${
-                      theme === 'christmas'
-                        ? 'text-green-300 hover:text-green-200'
-                        : 'text-sky-300 hover:text-sky-200'
-                    }
-                  `}
+                  className="text-sm underline hover:no-underline transition-colors duration-200 text-[var(--link)] hover:text-[var(--link-hover)]"
                 >
                   Voir le produit
                 </Link>
@@ -211,11 +173,11 @@ const KdosList = () => {
 
               {/* Comment */}
               {kdo.comment && (
-                <div className="flex items-start gap-2 pt-2 border-t border-white/10">
-                  <MessageCircle className="w-5 h-5 flex-shrink-0 text-white/70 mt-0.5" />
+                <div className="flex items-start gap-2 pt-2 border-t border-[var(--border-light)]">
+                  <MessageCircle className="w-5 h-5 flex-shrink-0 text-[var(--text-muted)] mt-0.5" />
                   <div className="text-sm">
-                    <p className="text-white/70 mb-1 font-medium">Commentaire :</p>
-                    <p className="text-white/90 italic">{kdo.comment}</p>
+                    <p className="text-[var(--text-muted)] mb-1 font-medium">Commentaire :</p>
+                    <p className="text-[var(--text-secondary)] italic">{kdo.comment}</p>
                   </div>
                 </div>
               )}
@@ -223,7 +185,7 @@ const KdosList = () => {
           </div>
 
           {/* Action button */}
-          <div className="w-full mt-6 pt-4 border-t border-white/10">
+          <div className="w-full mt-6 pt-4 border-t border-[var(--border-light)]">
             <DialogKdo
               id={kdo.id}
               name={kdo.name}
@@ -231,7 +193,6 @@ const KdosList = () => {
               takenBy={kdo.takenBy}
               availability={kdo.availability}
               userLogged={userLogged ?? ''}
-              theme={theme}
               onValidation={fetchKdos}
             />
           </div>

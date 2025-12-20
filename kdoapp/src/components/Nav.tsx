@@ -1,7 +1,7 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
+import { Logo } from './Logo';
 import { useEffect, useState } from 'react';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
 import { usePathname } from 'next/navigation';
@@ -10,6 +10,7 @@ import {
   decodeToken,
   clearAuthStorage,
 } from '@/lib/auth';
+import { isChristmas, themeConfig } from '@/lib/theme';
 import {
   Menu,
   X,
@@ -20,17 +21,16 @@ import {
   Gift,
 } from 'lucide-react';
 
-const mountains_of_christmas = Mountains_of_Christmas({
+const mountainsOfChristmas = Mountains_of_Christmas({
   weight: '700',
   subsets: ['latin'],
 });
 
-const knewave = Atma({
+const atma = Atma({
   weight: '500',
   subsets: ['latin'],
 });
 
-const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 export const Nav = () => {
@@ -45,7 +45,6 @@ export const Nav = () => {
       const token = localStorage.getItem('authToken');
 
       if (token) {
-        // Only check if token is decodable, NOT if expired
         if (isTokenDecodable(token)) {
           const decoded = decodeToken(token);
           if (decoded) {
@@ -53,14 +52,11 @@ export const Nav = () => {
             setUsername(decoded.username);
             setIsAdmin(decoded.isAdmin ? 'true' : 'false');
           } else {
-            // Shouldn't happen if isTokenDecodable returned true, but safety check
             setIsUserLoggedIn(false);
           }
         } else {
-          // Token is corrupted/invalid (not just expired)
           console.warn('⚠️ [NAV] Token is corrupted but not deleting it');
           setIsUserLoggedIn(false);
-          // DON'T delete tokens - user might be mid-refresh
         }
       } else {
         setIsUserLoggedIn(false);
@@ -91,7 +87,7 @@ export const Nav = () => {
       }
     }
 
-    clearAuthStorage(); // Use centralized function
+    clearAuthStorage();
     setIsUserLoggedIn(false);
     window.location.href = '/';
   };
@@ -100,175 +96,37 @@ export const Nav = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  return (
-    <header
-      className={`
-        w-full
-        backdrop-blur-md
-        bg-white/70
-        border-b
-        ${
-          theme === 'christmas'
-            ? 'border-red-200/50 shadow-lg shadow-red-100/20'
-            : 'border-sky-200/50 shadow-lg shadow-sky-100/20'
-        }
-        sticky
-        top-0
-        z-50
-        transition-all
-        duration-300
-      `}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div
-          className={
-            theme === 'christmas'
-              ? mountains_of_christmas.className
-              : knewave.className
-          }
-        >
-          <nav className="flex items-center justify-between py-4">
-            {/* Logo section */}
-            <div className="flex-shrink-0">
-              {isAdmin === 'false' || !isAdmin ? (
-                <Link
-                  href={`${isUserLoggedIn ? '/list' : '/'}`}
-                  className="flex gap-3 items-center group"
-                >
-                  <div className="relative">
-                    <Image
-                      src={
-                        theme === 'christmas'
-                          ? 'logo-christmas.svg'
-                          : 'logo.svg'
-                      }
-                      alt="KDO liste logo"
-                      width={50}
-                      height={50}
-                      className="object-contain transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12"
-                    />
-                  </div>
-                  <p
-                    className={`
-                      text-2xl
-                      sm:text-3xl
-                      font-bold
-                      transition-colors
-                      duration-200
-                      ${
-                        theme === 'christmas'
-                          ? 'text-red-700 group-hover:text-green-700'
-                          : 'text-sky-700 group-hover:text-indigo-700'
-                      }
-                    `}
-                  >
-                    {theme === 'christmas'
-                      ? '🎄 Liste de Noël'
-                      : "Liste d'anniversaire"}
-                  </p>
-                </Link>
-              ) : username === 'Mathieu' ? (
-                <Link
-                  href={`${isUserLoggedIn ? '/list?user=Marie-Eve' : '/'}`}
-                  className="flex gap-3 items-center group"
-                >
-                  <div className="relative">
-                    <Image
-                      src={
-                        theme === 'christmas'
-                          ? 'logo-christmas.svg'
-                          : 'logo.svg'
-                      }
-                      alt="KDO liste logo"
-                      width={50}
-                      height={50}
-                      className="object-contain transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12"
-                    />
-                  </div>
-                  <p
-                    className={`
-                      text-2xl
-                      sm:text-3xl
-                      font-bold
-                      transition-colors
-                      duration-200
-                      ${
-                        theme === 'christmas'
-                          ? 'text-red-700 group-hover:text-green-700'
-                          : 'text-sky-700 group-hover:text-indigo-700'
-                      }
-                    `}
-                  >
-                    {theme === 'christmas'
-                      ? '🎄 Liste de Noël'
-                      : "Liste d'anniversaire"}
-                  </p>
-                </Link>
-              ) : (
-                <Link
-                  href={`${isUserLoggedIn ? '/list?user=Mathieu' : '/'}`}
-                  className="flex gap-3 items-center group"
-                >
-                  <div className="relative">
-                    <Image
-                      src={
-                        theme === 'christmas'
-                          ? 'logo-christmas.svg'
-                          : 'logo.svg'
-                      }
-                      alt="KDO liste logo"
-                      width={50}
-                      height={50}
-                      className="object-contain transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12"
-                    />
-                  </div>
-                  <p
-                    className={`
-                      text-2xl
-                      sm:text-3xl
-                      font-bold
-                      transition-colors
-                      duration-200
-                      ${
-                        theme === 'christmas'
-                          ? 'text-red-700 group-hover:text-green-700'
-                          : 'text-sky-700 group-hover:text-indigo-700'
-                      }
-                    `}
-                  >
-                    {theme === 'christmas'
-                      ? '🎄 Liste de Noël'
-                      : "Liste d'anniversaire"}
-                  </p>
-                </Link>
-              )}
-            </div>
+  const getLogoHref = () => {
+    if (!isUserLoggedIn) return '/';
+    if (isAdmin === 'false' || !isAdmin) return '/list';
+    return username === 'Mathieu' ? '/list?user=Marie-Eve' : '/list?user=Mathieu';
+  };
 
-            {/* Desktop Navigation */}
-            {isUserLoggedIn && (
+  return (
+    <header className="w-full backdrop-blur-md bg-[var(--nav-bg)] border-b-2 border-[var(--nav-border)] shadow-[var(--shadow-sm)] sticky top-0 z-50 transition-all duration-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav className="flex items-center justify-between py-4">
+          {/* Logo section */}
+          <div className="flex-shrink-0">
+            <Link href={getLogoHref()} className="flex gap-3 items-center group">
+              <Logo size={44} />
+              <p className={`text-xl sm:text-2xl font-semibold transition-colors duration-200 text-[var(--primary)] group-hover:text-[var(--primary-hover)] ${isChristmas ? mountainsOfChristmas.className : atma.className}`}>
+                {themeConfig.titleEmoji} {themeConfig.appTitle}
+              </p>
+            </Link>
+          </div>
+
+          {/* Desktop Navigation */}
+          {isUserLoggedIn && (
               <>
                 {/* Mobile menu button */}
                 <div className="md:hidden">
                   <button
                     onClick={toggleMenu}
-                    className={`
-                      p-2
-                      rounded-lg
-                      transition-all
-                      duration-200
-                      ${
-                        theme === 'christmas'
-                          ? 'text-red-700 hover:bg-red-100/50'
-                          : 'text-sky-700 hover:bg-sky-100/50'
-                      }
-                    `}
+                    className="p-2 rounded-lg transition-all duration-200 text-[var(--primary)] hover:bg-[var(--primary-light)]"
                     aria-label="Toggle menu"
                   >
-                    {isMenuOpen ? (
-                      <X className="w-6 h-6" />
-                    ) : (
-                      <Menu className="w-6 h-6" />
-                    )}
+                    {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                   </button>
                 </div>
 
@@ -276,449 +134,97 @@ export const Nav = () => {
                 <div className="hidden md:flex items-center gap-2">
                   {isAdmin === 'false' ? (
                     <>
-                      <Link
-                        href="/list"
-                        className={`
-                          flex
-                          items-center
-                          gap-2
-                          px-4
-                          py-2
-                          rounded-lg
-                          font-medium
-                          transition-all
-                          duration-200
-                          ${
-                            theme === 'christmas'
-                              ? 'text-red-700 hover:bg-red-100/50'
-                              : 'text-sky-700 hover:bg-sky-100/50'
-                          }
-                        `}
-                      >
-                        <List className="w-4 h-4" />
+                      <NavLink href="/list" icon={<List className="w-4 h-4" />}>
                         Liste complète
-                      </Link>
-                      <Link
-                        href="/list?user=Marie-Eve"
-                        className={`
-                          flex
-                          items-center
-                          gap-2
-                          px-4
-                          py-2
-                          rounded-lg
-                          font-medium
-                          transition-all
-                          duration-200
-                          ${
-                            theme === 'christmas'
-                              ? 'text-red-700 hover:bg-red-100/50'
-                              : 'text-sky-700 hover:bg-sky-100/50'
-                          }
-                        `}
-                      >
-                        <Gift className="w-4 h-4" />
+                      </NavLink>
+                      <NavLink href="/list?user=Marie-Eve" icon={<Gift className="w-4 h-4" />}>
                         Marie-Eve
-                      </Link>
-                      <Link
-                        href="/list?user=Mathieu"
-                        className={`
-                          flex
-                          items-center
-                          gap-2
-                          px-4
-                          py-2
-                          rounded-lg
-                          font-medium
-                          transition-all
-                          duration-200
-                          ${
-                            theme === 'christmas'
-                              ? 'text-red-700 hover:bg-red-100/50'
-                              : 'text-sky-700 hover:bg-sky-100/50'
-                          }
-                        `}
-                      >
-                        <Gift className="w-4 h-4" />
+                      </NavLink>
+                      <NavLink href="/list?user=Mathieu" icon={<Gift className="w-4 h-4" />}>
                         Mathieu
-                      </Link>
+                      </NavLink>
                     </>
                   ) : username === 'Mathieu' ? (
                     <>
-                      <Link
-                        href="/admin/superadmin"
-                        className={`
-                          flex
-                          items-center
-                          gap-2
-                          px-4
-                          py-2
-                          rounded-lg
-                          font-medium
-                          transition-all
-                          duration-200
-                          ${
-                            theme === 'christmas'
-                              ? 'text-red-700 hover:bg-red-100/50'
-                              : 'text-sky-700 hover:bg-sky-100/50'
-                          }
-                        `}
-                      >
-                        <Shield className="w-4 h-4" />
+                      <NavLink href="/admin/superadmin" icon={<Shield className="w-4 h-4" />}>
                         Admin
-                      </Link>
-                      <Link
-                        href="/admin"
-                        className={`
-                          flex
-                          items-center
-                          gap-2
-                          px-4
-                          py-2
-                          rounded-lg
-                          font-medium
-                          transition-all
-                          duration-200
-                          ${
-                            theme === 'christmas'
-                              ? 'text-red-700 hover:bg-red-100/50'
-                              : 'text-sky-700 hover:bg-sky-100/50'
-                          }
-                        `}
-                      >
-                        <Settings className="w-4 h-4" />
+                      </NavLink>
+                      <NavLink href="/admin" icon={<Settings className="w-4 h-4" />}>
                         Modifier
-                      </Link>
-                      <Link
-                        href="/list?user=Marie-Eve"
-                        className={`
-                          flex
-                          items-center
-                          gap-2
-                          px-4
-                          py-2
-                          rounded-lg
-                          font-medium
-                          transition-all
-                          duration-200
-                          ${
-                            theme === 'christmas'
-                              ? 'text-red-700 hover:bg-red-100/50'
-                              : 'text-sky-700 hover:bg-sky-100/50'
-                          }
-                        `}
-                      >
-                        <Gift className="w-4 h-4" />
+                      </NavLink>
+                      <NavLink href="/list?user=Marie-Eve" icon={<Gift className="w-4 h-4" />}>
                         Marie-Eve
-                      </Link>
+                      </NavLink>
                     </>
                   ) : (
                     <>
-                      <Link
-                        href="/admin"
-                        className={`
-                          flex
-                          items-center
-                          gap-2
-                          px-4
-                          py-2
-                          rounded-lg
-                          font-medium
-                          transition-all
-                          duration-200
-                          ${
-                            theme === 'christmas'
-                              ? 'text-red-700 hover:bg-red-100/50'
-                              : 'text-sky-700 hover:bg-sky-100/50'
-                          }
-                        `}
-                      >
-                        <Settings className="w-4 h-4" />
+                      <NavLink href="/admin" icon={<Settings className="w-4 h-4" />}>
                         Modifier
-                      </Link>
-                      <Link
-                        href="/list?user=Mathieu"
-                        className={`
-                          flex
-                          items-center
-                          gap-2
-                          px-4
-                          py-2
-                          rounded-lg
-                          font-medium
-                          transition-all
-                          duration-200
-                          ${
-                            theme === 'christmas'
-                              ? 'text-red-700 hover:bg-red-100/50'
-                              : 'text-sky-700 hover:bg-sky-100/50'
-                          }
-                        `}
-                      >
-                        <Gift className="w-4 h-4" />
+                      </NavLink>
+                      <NavLink href="/list?user=Mathieu" icon={<Gift className="w-4 h-4" />}>
                         Mathieu
-                      </Link>
+                      </NavLink>
                     </>
                   )}
                   <button
                     onClick={handleLogout}
-                    className="
-                      flex
-                      items-center
-                      gap-2
-                      px-4
-                      py-2
-                      rounded-lg
-                      font-medium
-                      text-red-600
-                      hover:bg-red-100/50
-                      transition-all
-                      duration-200
-                    "
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[var(--danger)] hover:bg-[var(--error-bg)] transition-all duration-200"
                   >
                     <LogOut className="w-4 h-4" />
                     Déconnexion
                   </button>
                 </div>
               </>
-            )}
-          </nav>
-        </div>
+          )}
+        </nav>
       </div>
 
       {/* Mobile menu dropdown */}
       {isUserLoggedIn && (
         <div
-          className={`
-            md:hidden
-            overflow-hidden
-            transition-all
-            duration-300
-            ease-in-out
-            ${isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'}
-          `}
+          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+            isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+          }`}
         >
-          <div
-            className={`
-              backdrop-blur-lg
-              ${
-                theme === 'christmas'
-                  ? 'bg-red-50/80 border-t border-red-200/50'
-                  : 'bg-sky-50/80 border-t border-sky-200/50'
-              }
-            `}
-          >
+          <div className="backdrop-blur-lg bg-[var(--surface-hover)] border-t border-[var(--border-light)]">
             <div className="px-4 py-3 space-y-1">
               {isAdmin === 'false' ? (
                 <>
-                  <Link
-                    href="/list"
-                    onClick={toggleMenu}
-                    className={`
-                      flex
-                      items-center
-                      gap-3
-                      px-4
-                      py-3
-                      rounded-lg
-                      font-medium
-                      transition-all
-                      duration-200
-                      ${
-                        theme === 'christmas'
-                          ? 'text-red-700 hover:bg-red-100/50'
-                          : 'text-sky-700 hover:bg-sky-100/50'
-                      }
-                    `}
-                  >
-                    <List className="w-5 h-5" />
+                  <MobileNavLink href="/list" onClick={toggleMenu} icon={<List className="w-5 h-5" />}>
                     Liste complète
-                  </Link>
-                  <Link
-                    href="/list?user=Marie-Eve"
-                    onClick={toggleMenu}
-                    className={`
-                      flex
-                      items-center
-                      gap-3
-                      px-4
-                      py-3
-                      rounded-lg
-                      font-medium
-                      transition-all
-                      duration-200
-                      ${
-                        theme === 'christmas'
-                          ? 'text-red-700 hover:bg-red-100/50'
-                          : 'text-sky-700 hover:bg-sky-100/50'
-                      }
-                    `}
-                  >
-                    <Gift className="w-5 h-5" />
+                  </MobileNavLink>
+                  <MobileNavLink href="/list?user=Marie-Eve" onClick={toggleMenu} icon={<Gift className="w-5 h-5" />}>
                     Liste Marie-Eve
-                  </Link>
-                  <Link
-                    href="/list?user=Mathieu"
-                    onClick={toggleMenu}
-                    className={`
-                      flex
-                      items-center
-                      gap-3
-                      px-4
-                      py-3
-                      rounded-lg
-                      font-medium
-                      transition-all
-                      duration-200
-                      ${
-                        theme === 'christmas'
-                          ? 'text-red-700 hover:bg-red-100/50'
-                          : 'text-sky-700 hover:bg-sky-100/50'
-                      }
-                    `}
-                  >
-                    <Gift className="w-5 h-5" />
+                  </MobileNavLink>
+                  <MobileNavLink href="/list?user=Mathieu" onClick={toggleMenu} icon={<Gift className="w-5 h-5" />}>
                     Liste Mathieu
-                  </Link>
+                  </MobileNavLink>
                 </>
               ) : username === 'Mathieu' ? (
                 <>
-                  <Link
-                    href="/admin/superadmin"
-                    onClick={toggleMenu}
-                    className={`
-                      flex
-                      items-center
-                      gap-3
-                      px-4
-                      py-3
-                      rounded-lg
-                      font-medium
-                      transition-all
-                      duration-200
-                      ${
-                        theme === 'christmas'
-                          ? 'text-red-700 hover:bg-red-100/50'
-                          : 'text-sky-700 hover:bg-sky-100/50'
-                      }
-                    `}
-                  >
-                    <Shield className="w-5 h-5" />
+                  <MobileNavLink href="/admin/superadmin" onClick={toggleMenu} icon={<Shield className="w-5 h-5" />}>
                     Admin
-                  </Link>
-                  <Link
-                    href="/admin"
-                    onClick={toggleMenu}
-                    className={`
-                      flex
-                      items-center
-                      gap-3
-                      px-4
-                      py-3
-                      rounded-lg
-                      font-medium
-                      transition-all
-                      duration-200
-                      ${
-                        theme === 'christmas'
-                          ? 'text-red-700 hover:bg-red-100/50'
-                          : 'text-sky-700 hover:bg-sky-100/50'
-                      }
-                    `}
-                  >
-                    <Settings className="w-5 h-5" />
+                  </MobileNavLink>
+                  <MobileNavLink href="/admin" onClick={toggleMenu} icon={<Settings className="w-5 h-5" />}>
                     Modif. liste
-                  </Link>
-                  <Link
-                    href="/list?user=Marie-Eve"
-                    onClick={toggleMenu}
-                    className={`
-                      flex
-                      items-center
-                      gap-3
-                      px-4
-                      py-3
-                      rounded-lg
-                      font-medium
-                      transition-all
-                      duration-200
-                      ${
-                        theme === 'christmas'
-                          ? 'text-red-700 hover:bg-red-100/50'
-                          : 'text-sky-700 hover:bg-sky-100/50'
-                      }
-                    `}
-                  >
-                    <Gift className="w-5 h-5" />
+                  </MobileNavLink>
+                  <MobileNavLink href="/list?user=Marie-Eve" onClick={toggleMenu} icon={<Gift className="w-5 h-5" />}>
                     Liste Marie-Eve
-                  </Link>
+                  </MobileNavLink>
                 </>
               ) : (
                 <>
-                  <Link
-                    href="/admin"
-                    onClick={toggleMenu}
-                    className={`
-                      flex
-                      items-center
-                      gap-3
-                      px-4
-                      py-3
-                      rounded-lg
-                      font-medium
-                      transition-all
-                      duration-200
-                      ${
-                        theme === 'christmas'
-                          ? 'text-red-700 hover:bg-red-100/50'
-                          : 'text-sky-700 hover:bg-sky-100/50'
-                      }
-                    `}
-                  >
-                    <Settings className="w-5 h-5" />
+                  <MobileNavLink href="/admin" onClick={toggleMenu} icon={<Settings className="w-5 h-5" />}>
                     Modif. liste
-                  </Link>
-                  <Link
-                    href="/list?user=Mathieu"
-                    onClick={toggleMenu}
-                    className={`
-                      flex
-                      items-center
-                      gap-3
-                      px-4
-                      py-3
-                      rounded-lg
-                      font-medium
-                      transition-all
-                      duration-200
-                      ${
-                        theme === 'christmas'
-                          ? 'text-red-700 hover:bg-red-100/50'
-                          : 'text-sky-700 hover:bg-sky-100/50'
-                      }
-                    `}
-                  >
-                    <Gift className="w-5 h-5" />
+                  </MobileNavLink>
+                  <MobileNavLink href="/list?user=Mathieu" onClick={toggleMenu} icon={<Gift className="w-5 h-5" />}>
                     Liste Mathieu
-                  </Link>
+                  </MobileNavLink>
                 </>
               )}
               <button
                 onClick={handleLogout}
-                className="
-                  flex
-                  items-center
-                  gap-3
-                  w-full
-                  px-4
-                  py-3
-                  rounded-lg
-                  font-medium
-                  text-red-600
-                  hover:bg-red-100/50
-                  transition-all
-                  duration-200
-                "
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-[var(--danger)] hover:bg-[var(--error-bg)] transition-all duration-200"
               >
                 <LogOut className="w-5 h-5" />
                 Déconnexion
@@ -730,3 +236,46 @@ export const Nav = () => {
     </header>
   );
 };
+
+function NavLink({
+  href,
+  icon,
+  children,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[var(--nav-text)] hover:text-[var(--nav-text-hover)] hover:bg-[var(--surface-hover)] transition-all duration-200"
+    >
+      {icon}
+      {children}
+    </Link>
+  );
+}
+
+function MobileNavLink({
+  href,
+  onClick,
+  icon,
+  children,
+}: {
+  href: string;
+  onClick: () => void;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="flex items-center gap-3 px-4 py-3 rounded-lg text-[var(--nav-text)] hover:text-[var(--nav-text-hover)] hover:bg-[var(--surface-hover)] transition-all duration-200"
+    >
+      {icon}
+      {children}
+    </Link>
+  );
+}

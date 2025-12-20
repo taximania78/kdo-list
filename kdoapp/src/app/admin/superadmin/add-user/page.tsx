@@ -10,8 +10,8 @@ import { z } from 'zod';
 import { UserPlus, User, Lock, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 import api from '@/lib/api';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
+import { isChristmas } from '@/lib/theme';
 
-const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 const mountains_of_christmas = Mountains_of_Christmas({
@@ -102,40 +102,36 @@ export default function Password() {
     >
       {/* Main card container with fade-in animation */}
       <div className="w-full max-w-md z-10 animate-fadeInUp">
-        {/* Glassmorphism card */}
+        {/* Card */}
         <div
-          className={`
-            backdrop-blur-lg
-            bg-white/10
+          className="
             rounded-3xl
-            shadow-2xl
+            shadow-xl
             p-8
             border
-            border-white/20
-            ${theme === 'christmas' ? 'animate-glow' : ''}
-          `}
+            surface-card
+            border-[var(--border)]
+          "
         >
           {/* Header with icon */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <UserPlus className="w-16 h-16 text-white drop-shadow-lg" />
+              <UserPlus className={`w-16 h-16 ${isChristmas ? 'text-white drop-shadow-lg' : 'text-[var(--primary)]'}`} />
             </div>
             <h2
               className={`
                 text-3xl
                 font-bold
-                text-white
-                drop-shadow-lg
                 ${
-                  theme === 'christmas'
-                    ? mountains_of_christmas.className
-                    : knewave.className
+                  isChristmas
+                    ? `text-white drop-shadow-lg ${mountains_of_christmas.className}`
+                    : `text-[var(--text-primary)] ${knewave.className}`
                 }
               `}
             >
               Nouvel utilisateur
             </h2>
-            <p className="mt-2 text-white/80 text-sm">
+            <p className={`mt-2 text-sm ${isChristmas ? 'text-white/80' : 'text-[var(--text-muted)]'}`}>
               Créer un nouveau compte utilisateur
             </p>
           </div>
@@ -144,41 +140,38 @@ export default function Password() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Username input */}
             <div>
-              <label htmlFor="username" className="block text-white font-medium mb-2">
+              <label htmlFor="username" className={`block font-medium mb-2 ${isChristmas ? 'text-white' : 'text-[var(--text-secondary)]'}`}>
                 Nom d&apos;utilisateur
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-white/60" />
+                  <User className={`h-5 w-5 ${isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]'}`} />
                 </div>
                 <input
                   {...form.register('username')}
                   id="username"
                   type="text"
-                  className="
+                  className={`
                     block
                     w-full
                     pl-12
                     pr-4
                     py-3
-                    bg-white/20
-                    backdrop-blur-sm
-                    border
-                    border-white/30
                     rounded-xl
-                    text-white
-                    placeholder-white/60
                     focus:outline-none
                     focus:ring-2
-                    focus:ring-white/50
                     transition-all
                     duration-200
-                  "
+                    ${isChristmas
+                      ? 'bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-white/60 focus:ring-white/50'
+                      : 'bg-[var(--input-bg)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:ring-[var(--input-focus)]'
+                    }
+                  `}
                   placeholder="Entrer un nom d'utilisateur"
                 />
               </div>
               {form.formState.errors.username && (
-                <p className="mt-2 text-red-300 text-sm animate-shake backdrop-blur-sm bg-red-500/20 p-2 rounded-lg">
+                <p className="mt-2 text-[var(--error)] text-sm animate-shake bg-[var(--error-bg)] p-2 rounded-lg">
                   {form.formState.errors.username.message}
                 </p>
               )}
@@ -186,41 +179,38 @@ export default function Password() {
 
             {/* Password input */}
             <div>
-              <label htmlFor="userPassword" className="block text-white font-medium mb-2">
+              <label htmlFor="userPassword" className={`block font-medium mb-2 ${isChristmas ? 'text-white' : 'text-[var(--text-secondary)]'}`}>
                 Mot de passe temporaire
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-white/60" />
+                  <Lock className={`h-5 w-5 ${isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]'}`} />
                 </div>
                 <input
                   {...form.register('userPassword')}
                   id="userPassword"
                   type="text"
-                  className="
+                  className={`
                     block
                     w-full
                     pl-12
                     pr-4
                     py-3
-                    bg-white/20
-                    backdrop-blur-sm
-                    border
-                    border-white/30
                     rounded-xl
-                    text-white
-                    placeholder-white/60
                     focus:outline-none
                     focus:ring-2
-                    focus:ring-white/50
                     transition-all
                     duration-200
-                  "
+                    ${isChristmas
+                      ? 'bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-white/60 focus:ring-white/50'
+                      : 'bg-[var(--input-bg)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:ring-[var(--input-focus)]'
+                    }
+                  `}
                   placeholder="Entrer un mot de passe temporaire"
                 />
               </div>
               {form.formState.errors.userPassword && (
-                <p className="mt-2 text-red-300 text-sm animate-shake backdrop-blur-sm bg-red-500/20 p-2 rounded-lg">
+                <p className="mt-2 text-[var(--error)] text-sm animate-shake bg-[var(--error-bg)] p-2 rounded-lg">
                   {form.formState.errors.userPassword.message}
                 </p>
               )}
@@ -228,48 +218,48 @@ export default function Password() {
 
             {/* Password requirements */}
             {password && (
-              <div className="backdrop-blur-sm bg-white/10 p-4 rounded-xl border border-white/20">
-                <p className="text-white font-medium mb-2 text-sm">
+              <div className={`p-4 rounded-xl border ${isChristmas ? 'backdrop-blur-sm bg-white/10 border-white/20' : 'bg-[var(--input-bg)] border-[var(--border)]'}`}>
+                <p className={`font-medium mb-2 text-sm ${isChristmas ? 'text-white' : 'text-[var(--text-secondary)]'}`}>
                   Exigences du mot de passe :
                 </p>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-sm">
                     {passwordChecks.minLength ? (
-                      <CheckCircle className={`w-4 h-4 ${theme === 'christmas' ? 'text-green-300' : 'text-green-300'}`} />
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
                     ) : (
-                      <XCircle className="w-4 h-4 text-red-300" />
+                      <XCircle className="w-4 h-4 text-[var(--error)]" />
                     )}
-                    <span className={passwordChecks.minLength ? 'text-white' : 'text-white/60'}>
+                    <span className={passwordChecks.minLength ? (isChristmas ? 'text-white' : 'text-[var(--text-primary)]') : (isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]')}>
                       Au moins 8 caractères
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     {passwordChecks.hasUpperCase ? (
-                      <CheckCircle className={`w-4 h-4 ${theme === 'christmas' ? 'text-green-300' : 'text-green-300'}`} />
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
                     ) : (
-                      <XCircle className="w-4 h-4 text-red-300" />
+                      <XCircle className="w-4 h-4 text-[var(--error)]" />
                     )}
-                    <span className={passwordChecks.hasUpperCase ? 'text-white' : 'text-white/60'}>
+                    <span className={passwordChecks.hasUpperCase ? (isChristmas ? 'text-white' : 'text-[var(--text-primary)]') : (isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]')}>
                       Une lettre majuscule
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     {passwordChecks.hasNumber ? (
-                      <CheckCircle className={`w-4 h-4 ${theme === 'christmas' ? 'text-green-300' : 'text-green-300'}`} />
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
                     ) : (
-                      <XCircle className="w-4 h-4 text-red-300" />
+                      <XCircle className="w-4 h-4 text-[var(--error)]" />
                     )}
-                    <span className={passwordChecks.hasNumber ? 'text-white' : 'text-white/60'}>
+                    <span className={passwordChecks.hasNumber ? (isChristmas ? 'text-white' : 'text-[var(--text-primary)]') : (isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]')}>
                       Un chiffre
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     {passwordChecks.hasSpecialChar ? (
-                      <CheckCircle className={`w-4 h-4 ${theme === 'christmas' ? 'text-green-300' : 'text-green-300'}`} />
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
                     ) : (
-                      <XCircle className="w-4 h-4 text-red-300" />
+                      <XCircle className="w-4 h-4 text-[var(--error)]" />
                     )}
-                    <span className={passwordChecks.hasSpecialChar ? 'text-white' : 'text-white/60'}>
+                    <span className={passwordChecks.hasSpecialChar ? (isChristmas ? 'text-white' : 'text-[var(--text-primary)]') : (isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]')}>
                       Un caractère spécial
                     </span>
                   </div>
@@ -281,7 +271,7 @@ export default function Password() {
             <div className="flex gap-4 pt-2">
               <Link
                 href="/admin/superadmin"
-                className="
+                className={`
                   flex-1
                   flex
                   items-center
@@ -290,16 +280,14 @@ export default function Password() {
                   py-3
                   px-4
                   rounded-xl
-                  bg-white/20
-                  hover:bg-white/30
-                  text-white
                   font-semibold
                   transition-all
                   duration-200
-                  backdrop-blur-sm
                   hover:scale-[1.02]
                   active:scale-[0.98]
-                "
+                  border
+                  surface-card hover:bg-[var(--surface-hover)] text-[var(--text-secondary)] border-[var(--border)]
+                `}
               >
                 <ArrowLeft className="w-5 h-5" />
                 Retour
@@ -326,9 +314,9 @@ export default function Password() {
                   disabled:cursor-not-allowed
                   disabled:hover:scale-100
                   ${
-                    theme === 'christmas'
-                      ? 'bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 shadow-lg shadow-red-500/50'
-                      : 'bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 shadow-lg shadow-sky-500/50'
+                    isChristmas
+                      ? 'bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 shadow-lg'
+                      : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)] shadow-[var(--shadow-primary)]'
                   }
                 `}
               >
