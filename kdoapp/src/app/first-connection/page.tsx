@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import FormModifyPwd from '@/components/FormModifyPwd';
 import { KeyRound, Gift, Sparkles } from 'lucide-react';
-
-const theme = process.env.NEXT_PUBLIC_THEME || 'default';
+import { isChristmas, themeConfig } from '@/lib/theme';
 
 export default function FirstConnection() {
   const router = useRouter();
@@ -37,11 +36,11 @@ export default function FirstConnection() {
   // Show loading during auth check
   if (isLoading || !shouldShowPage) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-400 to-indigo-600">
-        <div className="backdrop-blur-lg bg-white/10 rounded-2xl p-8 border border-white/20">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="surface-card rounded-2xl p-8 border border-[var(--border)] shadow-lg">
           <div className="flex items-center gap-3">
-            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            <p className="text-white text-lg font-medium">Chargement...</p>
+            <div className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+            <p className="text-[var(--text-primary)] text-lg font-medium">Chargement...</p>
           </div>
         </div>
       </div>
@@ -61,48 +60,47 @@ export default function FirstConnection() {
     >
       {/* Main card container with fade-in animation */}
       <div className="w-full max-w-md z-10 animate-fadeInUp">
-        {/* Glassmorphism card */}
+        {/* Card */}
         <div
           className={`
-            backdrop-blur-lg
-            bg-white/10
             rounded-3xl
-            shadow-2xl
+            shadow-xl
             p-8
             border
-            border-white/20
-            ${theme === 'christmas' ? 'animate-glow' : ''}
+            ${isChristmas
+              ? 'backdrop-blur-lg bg-white/10 border-white/20 animate-glow'
+              : 'surface-card border-[var(--border)]'
+            }
           `}
         >
           {/* Header with icon */}
           <div className="text-center mb-6">
             <div className="flex justify-center mb-4">
-              {theme === 'christmas' ? (
+              {isChristmas ? (
                 <Gift className="w-16 h-16 text-white drop-shadow-lg" />
               ) : (
-                <Sparkles className="w-16 h-16 text-white drop-shadow-lg" />
+                <Sparkles className="w-16 h-16 text-[var(--primary)]" />
               )}
             </div>
             <h1
               className={`
                 text-3xl
                 font-bold
-                text-white
-                drop-shadow-lg
                 mb-4
+                ${isChristmas ? 'text-white drop-shadow-lg' : 'text-[var(--text-primary)]'}
               `}
             >
-              {theme === 'christmas' ? '🎄 ' : ''}
+              {themeConfig.titleEmoji ? `${themeConfig.titleEmoji} ` : ''}
               Première connexion
-              {theme === 'christmas' ? ' 🎄' : ''}
+              {themeConfig.titleEmoji ? ` ${themeConfig.titleEmoji}` : ''}
             </h1>
             <div className="flex items-center justify-center gap-2 mb-4">
-              <KeyRound className="w-5 h-5 text-white/80" />
-              <p className="text-white/80 text-sm">
+              <KeyRound className={`w-5 h-5 ${isChristmas ? 'text-white/80' : 'text-[var(--primary)]'}`} />
+              <p className={`text-sm ${isChristmas ? 'text-white/80' : 'text-[var(--text-secondary)]'}`}>
                 Sécurisez votre compte
               </p>
             </div>
-            <p className="text-white/70 text-sm">
+            <p className={`text-sm ${isChristmas ? 'text-white/70' : 'text-[var(--text-muted)]'}`}>
               C&apos;est votre première connexion. Vous devez changer votre mot
               de passe pour des raisons de sécurité.
             </p>
@@ -113,7 +111,7 @@ export default function FirstConnection() {
         </div>
 
         {/* Decorative elements for Christmas theme */}
-        {theme === 'christmas' && (
+        {isChristmas && (
           <div className="mt-4 text-center text-white/60 text-xs">
             ✨ Joyeux Noël ! ✨
           </div>

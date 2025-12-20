@@ -7,13 +7,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
 import { Shield, UserPlus, Trash2, Key, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
+import { isChristmas } from '@/lib/theme';
 
 type User = {
   id: number;
   name: string;
 };
 
-const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 const mountains_of_christmas = Mountains_of_Christmas({
@@ -113,33 +113,30 @@ function Superadmin() {
     >
       {/* Main container */}
       <div className="max-w-6xl mx-auto z-10 relative">
-        {/* Header with glassmorphism */}
+        {/* Header */}
         <div
-          className={`
-            backdrop-blur-lg
-            bg-white/10
+          className="
             rounded-3xl
-            shadow-2xl
+            shadow-xl
             p-6 sm:p-8
-            border border-white/20
+            border
             mb-6
-            ${theme === 'christmas' ? 'animate-glow' : ''}
             animate-fadeInUp
-          `}
+            surface-card
+            border-[var(--border)]
+          "
         >
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <Shield className="w-10 h-10 sm:w-12 sm:h-12 text-white drop-shadow-lg" />
+              <Shield className={`w-10 h-10 sm:w-12 sm:h-12 ${isChristmas ? 'text-white drop-shadow-lg' : 'text-[var(--primary)]'}`} />
               <h1
                 className={`
                   text-2xl sm:text-3xl lg:text-4xl
                   font-bold
-                  text-white
-                  drop-shadow-lg
                   ${
-                    theme === 'christmas'
-                      ? mountains_of_christmas.className
-                      : knewave.className
+                    isChristmas
+                      ? `text-white drop-shadow-lg ${mountains_of_christmas.className}`
+                      : `text-[var(--text-primary)] ${knewave.className}`
                   }
                 `}
               >
@@ -156,9 +153,9 @@ function Superadmin() {
                 transition-all duration-200
                 hover:scale-[1.02] active:scale-[0.98]
                 ${
-                  theme === 'christmas'
-                    ? 'bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 shadow-lg shadow-red-500/50'
-                    : 'bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 shadow-lg shadow-sky-500/50'
+                  isChristmas
+                    ? 'bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 shadow-lg'
+                    : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)] shadow-[var(--shadow-primary)]'
                 }
               `}
             >
@@ -168,62 +165,52 @@ function Superadmin() {
           </div>
         </div>
 
-        {/* Users table with glassmorphism */}
+        {/* Users table */}
         <div
-          className={`
-            backdrop-blur-lg
-            bg-white/10
+          className="
             rounded-3xl
-            shadow-2xl
-            border border-white/20
+            shadow-xl
+            border
             overflow-hidden
-            ${theme === 'christmas' ? 'animate-glow' : ''}
             animate-fadeInUp
-          `}
+            surface-card
+            border-[var(--border)]
+          "
           style={{ animationDelay: '0.1s' }}
         >
           {!usersList && (
             <div className="p-8 text-center">
-              <Loader2 className="w-8 h-8 text-white animate-spin mx-auto mb-4" />
-              <p className="text-white text-lg">Chargement des données...</p>
+              <Loader2 className={`w-8 h-8 animate-spin mx-auto mb-4 ${isChristmas ? 'text-white' : 'text-[var(--primary)]'}`} />
+              <p className={`text-lg ${isChristmas ? 'text-white' : 'text-[var(--text-primary)]'}`}>Chargement des données...</p>
             </div>
           )}
 
           {usersList && usersList.length === 0 && (
             <div className="p-8 text-center">
-              <p className="text-white text-lg">Aucun utilisateur trouvé.</p>
+              <p className={`text-lg ${isChristmas ? 'text-white' : 'text-[var(--text-primary)]'}`}>Aucun utilisateur trouvé.</p>
             </div>
           )}
 
           {usersList && usersList.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead
-                  className={`
-                    ${
-                      theme === 'christmas'
-                        ? 'bg-red-900/30'
-                        : 'bg-indigo-900/30'
-                    }
-                    backdrop-blur-sm
-                  `}
-                >
+                <thead className="bg-[var(--table-header)]">
                   <tr>
-                    <th className="px-6 py-4 text-left text-white font-semibold text-lg">
+                    <th className="px-6 py-4 text-left font-semibold text-lg text-[var(--text-primary)]">
                       Utilisateur
                     </th>
-                    <th className="px-6 py-4 text-right text-white font-semibold text-lg">
+                    <th className="px-6 py-4 text-right font-semibold text-lg text-[var(--text-primary)]">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/10">
+                <tbody className="divide-y divide-[var(--border)]">
                   {usersList.map((user) => (
                     <tr
                       key={user.id}
-                      className="hover:bg-white/5 transition-colors"
+                      className="transition-colors hover:bg-[var(--surface-hover)]"
                     >
-                      <td className="px-6 py-4 text-white text-lg font-medium">
+                      <td className="px-6 py-4 text-lg font-medium text-[var(--text-primary)]">
                         {user.name}
                       </td>
                       <td className="px-6 py-4">
@@ -236,11 +223,11 @@ function Superadmin() {
                               rounded-lg
                               transition-all duration-200
                               ${
-                                theme === 'christmas'
-                                  ? 'bg-green-500/80 hover:bg-green-600'
-                                  : 'bg-sky-500/80 hover:bg-sky-600'
+                                isChristmas
+                                  ? 'bg-[var(--secondary)] hover:bg-[var(--secondary-hover)]'
+                                  : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)]'
                               }
-                              text-white backdrop-blur-sm
+                              text-white
                               hover:scale-105
                             `}
                             title="Modifier le mot de passe"
@@ -255,10 +242,9 @@ function Superadmin() {
                               flex items-center gap-2
                               p-2 px-4
                               rounded-lg
-                              bg-red-500/80 hover:bg-red-600
+                              bg-[var(--danger)] hover:bg-[var(--danger-hover)]
                               text-white
                               transition-all duration-200
-                              backdrop-blur-sm
                               hover:scale-105
                               disabled:opacity-50
                               disabled:cursor-not-allowed
@@ -289,35 +275,29 @@ function Superadmin() {
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           {/* Overlay */}
           <div
-            className="fixed inset-0 bg-black/90 z-50 animate-overlayShow"
+            className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 animate-overlayShow"
             onClick={handleDeleteCancel}
           />
 
           {/* Dialog content */}
           <div
-            className={`
+            className="
               relative
               z-50
               max-w-md w-full
-              backdrop-blur-lg
-              ${
-                theme === 'christmas'
-                  ? 'bg-red-900/90'
-                  : 'bg-indigo-900/90'
-              }
               rounded-2xl
               p-8
-              border border-white/20
-              shadow-2xl
+              shadow-xl
               animate-fadeInUp
-            `}
+              dialog-surface
+            "
           >
-            <h3 className="text-xl font-bold text-white mb-4">
+            <h3 className="text-xl font-bold mb-4 text-[var(--text-primary)]">
               Confirmer la suppression
             </h3>
-            <p className="text-white/80 mb-6">
+            <p className="mb-6 text-[var(--text-secondary)]">
               Êtes-vous sûr de vouloir supprimer l&apos;utilisateur{' '}
-              <span className="font-bold text-white">
+              <span className="font-bold text-[var(--text-primary)]">
                 &quot;{userToDelete.name}&quot;
               </span>{' '}
               ? Cette action est irréversible.
@@ -329,13 +309,10 @@ function Superadmin() {
                 className="
                   px-6 py-2
                   rounded-lg
-                  bg-white/20
-                  hover:bg-white/30
-                  text-white
                   transition-all duration-200
-                  backdrop-blur-sm
                   disabled:opacity-50
                   disabled:cursor-not-allowed
+                  bg-[var(--surface-hover)] hover:bg-[var(--surface-muted)] text-[var(--text-secondary)]
                 "
               >
                 Annuler
@@ -347,7 +324,7 @@ function Superadmin() {
                   flex items-center gap-2
                   px-6 py-2
                   rounded-lg
-                  bg-red-600 hover:bg-red-700
+                  bg-[var(--danger)] hover:bg-[var(--danger-hover)]
                   text-white
                   transition-all duration-200
                   disabled:opacity-50

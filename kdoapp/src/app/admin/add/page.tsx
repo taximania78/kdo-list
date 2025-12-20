@@ -14,8 +14,7 @@ import {
   MessageSquare,
   Image as ImageIcon,
 } from 'lucide-react';
-
-const theme = process.env.NEXT_PUBLIC_THEME || 'default';
+import { isChristmas } from '@/lib/theme';
 
 const formSchema = z.object({
   name: z.string().min(2),
@@ -68,28 +67,28 @@ function AddItem() {
       "
     >
       <div className="w-full max-w-2xl z-10">
-        {/* Glassmorphism card */}
+        {/* Card */}
         <div
           className={`
-            backdrop-blur-lg
-            bg-white/10
             rounded-3xl
-            shadow-2xl
+            shadow-xl
             p-8
             border
-            border-white/20
-            ${theme === 'christmas' ? 'animate-glow' : ''}
+            ${isChristmas
+              ? 'backdrop-blur-lg bg-white/10 border-white/20 animate-glow'
+              : 'surface-card border-[var(--border)]'
+            }
           `}
         >
           {/* Header with icon */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <Plus className="w-16 h-16 text-white drop-shadow-lg" />
+              <Plus className={`w-16 h-16 ${isChristmas ? 'text-white drop-shadow-lg' : 'text-[var(--primary)]'}`} />
             </div>
-            <h1 className="text-3xl font-bold text-white drop-shadow-lg">
+            <h1 className={`text-3xl font-bold ${isChristmas ? 'text-white drop-shadow-lg' : 'text-[var(--text-primary)]'}`}>
               Ajouter une idée
             </h1>
-            <p className="mt-2 text-white/80 text-sm">
+            <p className={`mt-2 text-sm ${isChristmas ? 'text-white/80' : 'text-[var(--text-muted)]'}`}>
               Remplissez les informations ci-dessous
             </p>
           </div>
@@ -98,37 +97,33 @@ function AddItem() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Name input */}
             <div className="relative">
-              <label htmlFor="name" className="block text-white font-medium mb-2">
+              <label htmlFor="name" className={`block font-medium mb-2 ${isChristmas ? 'text-white' : 'text-[var(--text-secondary)]'}`}>
                 Nom
               </label>
               <input
                 {...form.register('name')}
-                className="
+                className={`
                   block
                   w-full
                   px-4
                   py-3
-                  bg-white/20
-                  backdrop-blur-sm
-                  border
-                  border-white/30
                   rounded-xl
-                  text-white
-                  placeholder-white/60
                   focus:outline-none
                   focus:ring-2
-                  focus:ring-white/50
-                  focus:border-transparent
                   transition-all
                   duration-200
-                "
+                  ${isChristmas
+                    ? 'bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-white/60 focus:ring-white/50'
+                    : 'bg-[var(--input-bg)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:ring-[var(--primary)]/30 focus:border-[var(--primary)]'
+                  }
+                `}
                 type="text"
                 id="name"
                 name="name"
                 placeholder="Entrer le nom"
               />
               {form.formState.errors.name && (
-                <p className="text-red-300 text-sm mt-1 font-medium">
+                <p className="text-[var(--error)] text-sm mt-1 font-medium">
                   {form.formState.errors.name.message}
                 </p>
               )}
@@ -138,36 +133,32 @@ function AddItem() {
             <div className="relative">
               <label
                 htmlFor="price"
-                className="block text-white font-medium mb-2"
+                className={`block font-medium mb-2 ${isChristmas ? 'text-white' : 'text-[var(--text-secondary)]'}`}
               >
                 Prix
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <DollarSign className="h-5 w-5 text-white/60" />
+                  <DollarSign className={`h-5 w-5 ${isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]'}`} />
                 </div>
                 <input
                   {...form.register('price', { valueAsNumber: true })}
-                  className="
+                  className={`
                     block
                     w-full
                     pl-12
                     pr-4
                     py-3
-                    bg-white/20
-                    backdrop-blur-sm
-                    border
-                    border-white/30
                     rounded-xl
-                    text-white
-                    placeholder-white/60
                     focus:outline-none
                     focus:ring-2
-                    focus:ring-white/50
-                    focus:border-transparent
                     transition-all
                     duration-200
-                  "
+                    ${isChristmas
+                      ? 'bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-white/60 focus:ring-white/50'
+                      : 'bg-[var(--input-bg)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:ring-[var(--primary)]/30 focus:border-[var(--primary)]'
+                    }
+                  `}
                   type="number"
                   step="0.01"
                   id="price"
@@ -176,7 +167,7 @@ function AddItem() {
                 />
               </div>
               {form.formState.errors.price && (
-                <p className="text-red-300 text-sm mt-1 font-medium">
+                <p className="text-[var(--error)] text-sm mt-1 font-medium">
                   {form.formState.errors.price.message}
                 </p>
               )}
@@ -184,33 +175,31 @@ function AddItem() {
 
             {/* User select */}
             <div className="relative">
-              <label htmlFor="user" className="block text-white font-medium mb-2">
+              <label htmlFor="user" className={`block font-medium mb-2 ${isChristmas ? 'text-white' : 'text-[var(--text-secondary)]'}`}>
                 Pour
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-white/60" />
+                  <User className={`h-5 w-5 ${isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]'}`} />
                 </div>
                 <select
                   {...form.register('user')}
-                  className="
+                  className={`
                     block
                     w-full
                     pl-12
                     pr-4
                     py-3
-                    bg-white/20
-                    backdrop-blur-sm
-                    border
-                    border-white/30
                     rounded-xl
-                    text-white
                     focus:outline-none
                     focus:ring-2
-                    focus:ring-white/50
                     transition-all
                     duration-200
-                  "
+                    ${isChristmas
+                      ? 'bg-white/20 backdrop-blur-sm border border-white/30 text-white focus:ring-white/50'
+                      : 'bg-[var(--input-bg)] border border-[var(--border)] text-[var(--text-primary)] focus:ring-[var(--primary)]/30 focus:border-[var(--primary)]'
+                    }
+                  `}
                   id="user"
                   name="user"
                 >
@@ -223,7 +212,7 @@ function AddItem() {
                 </select>
               </div>
               {form.formState.errors.user && (
-                <p className="text-red-300 text-sm mt-1 font-medium">
+                <p className="text-[var(--error)] text-sm mt-1 font-medium">
                   {form.formState.errors.user.message}
                 </p>
               )}
@@ -231,35 +220,31 @@ function AddItem() {
 
             {/* URL input */}
             <div className="relative">
-              <label htmlFor="url" className="block text-white font-medium mb-2">
+              <label htmlFor="url" className={`block font-medium mb-2 ${isChristmas ? 'text-white' : 'text-[var(--text-secondary)]'}`}>
                 URL
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <LinkIcon className="h-5 w-5 text-white/60" />
+                  <LinkIcon className={`h-5 w-5 ${isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]'}`} />
                 </div>
                 <input
                   {...form.register('url')}
-                  className="
+                  className={`
                     block
                     w-full
                     pl-12
                     pr-4
                     py-3
-                    bg-white/20
-                    backdrop-blur-sm
-                    border
-                    border-white/30
                     rounded-xl
-                    text-white
-                    placeholder-white/60
                     focus:outline-none
                     focus:ring-2
-                    focus:ring-white/50
-                    focus:border-transparent
                     transition-all
                     duration-200
-                  "
+                    ${isChristmas
+                      ? 'bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-white/60 focus:ring-white/50'
+                      : 'bg-[var(--input-bg)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:ring-[var(--primary)]/30 focus:border-[var(--primary)]'
+                    }
+                  `}
                   type="text"
                   id="url"
                   name="url"
@@ -267,7 +252,7 @@ function AddItem() {
                 />
               </div>
               {form.formState.errors.url && (
-                <p className="text-red-300 text-sm mt-1 font-medium">
+                <p className="text-[var(--error)] text-sm mt-1 font-medium">
                   {form.formState.errors.url.message}
                 </p>
               )}
@@ -277,36 +262,32 @@ function AddItem() {
             <div className="relative">
               <label
                 htmlFor="comment"
-                className="block text-white font-medium mb-2"
+                className={`block font-medium mb-2 ${isChristmas ? 'text-white' : 'text-[var(--text-secondary)]'}`}
               >
                 Commentaire (optionnel)
               </label>
               <div className="relative">
                 <div className="absolute top-3 left-0 pl-4 flex items-start pointer-events-none">
-                  <MessageSquare className="h-5 w-5 text-white/60" />
+                  <MessageSquare className={`h-5 w-5 ${isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]'}`} />
                 </div>
                 <input
                   {...form.register('comment')}
-                  className="
+                  className={`
                     block
                     w-full
                     pl-12
                     pr-4
                     py-3
-                    bg-white/20
-                    backdrop-blur-sm
-                    border
-                    border-white/30
                     rounded-xl
-                    text-white
-                    placeholder-white/60
                     focus:outline-none
                     focus:ring-2
-                    focus:ring-white/50
-                    focus:border-transparent
                     transition-all
                     duration-200
-                  "
+                    ${isChristmas
+                      ? 'bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-white/60 focus:ring-white/50'
+                      : 'bg-[var(--input-bg)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:ring-[var(--primary)]/30 focus:border-[var(--primary)]'
+                    }
+                  `}
                   type="text"
                   id="comment"
                   name="comment"
@@ -314,7 +295,7 @@ function AddItem() {
                 />
               </div>
               {form.formState.errors.comment && (
-                <p className="text-red-300 text-sm mt-1 font-medium">
+                <p className="text-[var(--error)] text-sm mt-1 font-medium">
                   {form.formState.errors.comment.message}
                 </p>
               )}
@@ -324,36 +305,32 @@ function AddItem() {
             <div className="relative">
               <label
                 htmlFor="image"
-                className="block text-white font-medium mb-2"
+                className={`block font-medium mb-2 ${isChristmas ? 'text-white' : 'text-[var(--text-secondary)]'}`}
               >
                 URL de l&apos;image (optionnel)
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <ImageIcon className="h-5 w-5 text-white/60" />
+                  <ImageIcon className={`h-5 w-5 ${isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]'}`} />
                 </div>
                 <input
                   {...form.register('image')}
-                  className="
+                  className={`
                     block
                     w-full
                     pl-12
                     pr-4
                     py-3
-                    bg-white/20
-                    backdrop-blur-sm
-                    border
-                    border-white/30
                     rounded-xl
-                    text-white
-                    placeholder-white/60
                     focus:outline-none
                     focus:ring-2
-                    focus:ring-white/50
-                    focus:border-transparent
                     transition-all
                     duration-200
-                  "
+                    ${isChristmas
+                      ? 'bg-white/20 backdrop-blur-sm border border-white/30 text-white placeholder-white/60 focus:ring-white/50'
+                      : 'bg-[var(--input-bg)] border border-[var(--border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:ring-[var(--primary)]/30 focus:border-[var(--primary)]'
+                    }
+                  `}
                   type="text"
                   id="image"
                   name="image"
@@ -361,7 +338,7 @@ function AddItem() {
                 />
               </div>
               {form.formState.errors.image && (
-                <p className="text-red-300 text-sm mt-1 font-medium">
+                <p className="text-[var(--error)] text-sm mt-1 font-medium">
                   {form.formState.errors.image.message}
                 </p>
               )}
@@ -372,22 +349,21 @@ function AddItem() {
               <button
                 type="button"
                 onClick={() => router.push('/admin')}
-                className="
+                className={`
                   w-full
                   sm:w-1/2
                   px-6
                   py-3
                   rounded-xl
-                  bg-white/20
-                  backdrop-blur-sm
                   border
-                  border-white/30
-                  text-white
                   font-semibold
-                  hover:bg-white/30
                   transition-all
                   duration-200
-                "
+                  ${isChristmas
+                    ? 'bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30'
+                    : 'surface-card border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--input-bg)]'
+                  }
+                `}
               >
                 Retour
               </button>
@@ -411,9 +387,9 @@ function AddItem() {
                   hover:scale-[1.02]
                   active:scale-[0.98]
                   ${
-                    theme === 'christmas'
-                      ? 'bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 shadow-lg shadow-red-500/50'
-                      : 'bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 shadow-lg shadow-sky-500/50'
+                    isChristmas
+                      ? 'bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 shadow-lg'
+                      : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)] shadow-[var(--shadow-primary)]'
                   }
                 `}
               >

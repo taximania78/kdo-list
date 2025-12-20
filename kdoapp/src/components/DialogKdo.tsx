@@ -2,6 +2,7 @@ import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import { useState } from 'react';
 import api from '@/lib/api';
 import { Gift, CheckCircle, X } from 'lucide-react';
+import { isChristmas } from '@/lib/theme';
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
@@ -12,7 +13,6 @@ type DialogTakeKdoProps = {
   availability: boolean;
   takenBy: string;
   userLogged: string;
-  theme: string;
   onValidation?: () => void;
 };
 
@@ -23,13 +23,11 @@ const DialogKdo = ({
   availability,
   takenBy,
   userLogged,
-  theme,
   onValidation,
 }: DialogTakeKdoProps) => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false); // État pour contrôler le dialogue
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const takeKdo = async () => {
-    // Logique pour prendre le kdo
     console.log(`Taking kdo: ${id}`);
     try {
       const response = await api.post(`${ApiAdress}/api/take-api/${id}`);
@@ -49,8 +47,7 @@ const DialogKdo = ({
   };
 
   const untakeKdo = async () => {
-    // Logique pour prendre le kdo
-    console.log(`Unaking kdo: ${id}`);
+    console.log(`Untaking kdo: ${id}`);
     try {
       const response = await api.post(`${ApiAdress}/api/untake-api/${id}`);
 
@@ -68,43 +65,23 @@ const DialogKdo = ({
     }
   };
 
+  const getButtonClasses = () => {
+    if (availability) {
+      return 'bg-[var(--secondary)] hover:bg-[var(--secondary-hover)] text-[var(--on-primary)] shadow-[var(--shadow-primary)]';
+    }
+    if (takenBy !== userLogged) {
+      return 'bg-[var(--surface-muted)] text-[var(--text-muted)] cursor-not-allowed';
+    }
+    return 'bg-[var(--danger)] hover:bg-[var(--danger-hover)] text-[var(--on-primary)] shadow-[var(--shadow-primary)]';
+  };
+
   return (
     <AlertDialog.Root open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <AlertDialog.Trigger asChild>
         <button
           onClick={() => setIsDialogOpen(true)}
           disabled={!availability && takenBy !== userLogged}
-          className={`
-            w-full
-            flex
-            items-center
-            justify-center
-            gap-2
-            p-3
-            rounded-lg
-            font-semibold
-            transition-all
-            duration-200
-            transform
-            hover:scale-[1.02]
-            active:scale-[0.98]
-            disabled:opacity-50
-            disabled:cursor-not-allowed
-            disabled:hover:scale-100
-            ${
-              availability
-                ? theme === 'christmas'
-                  ? 'bg-green-700 hover:bg-green-800 text-white shadow-lg shadow-green-900/30'
-                  : 'bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-900/30'
-                : takenBy !== userLogged
-                  ? theme === 'christmas'
-                    ? 'bg-red-400 text-white cursor-not-allowed'
-                    : 'bg-slate-400 text-white cursor-not-allowed'
-                  : theme === 'christmas'
-                    ? 'bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-900/30'
-                    : 'bg-slate-600 hover:bg-slate-700 text-white shadow-lg shadow-slate-900/30'
-            }
-          `}
+          className={`w-full flex items-center justify-center gap-2 p-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 ${getButtonClasses()}`}
         >
           {availability ? (
             <>
@@ -125,91 +102,56 @@ const DialogKdo = ({
         </button>
       </AlertDialog.Trigger>
       <AlertDialog.Portal>
-        <AlertDialog.Overlay className="fixed inset-0 bg-black/90 z-50 data-[state=open]:animate-overlayShow" />
+        <AlertDialog.Overlay className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 data-[state=open]:animate-overlayShow" />
         <AlertDialog.Content
-          className={`
-            fixed
-            left-1/2
-            top-1/2
-            -translate-x-1/2
-            -translate-y-1/2
-            max-h-[85vh]
-            w-[90vw]
-            max-w-[500px]
-            z-50
-            backdrop-blur-lg
-            ${
-              theme === 'christmas'
-                ? 'bg-red-900/90'
-                : 'bg-indigo-900/90'
-            }
-            rounded-2xl
-            p-8
-            border
-            border-white/20
-            shadow-2xl
-            focus:outline-none
-            data-[state=open]:animate-contentShow
-          `}
+          className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-h-[85vh] w-[90vw] max-w-[500px] z-50 rounded-2xl p-8 border shadow-xl focus:outline-none data-[state=open]:animate-contentShow surface-card ${
+            isChristmas ? 'backdrop-blur-lg' : ''
+          }`}
         >
-          <AlertDialog.Title className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+          <AlertDialog.Title className="text-2xl font-bold mb-6 flex items-center gap-3 text-[var(--text-primary)]">
             {availability ? (
               <>
-                <Gift className="w-6 h-6" />
+                <Gift className="w-6 h-6 text-[var(--primary)]" />
                 Confirmes-tu ton choix?
               </>
             ) : (
               <>
-                <CheckCircle className="w-6 h-6" />
+                <CheckCircle className="w-6 h-6 text-[var(--primary)]" />
                 Libérer cette idée?
               </>
             )}
           </AlertDialog.Title>
-          <AlertDialog.Description className="text-white/90 mb-6 space-y-3">
-            {availability ? (
-              <div className="space-y-2 p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-                <div>
-                  <span className="font-semibold text-white">Produit : </span>
-                  <span className="text-white/90">{name}</span>
-                </div>
-                {comment && (
+          <AlertDialog.Description asChild>
+            <div className="mb-6 space-y-3 text-[var(--text-secondary)]">
+              {availability ? (
+                <div className="space-y-2 p-4 rounded-lg border bg-[var(--surface-hover)] border-[var(--border-light)]">
                   <div>
-                    <span className="font-semibold text-white">
-                      Commentaire :{' '}
-                    </span>
-                    <span className="text-white/90">{comment}</span>
+                    <span className="font-semibold text-[var(--text-primary)]">Produit : </span>
+                    <span>{name}</span>
                   </div>
-                )}
-              </div>
-            ) : (
-              <div className="p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-                <p className="text-white/90">
-                  <span className="font-semibold text-white">{name}</span> sera
-                  de nouveau disponible pour d&apos;autres personnes.
-                </p>
-              </div>
-            )}
+                  {comment && (
+                    <div>
+                      <span className="font-semibold text-[var(--text-primary)]">Commentaire : </span>
+                      <span>{comment}</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-4 rounded-lg border bg-[var(--surface-hover)] border-[var(--border-light)]">
+                  <p>
+                    <span className="font-semibold text-[var(--text-primary)]">{name}</span> sera de
+                    nouveau disponible pour d&apos;autres personnes.
+                  </p>
+                </div>
+              )}
+            </div>
           </AlertDialog.Description>
           <div className="flex gap-3">
             <AlertDialog.Cancel asChild>
               <button
                 type="button"
                 onClick={() => setIsDialogOpen(false)}
-                className="
-                  flex-1
-                  px-4
-                  py-3
-                  rounded-lg
-                  bg-white/20
-                  hover:bg-white/30
-                  text-white
-                  font-medium
-                  transition-all
-                  duration-200
-                  backdrop-blur-sm
-                  border
-                  border-white/30
-                "
+                className="flex-1 px-4 py-3 rounded-lg font-medium transition-all duration-200 border bg-[var(--surface-hover)] hover:bg-[var(--surface-muted)] text-[var(--text-primary)] border-[var(--border)]"
               >
                 Non
               </button>
@@ -223,28 +165,11 @@ const DialogKdo = ({
                   untakeKdo();
                 }
               }}
-              className={`
-                flex-1
-                flex
-                items-center
-                justify-center
-                gap-2
-                px-4
-                py-3
-                rounded-lg
-                text-white
-                font-semibold
-                transition-all
-                duration-200
-                transform
-                hover:scale-[1.02]
-                active:scale-[0.98]
-                ${
-                  theme === 'christmas'
-                    ? 'bg-gradient-to-r from-green-600 to-red-600 hover:from-green-700 hover:to-red-700 shadow-lg shadow-green-500/30'
-                    : 'bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 shadow-lg shadow-sky-500/30'
-                }
-              `}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-[var(--on-primary)] font-semibold transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-[var(--shadow-primary)] ${
+                isChristmas
+                  ? 'bg-gradient-to-r from-green-600 to-red-600 hover:from-green-700 hover:to-red-700'
+                  : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)]'
+              }`}
             >
               {availability ? (
                 <>

@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import FormModifyPwd from '@/components/FormModifyPwd';
 import { Lock } from 'lucide-react';
-
-const theme = process.env.NEXT_PUBLIC_THEME || 'default';
+import { isChristmas } from '@/lib/theme';
 
 export default function ChangePassword() {
   const router = useRouter();
@@ -26,11 +25,11 @@ export default function ChangePassword() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-400 to-indigo-600">
-        <div className="backdrop-blur-lg bg-white/10 rounded-2xl p-8 border border-white/20">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="surface-card rounded-2xl p-8 border border-[var(--border)] shadow-lg">
           <div className="flex items-center gap-3">
-            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            <p className="text-white text-lg font-medium">Chargement...</p>
+            <div className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+            <p className="text-[var(--text-primary)] text-lg font-medium">Chargement...</p>
           </div>
         </div>
       </div>
@@ -52,28 +51,28 @@ export default function ChangePassword() {
       "
     >
       <div className="w-full max-w-md z-10">
-        {/* Glassmorphism card */}
+        {/* Card */}
         <div
           className={`
-            backdrop-blur-lg
-            bg-white/10
             rounded-3xl
-            shadow-2xl
+            shadow-xl
             p-8
             border
-            border-white/20
-            ${theme === 'christmas' ? 'animate-glow' : ''}
+            ${isChristmas
+              ? 'backdrop-blur-lg bg-white/10 border-white/20 animate-glow'
+              : 'surface-card border-[var(--border)]'
+            }
           `}
         >
           {/* Header with icon */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <Lock className="w-16 h-16 text-white drop-shadow-lg" />
+              <Lock className={`w-16 h-16 ${isChristmas ? 'text-white drop-shadow-lg' : 'text-[var(--primary)]'}`} />
             </div>
-            <h1 className="text-3xl font-bold text-white drop-shadow-lg">
+            <h1 className={`text-3xl font-bold ${isChristmas ? 'text-white drop-shadow-lg' : 'text-[var(--text-primary)]'}`}>
               Modifier mon mot de passe
             </h1>
-            <p className="mt-2 text-white/80 text-sm">
+            <p className={`mt-2 text-sm ${isChristmas ? 'text-white/80' : 'text-[var(--text-muted)]'}`}>
               Saisissez votre nouveau mot de passe
             </p>
           </div>

@@ -8,6 +8,7 @@ import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import * as Accordion from '@radix-ui/react-accordion';
 import { z } from 'zod';
 import api from '@/lib/api';
+import { isChristmas } from '@/lib/theme';
 import {
   ChevronDown,
   Tag,
@@ -47,17 +48,15 @@ interface FormModifyItemProps {
     image?: string | null;
   };
   id: number;
-  theme: string;
   onFormSubmit?: () => void;
 }
 
 export default function FormModifyItem({
   kdo,
   id,
-  theme,
   onFormSubmit,
 }: FormModifyItemProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false); // État pour contrôler le dialogue
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const { register, handleSubmit } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -89,8 +88,7 @@ export default function FormModifyItem({
 
       const data = response.data;
       console.log('Success:', data, values);
-      setIsDialogOpen(false); // Fermer le dialogue après succès
-      // window.location.reload();
+      setIsDialogOpen(false);
       if (onFormSubmit) {
         onFormSubmit();
       }
@@ -119,27 +117,15 @@ export default function FormModifyItem({
     }
   };
 
+  const inputClasses =
+    'block w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:ring-[var(--input-focus)]';
+
   return (
     <AlertDialog.Root open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <AlertDialog.Trigger asChild>
         <button
           onClick={() => setIsDialogOpen(true)}
-          className={`
-            inline-flex
-            items-center
-            gap-2
-            rounded-lg
-            px-6
-            py-2
-            font-medium
-            transition-all
-            duration-200
-            ${
-              theme === 'christmas'
-                ? 'bg-white/90 text-red-700 hover:bg-white border border-red-200/50'
-                : 'bg-white/90 text-sky-700 hover:bg-white border border-sky-200/50'
-            }
-          `}
+          className="inline-flex items-center gap-2 rounded-lg px-6 py-2 font-medium transition-all duration-200 bg-[var(--surface)] text-[var(--primary)] hover:bg-[var(--surface-hover)] border border-[var(--border)]"
         >
           <Save className="w-4 h-4" />
           Modifier
@@ -147,36 +133,14 @@ export default function FormModifyItem({
       </AlertDialog.Trigger>
 
       <AlertDialog.Portal>
-        <AlertDialog.Overlay className="fixed inset-0 bg-black/90 z-50 data-[state=open]:animate-overlayShow" />
+        <AlertDialog.Overlay className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 data-[state=open]:animate-overlayShow" />
         <AlertDialog.Content
-          className={`
-            fixed
-            left-1/2
-            top-1/2
-            -translate-x-1/2
-            -translate-y-1/2
-            max-h-[85vh]
-            w-[90vw]
-            max-w-[600px]
-            z-50
-            overflow-y-auto
-            backdrop-blur-lg
-            ${
-              theme === 'christmas'
-                ? 'bg-red-900/90'
-                : 'bg-indigo-900/90'
-            }
-            rounded-2xl
-            p-8
-            border
-            border-white/20
-            shadow-2xl
-            focus:outline-none
-            data-[state=open]:animate-contentShow
-          `}
+          className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 max-h-[85vh] w-[90vw] max-w-[600px] z-50 overflow-y-auto surface-card rounded-2xl p-8 shadow-xl focus:outline-none data-[state=open]:animate-contentShow ${
+            isChristmas ? 'backdrop-blur-lg' : ''
+          }`}
         >
-          <AlertDialog.Title className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-            <Save className="w-6 h-6" />
+          <AlertDialog.Title className="text-2xl font-bold mb-6 flex items-center gap-3 text-[var(--text-primary)]">
+            <Save className="w-6 h-6 text-[var(--primary)]" />
             Modifier : {kdo.name}
           </AlertDialog.Title>
           <AlertDialog.Description asChild>
@@ -188,36 +152,17 @@ export default function FormModifyItem({
               >
                 <div className="relative">
                   <label
-                    className="block text-white/90 font-medium mb-2"
+                    className="block font-medium mb-2 text-[var(--text-secondary)]"
                     htmlFor="name"
                   >
                     Nom
                   </label>
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none mt-8">
-                    <Tag className="h-5 w-5 text-white/60" />
+                    <Tag className="h-5 w-5 text-[var(--text-muted)]" />
                   </div>
                   <input
                     {...register('name')}
-                    className="
-                      block
-                      w-full
-                      pl-10
-                      pr-4
-                      py-3
-                      bg-white/20
-                      backdrop-blur-sm
-                      border
-                      border-white/30
-                      rounded-lg
-                      text-white
-                      placeholder-white/60
-                      focus:outline-none
-                      focus:ring-2
-                      focus:ring-white/50
-                      focus:border-transparent
-                      transition-all
-                      duration-200
-                    "
+                    className={inputClasses}
                     type="text"
                     id="name"
                     name="name"
@@ -228,36 +173,17 @@ export default function FormModifyItem({
 
                 <div className="relative">
                   <label
-                    className="block text-white/90 font-medium mb-2"
+                    className="block font-medium mb-2 text-[var(--text-secondary)]"
                     htmlFor="price"
                   >
                     Prix
                   </label>
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none mt-8">
-                    <DollarSign className="h-5 w-5 text-white/60" />
+                    <DollarSign className="h-5 w-5 text-[var(--text-muted)]" />
                   </div>
                   <input
                     {...register('price', { valueAsNumber: true })}
-                    className="
-                      block
-                      w-full
-                      pl-10
-                      pr-4
-                      py-3
-                      bg-white/20
-                      backdrop-blur-sm
-                      border
-                      border-white/30
-                      rounded-lg
-                      text-white
-                      placeholder-white/60
-                      focus:outline-none
-                      focus:ring-2
-                      focus:ring-white/50
-                      focus:border-transparent
-                      transition-all
-                      duration-200
-                    "
+                    className={inputClasses}
                     type="number"
                     step="0.01"
                     id="price"
@@ -269,31 +195,14 @@ export default function FormModifyItem({
 
                 <div>
                   <label
-                    className="block text-white/90 font-medium mb-2"
+                    className="block font-medium mb-2 text-[var(--text-secondary)]"
                     htmlFor="user"
                   >
                     Pour
                   </label>
                   <select
                     {...register('user')}
-                    className="
-                      block
-                      w-full
-                      px-4
-                      py-3
-                      bg-white/20
-                      backdrop-blur-sm
-                      border
-                      border-white/30
-                      rounded-lg
-                      text-white
-                      focus:outline-none
-                      focus:ring-2
-                      focus:ring-white/50
-                      focus:border-transparent
-                      transition-all
-                      duration-200
-                    "
+                    className="block w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--text-primary)] focus:ring-[var(--input-focus)]"
                     id="user"
                     name="user"
                     defaultValue={kdo.user}
@@ -309,36 +218,17 @@ export default function FormModifyItem({
 
                 <div className="relative">
                   <label
-                    className="block text-white/90 font-medium mb-2"
+                    className="block font-medium mb-2 text-[var(--text-secondary)]"
                     htmlFor="url"
                   >
                     URL
                   </label>
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none mt-8">
-                    <LinkIcon className="h-5 w-5 text-white/60" />
+                    <LinkIcon className="h-5 w-5 text-[var(--text-muted)]" />
                   </div>
                   <input
                     {...register('url')}
-                    className="
-                      block
-                      w-full
-                      pl-10
-                      pr-4
-                      py-3
-                      bg-white/20
-                      backdrop-blur-sm
-                      border
-                      border-white/30
-                      rounded-lg
-                      text-white
-                      placeholder-white/60
-                      focus:outline-none
-                      focus:ring-2
-                      focus:ring-white/50
-                      focus:border-transparent
-                      transition-all
-                      duration-200
-                    "
+                    className={inputClasses}
                     type="text"
                     id="url"
                     name="url"
@@ -349,37 +239,17 @@ export default function FormModifyItem({
 
                 <div className="relative">
                   <label
-                    className="block text-white/90 font-medium mb-2"
+                    className="block font-medium mb-2 text-[var(--text-secondary)]"
                     htmlFor="comment"
                   >
                     Commentaire
                   </label>
                   <div className="absolute top-12 left-0 pl-3 flex items-start pointer-events-none">
-                    <MessageSquare className="h-5 w-5 text-white/60" />
+                    <MessageSquare className="h-5 w-5 text-[var(--text-muted)]" />
                   </div>
                   <textarea
                     {...register('comment')}
-                    className="
-                      block
-                      w-full
-                      pl-10
-                      pr-4
-                      py-3
-                      bg-white/20
-                      backdrop-blur-sm
-                      border
-                      border-white/30
-                      rounded-lg
-                      text-white
-                      placeholder-white/60
-                      focus:outline-none
-                      focus:ring-2
-                      focus:ring-white/50
-                      focus:border-transparent
-                      transition-all
-                      duration-200
-                      min-h-[80px]
-                    "
+                    className={`${inputClasses} min-h-[80px]`}
                     id="comment"
                     name="comment"
                     placeholder="Entrer un commentaire"
@@ -389,36 +259,17 @@ export default function FormModifyItem({
 
                 <div className="relative">
                   <label
-                    className="block text-white/90 font-medium mb-2"
+                    className="block font-medium mb-2 text-[var(--text-secondary)]"
                     htmlFor="image"
                   >
                     URL de l&apos;image
                   </label>
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none mt-8">
-                    <ImageIcon className="h-5 w-5 text-white/60" />
+                    <ImageIcon className="h-5 w-5 text-[var(--text-muted)]" />
                   </div>
                   <input
                     {...register('image')}
-                    className="
-                      block
-                      w-full
-                      pl-10
-                      pr-4
-                      py-3
-                      bg-white/20
-                      backdrop-blur-sm
-                      border
-                      border-white/30
-                      rounded-lg
-                      text-white
-                      placeholder-white/60
-                      focus:outline-none
-                      focus:ring-2
-                      focus:ring-white/50
-                      focus:border-transparent
-                      transition-all
-                      duration-200
-                    "
+                    className={inputClasses}
                     type="text"
                     id="image"
                     name="image"
@@ -435,21 +286,7 @@ export default function FormModifyItem({
               <button
                 type="button"
                 onClick={() => setIsDialogOpen(false)}
-                className="
-                  flex-1
-                  px-4
-                  py-3
-                  rounded-lg
-                  bg-white/20
-                  hover:bg-white/30
-                  text-white
-                  font-medium
-                  transition-all
-                  duration-200
-                  backdrop-blur-sm
-                  border
-                  border-white/30
-                "
+                className="flex-1 px-4 py-3 rounded-lg font-medium transition-all duration-200 border bg-[var(--surface-hover)] hover:bg-[var(--surface-muted)] text-[var(--text-primary)] border-[var(--border)]"
               >
                 Annuler
               </button>
@@ -460,28 +297,11 @@ export default function FormModifyItem({
               onClick={() => {
                 handleSubmit(onSubmit)();
               }}
-              className={`
-                flex-1
-                flex
-                items-center
-                justify-center
-                gap-2
-                px-4
-                py-3
-                rounded-lg
-                text-white
-                font-semibold
-                transition-all
-                duration-200
-                transform
-                hover:scale-[1.02]
-                active:scale-[0.98]
-                ${
-                  theme === 'christmas'
-                    ? 'bg-gradient-to-r from-green-600 to-red-600 hover:from-green-700 hover:to-red-700 shadow-lg shadow-green-500/30'
-                    : 'bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 shadow-lg shadow-sky-500/30'
-                }
-              `}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-[var(--on-primary)] font-semibold transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-[var(--shadow-primary)] ${
+                isChristmas
+                  ? 'bg-gradient-to-r from-green-600 to-red-600 hover:from-green-700 hover:to-red-700'
+                  : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)]'
+              }`}
             >
               <Save className="w-5 h-5" />
               Enregistrer
@@ -490,36 +310,12 @@ export default function FormModifyItem({
 
           <div className="mt-4">
             <Accordion.Root
-              className={`
-                rounded-lg
-                overflow-hidden
-                border
-                ${
-                  theme === 'christmas'
-                    ? 'border-red-700/50 bg-red-950/30'
-                    : 'border-indigo-700/50 bg-indigo-950/30'
-                }
-                backdrop-blur-sm
-              `}
+              className="rounded-lg overflow-hidden border border-[var(--danger)] bg-[var(--surface-muted)]"
               type="single"
               collapsible
             >
               <Accordion.Item value="item-1" className="border-none">
-                <Accordion.Trigger
-                  className="
-                    flex
-                    justify-between
-                    items-center
-                    w-full
-                    px-4
-                    py-3
-                    text-red-400
-                    hover:text-red-300
-                    transition-colors
-                    duration-200
-                    group
-                  "
-                >
+                <Accordion.Trigger className="flex justify-between items-center w-full px-4 py-3 text-[var(--danger)] hover:text-[var(--danger-hover)] transition-colors duration-200 group">
                   <span className="text-sm font-medium flex items-center gap-2">
                     <Trash2 className="w-4 h-4" />
                     Supprimer l&apos;idée ?
@@ -528,27 +324,7 @@ export default function FormModifyItem({
                 </Accordion.Trigger>
                 <Accordion.Content className="px-4 pb-4 pt-2 data-[state=open]:animate-slideDown data-[state=closed]:animate-slideUp">
                   <button
-                    className="
-                      w-full
-                      flex
-                      items-center
-                      justify-center
-                      gap-2
-                      rounded-lg
-                      text-white
-                      px-6
-                      py-3
-                      bg-red-600
-                      hover:bg-red-700
-                      font-semibold
-                      transition-all
-                      duration-200
-                      transform
-                      hover:scale-[1.02]
-                      active:scale-[0.98]
-                      shadow-lg
-                      shadow-red-500/30
-                    "
+                    className="w-full flex items-center justify-center gap-2 rounded-lg text-[var(--on-primary)] px-6 py-3 bg-[var(--danger)] hover:bg-[var(--danger-hover)] font-semibold transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
                     onClick={() => {
                       if (
                         window.confirm(

@@ -9,8 +9,8 @@ import { useRouter } from 'next/navigation';
 import { Plus, ChevronDown, ChevronUp, Settings, Download } from 'lucide-react';
 import * as Select from '@radix-ui/react-select';
 import FormModifyItem from '@/components/FormModifyItem';
+import { isChristmas } from '@/lib/theme';
 
-const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 /** ---------------------
@@ -111,17 +111,14 @@ function Admin() {
           rounded-xl
           px-4
           py-3
-          bg-white/20
-          backdrop-blur-sm
-          border
-          border-white/30
-          text-white
           focus:outline-none
           focus:ring-2
-          focus:ring-white/50
           transition-all
           duration-200
-          hover:bg-white/30
+          ${isChristmas
+            ? 'bg-white/20 backdrop-blur-sm border border-white/30 text-white focus:ring-white/50 hover:bg-white/30'
+            : 'surface-card border border-[var(--border)] text-[var(--text-primary)] focus:ring-[var(--primary)]/30 hover:bg-[var(--input-bg)]'
+          }
         `}
         aria-label="Sélectionner l'utilisateur"
       >
@@ -132,8 +129,8 @@ function Admin() {
       </Select.Trigger>
 
       <Select.Portal>
-        <Select.Content className="overflow-hidden rounded-xl bg-white/90 backdrop-blur-lg shadow-2xl border border-white/20 z-50">
-          <Select.ScrollUpButton className="flex h-6 items-center justify-center bg-white/50">
+        <Select.Content className="overflow-hidden rounded-xl surface-card shadow-xl border border-[var(--border)] z-50">
+          <Select.ScrollUpButton className="flex h-6 items-center justify-center bg-[var(--input-bg)]">
             <ChevronUp className="w-4 h-4" />
           </Select.ScrollUpButton>
 
@@ -150,11 +147,7 @@ function Admin() {
                 px-4
                 py-2
                 transition-colors
-                ${
-                  theme === 'christmas'
-                    ? 'hover:bg-red-100 text-red-900'
-                    : 'hover:bg-sky-100 text-sky-900'
-                }
+                hover:bg-[var(--primary)]/10 text-[var(--text-primary)]
               `}
             >
               <Select.ItemText>Personne</Select.ItemText>
@@ -171,18 +164,14 @@ function Admin() {
                 px-4
                 py-2
                 transition-colors
-                ${
-                  theme === 'christmas'
-                    ? 'hover:bg-red-100 text-red-900'
-                    : 'hover:bg-sky-100 text-sky-900'
-                }
+                hover:bg-[var(--primary)]/10 text-[var(--text-primary)]
               `}
             >
               <Select.ItemText>Mathieu</Select.ItemText>
             </Select.Item>
           </Select.Viewport>
 
-          <Select.ScrollDownButton className="flex h-6 items-center justify-center bg-white/50">
+          <Select.ScrollDownButton className="flex h-6 items-center justify-center bg-[var(--input-bg)]">
             <ChevronDown className="w-4 h-4" />
           </Select.ScrollDownButton>
         </Select.Content>
@@ -208,22 +197,22 @@ function Admin() {
         {/* Header with title and controls */}
         <div
           className={`
-            backdrop-blur-lg
-            bg-white/10
             rounded-3xl
-            shadow-2xl
+            shadow-xl
             p-6
             sm:p-8
             border
-            border-white/20
             mb-8
-            ${theme === 'christmas' ? 'animate-glow' : ''}
+            ${isChristmas
+              ? 'backdrop-blur-lg bg-white/10 border-white/20 animate-glow'
+              : 'surface-card border-[var(--border)]'
+            }
           `}
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <Settings className="w-8 h-8 text-white" />
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">
+              <Settings className={`w-8 h-8 ${isChristmas ? 'text-white' : 'text-[var(--primary)]'}`} />
+              <h1 className={`text-2xl sm:text-3xl font-bold ${isChristmas ? 'text-white' : 'text-[var(--text-primary)]'}`}>
                 Modifier mes idées
               </h1>
             </div>
@@ -247,9 +236,9 @@ function Admin() {
                   hover:scale-[1.02]
                   active:scale-[0.98]
                   ${
-                    theme === 'christmas'
+                    isChristmas
                       ? 'bg-gradient-to-r from-green-600 to-red-600 hover:from-green-700 hover:to-red-700 shadow-lg shadow-green-500/50'
-                      : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg shadow-indigo-500/50'
+                      : 'bg-[var(--text-secondary)] hover:bg-[var(--text-secondary)]/90 shadow-lg'
                   }
                 `}
               >
@@ -274,9 +263,9 @@ function Admin() {
                   hover:scale-[1.02]
                   active:scale-[0.98]
                   ${
-                    theme === 'christmas'
-                      ? 'bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 shadow-lg shadow-red-500/50'
-                      : 'bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 shadow-lg shadow-sky-500/50'
+                    isChristmas
+                      ? 'bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 shadow-lg'
+                      : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)] shadow-[var(--shadow-primary)]'
                   }
                 `}
               >
@@ -289,59 +278,50 @@ function Admin() {
 
         {/* Content */}
         {!kdosList && (
-          <div className="backdrop-blur-lg bg-white/10 rounded-2xl p-8 border border-white/20 text-center">
+          <div className="surface-card rounded-2xl p-8 border border-[var(--border)] shadow-lg text-center">
             <div className="flex justify-center mb-4">
-              <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-3 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
             </div>
-            <p className="text-white text-lg">Chargement des données...</p>
+            <p className="text-[var(--text-primary)] text-lg">Chargement des données...</p>
           </div>
         )}
 
         {kdosList && kdosList.length === 0 && (
-          <div className="backdrop-blur-lg bg-white/10 rounded-2xl p-8 border border-white/20 text-center">
-            <p className="text-white text-lg">
+          <div className="surface-card rounded-2xl p-8 border border-[var(--border)] shadow-lg text-center">
+            <p className="text-[var(--text-primary)] text-lg">
               Aucun cadeau trouvé pour cet utilisateur.
             </p>
           </div>
         )}
 
         {kdosList && kdosList.length !== 0 && (
-          <div className="backdrop-blur-lg bg-white/10 rounded-2xl border border-white/20 overflow-hidden">
+          <div className="surface-card rounded-2xl border border-[var(--border)] shadow-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead
-                  className={`
-                    ${
-                      theme === 'christmas'
-                        ? 'bg-red-900/30'
-                        : 'bg-indigo-900/30'
-                    }
-                    backdrop-blur-sm
-                  `}
-                >
+                <thead className="bg-[var(--table-header)]">
                   <tr>
-                    <th className="px-6 py-4 text-left text-white font-semibold">
+                    <th className="px-6 py-4 text-left font-semibold text-[var(--text-primary)]">
                       Image
                     </th>
-                    <th className="px-6 py-4 text-left text-white font-semibold">
+                    <th className="px-6 py-4 text-left font-semibold text-[var(--text-primary)]">
                       Idée
                     </th>
-                    <th className="px-6 py-4 text-left text-white font-semibold">
+                    <th className="px-6 py-4 text-left font-semibold text-[var(--text-primary)]">
                       Pour
                     </th>
-                    <th className="px-6 py-4 text-center text-white font-semibold">
+                    <th className="px-6 py-4 text-center font-semibold text-[var(--text-primary)]">
                       Action
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/10">
+                <tbody className="divide-y divide-[var(--border)]">
                   {kdosList.map((kdo) => (
                     <tr
                       key={kdo.id}
-                      className="hover:bg-white/5 transition-colors"
+                      className="hover:bg-[var(--primary)]/5 transition-colors"
                     >
                       <td className="px-6 py-4">
-                        <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-white/10 backdrop-blur-sm">
+                        <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-[var(--input-bg)]">
                           <Image
                             src={`/api/kdos/${kdo.imageDisplay}`}
                             alt={`Image ${kdo.name}`}
@@ -350,15 +330,14 @@ function Admin() {
                           />
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-white font-medium">
+                      <td className="px-6 py-4 text-[var(--text-primary)] font-medium">
                         {kdo.name}
                       </td>
-                      <td className="px-6 py-4 text-white">{kdo.user}</td>
+                      <td className="px-6 py-4 text-[var(--text-secondary)]">{kdo.user}</td>
                       <td className="px-6 py-4 text-center">
                         <FormModifyItem
                           kdo={kdo}
                           id={kdo.id}
-                          theme={theme}
                           onFormSubmit={() => fetchKdos(kdo.user)}
                         />
                       </td>

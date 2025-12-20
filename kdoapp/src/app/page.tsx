@@ -4,8 +4,8 @@ import { useEffect, FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { User, Lock, LogIn, Gift, Sparkles } from 'lucide-react';
+import { isChristmas } from '@/lib/theme';
 
-const theme = process.env.NEXT_PUBLIC_THEME || 'default';
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 export default function LoginPage() {
@@ -16,7 +16,6 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      // User already logged in, redirect based on role
       if (user.isAdmin) {
         router.push('/admin');
       } else {
@@ -50,13 +49,11 @@ export default function LoginPage() {
 
         const firstConnection = data.firstConnection;
         if (firstConnection) {
-          // Set temporary flag for first-connection page validation
           sessionStorage.setItem('requirePasswordChange', 'true');
           router.push('/first-connection');
           return;
         }
-        const admin = data.isAdmin;
-        if (admin) {
+        if (data.isAdmin) {
           router.push('/admin');
         } else {
           router.push('/list');
@@ -72,86 +69,45 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      className="
-        flex
-        items-center
-        justify-center
-        px-4
-        py-8
-        sm:px-6
-        lg:px-8
-        relative
-      "
-    >
-      {/* Main card container with fade-in animation */}
+    <div className="flex items-center justify-center px-4 py-8 sm:px-6 lg:px-8 relative">
       <div className="w-full max-w-md z-10 animate-fadeInUp">
-        {/* Glassmorphism card */}
         <div
-          className={`
-            backdrop-blur-lg
-            bg-white/10
-            rounded-3xl
-            shadow-2xl
-            p-8
-            border
-            border-white/20
-            ${theme === 'christmas' ? 'animate-glow' : ''}
-          `}
+          className={`surface-card rounded-3xl shadow-xl p-8 ${
+            isChristmas ? 'backdrop-blur-lg animate-glow' : ''
+          }`}
         >
           {/* Header with icon */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              {theme === 'christmas' ? (
-                <Gift className="w-16 h-16 text-white drop-shadow-lg" />
+              {isChristmas ? (
+                <Gift className="w-16 h-16 text-[var(--text-primary)] drop-shadow-lg" />
               ) : (
-                <Sparkles className="w-16 h-16 text-white drop-shadow-lg" />
+                <Sparkles className="w-16 h-16 text-[var(--primary)]" />
               )}
             </div>
-            <h2
-              className={`
-                text-3xl
-                font-bold
-                text-white
-                drop-shadow-lg
-                ${theme === 'christmas' ? 'font-serif' : ''}
-              `}
-            >
-              {theme === 'christmas' ? '🎄 Connexion 🎄' : 'Bienvenue'}
+            <h2 className="text-3xl font-bold text-[var(--text-primary)]">
+              {isChristmas ? '🎄 Connexion 🎄' : 'Bienvenue'}
             </h2>
-            <p className="mt-2 text-white/80 text-sm">
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">
               Connectez-vous pour accéder aux listes
             </p>
           </div>
 
-          {/* Error message with shake animation */}
+          {/* Error message */}
           {error && (
-            <div
-              className="
-                mb-6
-                p-4
-                bg-red-500/90
-                text-white
-                rounded-lg
-                text-center
-                font-medium
-                animate-shake
-                backdrop-blur-sm
-              "
-            >
+            <div className="mb-6 p-4 bg-[var(--danger)] text-[var(--on-primary)] rounded-lg text-center font-medium animate-shake backdrop-blur-sm">
               {error}
             </div>
           )}
 
           {/* Login form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Username input */}
             <div className="relative">
               <label htmlFor="username" className="sr-only">
                 Nom d&apos;utilisateur
               </label>
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <User className="h-5 w-5 text-white/60" />
+                <User className="h-5 w-5 text-[var(--text-muted)]" />
               </div>
               <input
                 id="username"
@@ -160,39 +116,17 @@ export default function LoginPage() {
                 autoComplete="username"
                 required
                 disabled={isLoading}
-                className="
-                  block
-                  w-full
-                  pl-12
-                  pr-4
-                  py-3
-                  bg-white/20
-                  backdrop-blur-sm
-                  border
-                  border-white/30
-                  rounded-xl
-                  text-white
-                  placeholder-white/60
-                  focus:outline-none
-                  focus:ring-2
-                  focus:ring-white/50
-                  focus:border-transparent
-                  transition-all
-                  duration-200
-                  disabled:opacity-50
-                  disabled:cursor-not-allowed
-                "
+                className="block w-full pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:ring-[var(--input-focus)]"
                 placeholder="Nom d'utilisateur"
               />
             </div>
 
-            {/* Password input */}
             <div className="relative">
               <label htmlFor="password" className="sr-only">
                 Mot de passe
               </label>
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Lock className="h-5 w-5 text-white/60" />
+                <Lock className="h-5 w-5 text-[var(--text-muted)]" />
               </div>
               <input
                 id="password"
@@ -201,61 +135,19 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 required
                 disabled={isLoading}
-                className="
-                  block
-                  w-full
-                  pl-12
-                  pr-4
-                  py-3
-                  bg-white/20
-                  backdrop-blur-sm
-                  border
-                  border-white/30
-                  rounded-xl
-                  text-white
-                  placeholder-white/60
-                  focus:outline-none
-                  focus:ring-2
-                  focus:ring-white/50
-                  focus:border-transparent
-                  transition-all
-                  duration-200
-                  disabled:opacity-50
-                  disabled:cursor-not-allowed
-                "
+                className="block w-full pl-12 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:ring-[var(--input-focus)]"
                 placeholder="Mot de passe"
               />
             </div>
 
-            {/* Submit button */}
             <button
               type="submit"
               disabled={isLoading}
-              className={`
-                w-full
-                flex
-                items-center
-                justify-center
-                gap-2
-                py-3
-                px-4
-                rounded-xl
-                text-white
-                font-semibold
-                transition-all
-                duration-200
-                transform
-                hover:scale-[1.02]
-                active:scale-[0.98]
-                disabled:opacity-50
-                disabled:cursor-not-allowed
-                disabled:hover:scale-100
-                ${
-                  theme === 'christmas'
-                    ? 'bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 shadow-lg shadow-red-500/50'
-                    : 'bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 shadow-lg shadow-sky-500/50'
-                }
-              `}
+              className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-[var(--on-primary)] font-semibold transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-[var(--shadow-primary)] ${
+                isChristmas
+                  ? 'bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700'
+                  : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)]'
+              }`}
             >
               {isLoading ? (
                 <>
@@ -271,17 +163,15 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Footer message */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-white/70 italic">
+            <p className="text-sm italic text-[var(--text-muted)]">
               Mot de passe oublié ? Contactez-moi.
             </p>
           </div>
         </div>
 
-        {/* Decorative elements for Christmas theme */}
-        {theme === 'christmas' && (
-          <div className="mt-4 text-center text-white/60 text-xs">
+        {isChristmas && (
+          <div className="mt-4 text-center text-[var(--text-muted)] text-xs">
             ✨ Joyeux Noël ! ✨
           </div>
         )}

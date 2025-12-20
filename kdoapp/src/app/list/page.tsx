@@ -7,8 +7,7 @@ import { Mountains_of_Christmas, Atma } from 'next/font/google';
 import KdosList from '@/components/KdosList';
 import { useSearchParams } from 'next/navigation';
 import { Gift, Sparkles } from 'lucide-react';
-
-const theme = process.env.NEXT_PUBLIC_THEME || 'default';
+import { isChristmas, themeConfig } from '@/lib/theme';
 
 const mountains_of_christmas = Mountains_of_Christmas({
   weight: '700',
@@ -36,11 +35,11 @@ function List() {
   // Show loading during auth check
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-400 to-indigo-600">
-        <div className="backdrop-blur-lg bg-white/10 rounded-2xl p-8 border border-white/20">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="surface-card rounded-2xl p-8 border border-[var(--border)] shadow-lg">
           <div className="flex items-center gap-3">
-            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            <p className="text-white text-lg font-medium">Chargement...</p>
+            <div className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+            <p className="text-[var(--text-primary)] text-lg font-medium">Chargement...</p>
           </div>
         </div>
       </div>
@@ -71,10 +70,10 @@ function List() {
           {/* Header section */}
           <div className="text-center mb-8 animate-fadeInUp">
             <div className="flex justify-center mb-4">
-              {theme === 'christmas' ? (
+              {isChristmas ? (
                 <Gift className="w-16 h-16 text-white drop-shadow-lg" />
               ) : (
-                <Sparkles className="w-16 h-16 text-white drop-shadow-lg" />
+                <Sparkles className="w-16 h-16 text-[var(--primary)]" />
               )}
             </div>
             <h1
@@ -82,20 +81,18 @@ function List() {
                 text-3xl
                 sm:text-4xl
                 font-bold
-                text-white
-                drop-shadow-lg
                 ${
-                  theme === 'christmas'
-                    ? mountains_of_christmas.className
-                    : knewave.className
+                  isChristmas
+                    ? `text-white drop-shadow-lg ${mountains_of_christmas.className}`
+                    : `text-[var(--text-primary)] ${knewave.className}`
                 }
               `}
             >
-              {theme === 'christmas' ? '🎄 ' : ''}
+              {themeConfig.titleEmoji ? `${themeConfig.titleEmoji} ` : ''}
               {textList}
-              {theme === 'christmas' ? ' 🎄' : ''}
+              {themeConfig.titleEmoji ? ` ${themeConfig.titleEmoji}` : ''}
             </h1>
-            <p className="mt-2 text-white/80 text-sm">
+            <p className={`mt-2 text-sm ${isChristmas ? 'text-white/80' : 'text-[var(--text-muted)]'}`}>
               Découvrez les idées cadeaux et réservez vos préférés
             </p>
           </div>
