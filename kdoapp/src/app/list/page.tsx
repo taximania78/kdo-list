@@ -34,22 +34,55 @@ const listIcons: Record<string, React.ReactNode> = {
   'commune': <Users className="w-10 h-10" />,
 };
 
-const listColors: Record<string, { gradient: string; hoverGradient: string; iconBg: string }> = {
-  'marie-eve': {
-    gradient: 'from-[#F5CAC3] to-[#F28482]',
-    hoverGradient: 'from-[#F28482] to-[#E07270]',
-    iconBg: 'bg-[#F28482]/20',
-  },
-  'mathieu': {
-    gradient: 'from-[#B8CCC7] to-[#84A59D]',
-    hoverGradient: 'from-[#84A59D] to-[#6B8B83]',
-    iconBg: 'bg-[#84A59D]/20',
-  },
-  'commune': {
+const getListColors = (slug: string) => {
+  if (isChristmas) {
+    if (slug === 'marie-eve') {
+      return {
+        gradient: 'from-red-600/30 to-red-800/50',
+        hoverGradient: 'from-red-500/40 to-red-700/60',
+        iconBg: 'bg-red-500/30',
+        iconColor: 'text-red-100',
+      };
+    }
+    if (slug === 'mathieu') {
+      return {
+        gradient: 'from-green-600/30 to-green-800/50',
+        hoverGradient: 'from-green-500/40 to-green-700/60',
+        iconBg: 'bg-green-500/30',
+        iconColor: 'text-green-100',
+      };
+    }
+    return {
+      gradient: 'from-amber-600/30 to-amber-800/50',
+      hoverGradient: 'from-amber-500/40 to-amber-700/60',
+      iconBg: 'bg-amber-500/30',
+      iconColor: 'text-amber-100',
+    };
+  }
+
+  // Default theme
+  if (slug === 'marie-eve') {
+    return {
+      gradient: 'from-[#F5CAC3] to-[#F28482]',
+      hoverGradient: 'from-[#F28482] to-[#E07270]',
+      iconBg: 'bg-[#F28482]/20',
+      iconColor: 'text-[var(--text-primary)]',
+    };
+  }
+  if (slug === 'mathieu') {
+    return {
+      gradient: 'from-[#B8CCC7] to-[#84A59D]',
+      hoverGradient: 'from-[#84A59D] to-[#6B8B83]',
+      iconBg: 'bg-[#84A59D]/20',
+      iconColor: 'text-[var(--text-primary)]',
+    };
+  }
+  return {
     gradient: 'from-[#F5E6CC] to-[#E8B86D]',
     hoverGradient: 'from-[#E8B86D] to-[#D4A054]',
     iconBg: 'bg-[#E8B86D]/20',
-  },
+    iconColor: 'text-[var(--text-primary)]',
+  };
 };
 
 function ListSelector() {
@@ -154,7 +187,7 @@ function ListSelector() {
         {lists && lists.length > 0 && (
           <div className="flex flex-wrap justify-center gap-6">
             {lists.map((list, index) => {
-              const colors = listColors[list.slug] || listColors['commune'];
+              const colors = getListColors(list.slug);
               const icon = listIcons[list.slug] || <Gift className="w-10 h-10" />;
 
               return (
@@ -197,10 +230,11 @@ function ListSelector() {
                     <div
                       className={`
                         ${colors.iconBg}
+                        ${colors.iconColor}
                         rounded-2xl p-4
-                        text-[var(--text-primary)]
                         transition-all duration-300
                         group-hover:scale-110
+                        shadow-sm
                       `}
                     >
                       {icon}
@@ -208,10 +242,10 @@ function ListSelector() {
 
                     {/* Label */}
                     <div className="relative z-10">
-                      <h2 className="text-xl font-bold text-[var(--text-primary)] mb-1">
+                      <h2 className={`text-xl font-bold mb-1 ${isChristmas ? 'text-white' : 'text-[var(--text-primary)]'}`}>
                         {list.label}
                       </h2>
-                      <p className="text-sm text-[var(--text-muted)]">
+                      <p className={`text-sm ${isChristmas ? 'text-white/70' : 'text-[var(--text-muted)]'}`}>
                         Voir les idées cadeaux
                       </p>
                     </div>
