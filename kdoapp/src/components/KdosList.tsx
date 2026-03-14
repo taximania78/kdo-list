@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import router from 'next/router';
 import { getUserInfo } from '@/lib/auth';
@@ -29,24 +28,26 @@ type Kdo = {
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
-const KdosList = () => {
-  const searchParams = useSearchParams();
-  const userQuery = searchParams.get('user');
+type KdosListProps = {
+  listSlug?: string;
+  user?: string;
+};
+
+const KdosList = ({ listSlug, user }: KdosListProps) => {
   const [kdosList, setKdosList] = useState<Kdo[] | null>(null);
   const [userLogged, setUserLogged] = useState<string | null>(null);
 
   const fetchKdos = async () => {
-    console.log('Fetching kdos with user:', userQuery);
     let apiUrl = `${ApiAdress}/api/kdos/?format=json`;
-    if (userQuery) {
-      apiUrl += `&user=${encodeURIComponent(userQuery)}`;
+    if (listSlug) {
+      apiUrl += `&list=${encodeURIComponent(listSlug)}`;
+    } else if (user) {
+      apiUrl += `&user=${encodeURIComponent(user)}`;
     }
 
     try {
       const response = await api.get(apiUrl);
-      console.log('Response status:', response.status);
       if (response.status !== 200) {
-        router.push('/');
         throw new Error('Network response was not ok');
       }
       const data = response.data;
@@ -66,7 +67,7 @@ const KdosList = () => {
   useEffect(() => {
     fetchKdos();
     fetchUsername();
-  }, [userQuery]);
+  }, [listSlug, user]);
 
   if (!kdosList)
     return (
