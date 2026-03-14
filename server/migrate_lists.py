@@ -38,6 +38,12 @@ async def migrate():
         """))
         print("✅ Colonne list_id ajoutée à ideas (ou existait déjà)")
 
+        # 2b. Rendre userId nullable (pour la liste commune)
+        await conn.execute(text("""
+            ALTER TABLE ideas ALTER COLUMN "userId" DROP NOT NULL;
+        """))
+        print("✅ Colonne userId rendue nullable")
+
         # 3. Seed default lists (upsert)
         await conn.execute(text("""
             INSERT INTO gift_lists (slug, label, user_name, enabled)

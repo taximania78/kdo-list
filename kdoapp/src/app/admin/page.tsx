@@ -57,10 +57,12 @@ function Admin() {
     fetchKdos(value);
   };
 
-  const fetchKdos = async (user: string) => {
+  const fetchKdos = async (selection: string) => {
     let apiUrl = `${ApiAdress}/api/kdos-admin/?format=json`;
-    if (user) {
-      apiUrl += `&user=${encodeURIComponent(user)}`;
+    if (selection === 'commune') {
+      apiUrl += `&list=commune`;
+    } else if (selection) {
+      apiUrl += `&user=${encodeURIComponent(selection)}`;
     }
 
     try {
@@ -168,6 +170,23 @@ function Admin() {
               `}
             >
               <Select.ItemText>Mathieu</Select.ItemText>
+            </Select.Item>
+            <Select.Item
+              value="commune"
+              className={`
+                relative
+                flex
+                cursor-pointer
+                select-none
+                items-center
+                rounded-lg
+                px-4
+                py-2
+                transition-colors
+                hover:bg-[var(--primary)]/10 text-[var(--text-primary)]
+              `}
+            >
+              <Select.ItemText>Liste commune</Select.ItemText>
             </Select.Item>
           </Select.Viewport>
 
@@ -338,7 +357,7 @@ function Admin() {
                         <FormModifyItem
                           kdo={kdo}
                           id={kdo.id}
-                          onFormSubmit={() => fetchKdos(kdo.user)}
+                          onFormSubmit={() => fetchKdos(selectedUser)}
                         />
                       </td>
                     </tr>

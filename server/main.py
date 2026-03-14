@@ -175,7 +175,7 @@ async def get_kdo_list(user: str = "all", list: str = None, token: str = Depends
     return rows
 
 @app.get("/api/kdos-admin/")
-async def get_kdo_list_admin(user: str = "all", token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+async def get_kdo_list_admin(user: str = "all", list: str = None, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     payload = decode_jwt(token)
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
@@ -192,10 +192,17 @@ async def get_kdo_list_admin(user: str = "all", token: str = Depends(oauth2_sche
             Idea.imageDisplay,
             Idea.userId,
             user_owner.name.label("user"),
-        ).join(user_owner, Idea.userId == user_owner.id)
+        ).outerjoin(user_owner, Idea.userId == user_owner.id)
 
-        if user != "all":
-            # Récupérer l'instance User correspondant au nom donné
+        # Support pour le nouveau paramètre list (slu de la liste)
+        if list:
+            result_list = await db.execute(select(GiftList).where(GiftList.slug == list))
+            gift_list = result_list.scalars().first()
+            if not gift_list:
+                raise HTTPException(status_code=404, detail="Liste non trouvée")
+            query = query.filter(Idea.list_id == gift_list.id)
+        elif user != "all":
+            # Rétrocompatibilité
             result = await db.execute(select(User).where(User.name == user))
             user_instance = result.scalars().first()
             if not user_instance:
@@ -421,16 +428,31 @@ async def modify_item_api(update_data: IdeaUpdate, token: str = Depends(oauth2_s
     if not idea:
         raise HTTPException(status_code=404, detail="Idée non trouvée")
     
-    result = await db.execute(select(User).where(User.name == update_data.user))
-    user_instance = result.scalars().first()
-    if not user_instance:
-        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
-
     # Créer un dictionnaire avec les valeurs mises à jour
     update_values = update_data.model_dump(exclude_unset=True)  # Exclut les valeurs non envoyées
 
-    # Puis remplace la clé `user` dans update_values par `userId`
-    update_values["userId"] = user_instance.id
+    # Gérer la mise à jour de la liste / de l'utilisateur
+    if update_data.list_slug:
+        result_list = await db.execute(select(GiftList).where(GiftList.slug == update_data.list_slug))
+        gift_list = result_list.scalars().first()
+        if gift_list:
+            update_values["list_id"] = gift_list.id
+            if gift_list.user_name:
+                result_user = await db.execute(select(User).where(User.name == gift_list.user_name))
+                user_instance = result_user.scalars().first()
+                update_values["userId"] = user_instance.id if user_instance else None
+            else:
+                update_values["userId"] = None
+    elif update_data.user:
+        # Rétrocompatibilité
+        result = await db.execute(select(User).where(User.name == update_data.user))
+        user_instance = result.scalars().first()
+        if not user_instance:
+            raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+        update_values["userId"] = user_instance.id
+    
+    # Nettoyer les clés qui ne sont pas dans le modèle Idea
+    update_values.pop("list_slug", None)
     update_values.pop("user", None)
 
     # Convertir les champs url et image en string s'ils sont présents
