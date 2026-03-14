@@ -96,6 +96,7 @@ class IdeaUpdate(BaseModel):
     image: Optional[str] = None
     imageDisplay: Optional[str] = None
     user: Optional[str] = None
+    list_slug: Optional[str] = None
 
 class RefreshToken(Base):
     __tablename__ = "refresh_tokens"

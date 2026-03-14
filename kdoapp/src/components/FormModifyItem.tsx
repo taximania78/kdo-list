@@ -22,11 +22,17 @@ import {
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
+const listOptions = [
+  { value: 'marie-eve', label: 'Marie-Eve', user: 'Marie-Eve' },
+  { value: 'mathieu', label: 'Mathieu', user: 'Mathieu' },
+  { value: 'commune', label: 'Liste commune', user: null },
+];
+
 const formSchema = z.object({
   id: z.number(),
   name: z.string().min(2),
   price: z.number().positive(),
-  user: z.string(),
+  list_slug: z.enum(['marie-eve', 'mathieu', 'commune']),
   url: z.string().url({ message: 'Invalid url' }),
   comment: z.string().optional().nullable(),
   image: z
@@ -58,13 +64,21 @@ export default function FormModifyItem({
 }: FormModifyItemProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  const initialListSlug = React.useMemo(() => {
+    // Si kdo.user = null/undefined (venant du backend sur la liste commune) => 'commune'
+    if (!kdo.user) return 'commune';
+    // Sinon on cherche la correspondance stricte
+    const opt = listOptions.find((l) => l.user === kdo.user);
+    return opt ? opt.value as 'marie-eve' | 'mathieu' | 'commune' : 'commune';
+  }, [kdo.user]);
+
   const { register, handleSubmit } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: kdo.id,
       name: kdo.name,
       price: kdo.price,
-      user: kdo.user,
+      list_slug: initialListSlug,
       url: kdo.url ?? '',
       comment: kdo.comment ?? '',
       image: kdo.image ?? '',
@@ -75,8 +89,16 @@ export default function FormModifyItem({
     const apiUrl = `${ApiAdress}/api/modify-item/`;
     setIsDialogOpen(false);
 
+    // Résoudre le user à partir du list_slug
+    const selectedList = listOptions.find((l) => l.value === values.list_slug);
+    const payload = {
+      ...values,
+      user: selectedList?.user || undefined, // undefined pour commune
+      list_slug: values.list_slug,
+    };
+
     try {
-      const response = await api.put(apiUrl, values, {
+      const response = await api.put(apiUrl, payload, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -196,23 +218,21 @@ export default function FormModifyItem({
                 <div>
                   <label
                     className="block font-medium mb-2 text-[var(--text-secondary)]"
-                    htmlFor="user"
+                    htmlFor="list_slug"
                   >
                     Pour
                   </label>
                   <select
-                    {...register('user')}
+                    {...register('list_slug')}
                     className="block w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--text-primary)] focus:ring-[var(--input-focus)]"
-                    id="user"
-                    name="user"
-                    defaultValue={kdo.user}
+                    id="list_slug"
+                    name="list_slug"
                   >
-                    <option value="Marie-Eve" className="text-gray-900">
-                      Marie-Eve
-                    </option>
-                    <option value="Mathieu" className="text-gray-900">
-                      Mathieu
-                    </option>
+                    {listOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value} className="text-gray-900">
+                        {opt.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
