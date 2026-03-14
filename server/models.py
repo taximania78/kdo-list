@@ -1,11 +1,25 @@
 from __future__ import annotations
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List as TypingList
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Float, Boolean
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from database import Base  # On suppose que Base est défini dans database.py
 from pydantic import BaseModel, Field, HttpUrl, validator
 import re
+
+class GiftList(Base):
+    __tablename__ = "gift_lists"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    slug: Mapped[str] = mapped_column(String, unique=True, nullable=False)  # "marie-eve", "mathieu", "commune"
+    label: Mapped[str] = mapped_column(String, nullable=False)  # "Personne", "Mathieu", "Liste commune"
+    user_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # NULL pour la liste commune
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    ideas: Mapped[list[Idea]] = relationship(
+        "Idea",
+        back_populates="gift_list",
+        foreign_keys=lambda: [Idea.list_id]
+    )
 
 class User(Base):
     __tablename__ = "users"
@@ -39,15 +53,21 @@ class Idea(Base):
     name: Mapped[str] = mapped_column(String, index=True, nullable=False)
     comment: Mapped[str] = mapped_column(String)
     # Utiliser "users.id" (note le 's') pour la FK
-    userId: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
-    user: Mapped[User] = relationship(
+    userId: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
+    user: Mapped[Optional[User]] = relationship(
         "User",
         foreign_keys=[userId],
         back_populates="ideas"
     )
+    list_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("gift_lists.id"), nullable=True)
+    gift_list: Mapped[Optional[GiftList]] = relationship(
+        "GiftList",
+        foreign_keys=[list_id],
+        back_populates="ideas"
+    )
     availability: Mapped[bool] = mapped_column(Boolean, default=True)
-    takenById: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
-    takenBy: Mapped[User] = relationship(
+    takenById: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
+    takenBy: Mapped[Optional[User]] = relationship(
         "User",
         foreign_keys=[takenById],
         back_populates="take"
@@ -64,7 +84,8 @@ class IdeaCreate(BaseModel):
     url: Optional[HttpUrl] = None
     image: Optional[str] = None
     imageDisplay: Optional[str] = "unknown.jpg"
-    user: str
+    user: Optional[str] = None
+    list_slug: Optional[str] = None  # slug de la liste cible
 
 class IdeaUpdate(BaseModel):
     id: int
@@ -75,6 +96,7 @@ class IdeaUpdate(BaseModel):
     image: Optional[str] = None
     imageDisplay: Optional[str] = None
     user: Optional[str] = None
+    list_slug: Optional[str] = None
 
 class RefreshToken(Base):
     __tablename__ = "refresh_tokens"
@@ -135,3 +157,15 @@ class UserCreate(BaseModel):
         if not any(c.isdigit() for c in v):
             raise ValueError('Le mot de passe doit contenir au moins un chiffre.')
         return v
+
+class GiftListResponse(BaseModel):
+    slug: str
+    label: str
+    user_name: Optional[str] = None
+    enabled: bool
+
+    class Config:
+        from_attributes = True
+
+class GiftListToggle(BaseModel):
+    enabled: bool

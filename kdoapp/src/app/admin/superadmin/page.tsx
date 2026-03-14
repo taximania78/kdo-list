@@ -5,13 +5,20 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
-import { Shield, UserPlus, Trash2, Key, Loader2 } from 'lucide-react';
+import { Shield, UserPlus, Trash2, Key, Loader2, ListChecks } from 'lucide-react';
 import api from '@/lib/api';
 import { isChristmas } from '@/lib/theme';
 
 type User = {
   id: number;
   name: string;
+};
+
+type GiftListItem = {
+  slug: string;
+  label: string;
+  user_name: string | null;
+  enabled: boolean;
 };
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
@@ -30,6 +37,8 @@ function Superadmin() {
   const router = useRouter();
   const { isAuthenticated, user, isLoading } = useAuth();
   const [usersList, setUsersList] = useState<User[] | null>(null);
+  const [giftLists, setGiftLists] = useState<GiftListItem[] | null>(null);
+  const [togglingSlug, setTogglingSlug] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [userToDelete, setUserToDelete] = useState<{
@@ -97,9 +106,35 @@ function Superadmin() {
     setUserToDelete(null);
   };
 
+  const fetchGiftLists = async () => {
+    try {
+      const response = await api.get(`${ApiAdress}/api/lists/all/`);
+      if (response.status >= 200 && response.status < 300) {
+        setGiftLists(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch gift lists:', error);
+    }
+  };
+
+  const handleToggleList = async (slug: string) => {
+    setTogglingSlug(slug);
+    try {
+      const response = await api.patch(`${ApiAdress}/api/lists/${slug}/toggle`);
+      if (response.status >= 200 && response.status < 300) {
+        fetchGiftLists();
+      }
+    } catch (error) {
+      console.error('Error toggling list:', error);
+    } finally {
+      setTogglingSlug(null);
+    }
+  };
+
   // Chargement datas
   useEffect(() => {
     fetchUsers();
+    fetchGiftLists();
   }, []);
 
   return (
@@ -265,6 +300,88 @@ function Superadmin() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+        </div>
+
+        {/* Gift Lists Management */}
+        <div
+          className="
+            rounded-3xl
+            shadow-xl
+            border
+            overflow-hidden
+            animate-fadeInUp
+            surface-card
+            border-[var(--border)]
+            mt-6
+          "
+          style={{ animationDelay: '0.2s' }}
+        >
+          <div className="p-6 sm:p-8 border-b border-[var(--border)]">
+            <div className="flex items-center gap-3">
+              <ListChecks className={`w-6 h-6 ${isChristmas ? 'text-white' : 'text-[var(--primary)]'}`} />
+              <h2 className={`text-xl font-bold ${isChristmas ? 'text-white' : 'text-[var(--text-primary)]'}`}>
+                Gestion des listes
+              </h2>
+            </div>
+          </div>
+
+          {!giftLists && (
+            <div className="p-8 text-center">
+              <Loader2 className={`w-8 h-8 animate-spin mx-auto mb-4 ${isChristmas ? 'text-white' : 'text-[var(--primary)]'}`} />
+              <p className={`text-lg ${isChristmas ? 'text-white' : 'text-[var(--text-primary)]'}`}>Chargement des listes...</p>
+            </div>
+          )}
+
+          {giftLists && giftLists.length > 0 && (
+            <div className="divide-y divide-[var(--border)]">
+              {giftLists.map((gList) => (
+                <div
+                  key={gList.slug}
+                  className="flex items-center justify-between px-6 py-4 transition-colors hover:bg-[var(--surface-hover)]"
+                >
+                  <div>
+                    <p className="text-lg font-medium text-[var(--text-primary)]">
+                      {gList.label}
+                    </p>
+                    <p className="text-sm text-[var(--text-muted)]">
+                      /{gList.slug}
+                      {gList.user_name ? ` — ${gList.user_name}` : ' — Liste commune'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleToggleList(gList.slug)}
+                    disabled={togglingSlug === gList.slug}
+                    className="relative"
+                    title={gList.enabled ? 'Désactiver' : 'Activer'}
+                  >
+                    {togglingSlug === gList.slug ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-[var(--text-muted)]" />
+                    ) : (
+                      <div
+                        className={`
+                          w-12 h-7 rounded-full
+                          transition-all duration-300 cursor-pointer
+                          flex items-center px-1
+                          ${gList.enabled
+                            ? 'bg-[var(--success)]'
+                            : 'bg-[var(--border)]'
+                          }
+                        `}
+                      >
+                        <div
+                          className={`
+                            w-5 h-5 rounded-full bg-white shadow-md
+                            transition-transform duration-300
+                            ${gList.enabled ? 'translate-x-5' : 'translate-x-0'}
+                          `}
+                        />
+                      </div>
+                    )}
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
