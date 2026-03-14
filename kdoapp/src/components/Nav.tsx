@@ -98,8 +98,7 @@ export const Nav = () => {
 
   const getLogoHref = () => {
     if (!isUserLoggedIn) return '/';
-    if (isAdmin === 'false' || !isAdmin) return '/list';
-    return username === 'Mathieu' ? '/list?user=Personne' : '/list?user=Mathieu';
+    return '/list';
   };
 
   return (
@@ -135,13 +134,7 @@ export const Nav = () => {
                   {isAdmin === 'false' ? (
                     <>
                       <NavLink href="/list" icon={<List className="w-4 h-4" />}>
-                        Liste complète
-                      </NavLink>
-                      <NavLink href="/list?user=Personne" icon={<Gift className="w-4 h-4" />}>
-                        Personne
-                      </NavLink>
-                      <NavLink href="/list?user=Mathieu" icon={<Gift className="w-4 h-4" />}>
-                        Mathieu
+                        Listes
                       </NavLink>
                     </>
                   ) : username === 'Mathieu' ? (
@@ -152,8 +145,8 @@ export const Nav = () => {
                       <NavLink href="/admin" icon={<Settings className="w-4 h-4" />}>
                         Modifier
                       </NavLink>
-                      <NavLink href="/list?user=Personne" icon={<Gift className="w-4 h-4" />}>
-                        Personne
+                      <NavLink href="/list" icon={<Gift className="w-4 h-4" />}>
+                        Listes
                       </NavLink>
                     </>
                   ) : (
@@ -161,8 +154,8 @@ export const Nav = () => {
                       <NavLink href="/admin" icon={<Settings className="w-4 h-4" />}>
                         Modifier
                       </NavLink>
-                      <NavLink href="/list?user=Mathieu" icon={<Gift className="w-4 h-4" />}>
-                        Mathieu
+                      <NavLink href="/list" icon={<Gift className="w-4 h-4" />}>
+                        Listes
                       </NavLink>
                     </>
                   )}
@@ -191,13 +184,7 @@ export const Nav = () => {
               {isAdmin === 'false' ? (
                 <>
                   <MobileNavLink href="/list" onClick={toggleMenu} icon={<List className="w-5 h-5" />}>
-                    Liste complète
-                  </MobileNavLink>
-                  <MobileNavLink href="/list?user=Personne" onClick={toggleMenu} icon={<Gift className="w-5 h-5" />}>
-                    Liste Personne
-                  </MobileNavLink>
-                  <MobileNavLink href="/list?user=Mathieu" onClick={toggleMenu} icon={<Gift className="w-5 h-5" />}>
-                    Liste Mathieu
+                    Listes
                   </MobileNavLink>
                 </>
               ) : username === 'Mathieu' ? (
@@ -208,8 +195,8 @@ export const Nav = () => {
                   <MobileNavLink href="/admin" onClick={toggleMenu} icon={<Settings className="w-5 h-5" />}>
                     Modif. liste
                   </MobileNavLink>
-                  <MobileNavLink href="/list?user=Personne" onClick={toggleMenu} icon={<Gift className="w-5 h-5" />}>
-                    Liste Personne
+                  <MobileNavLink href="/list" onClick={toggleMenu} icon={<Gift className="w-5 h-5" />}>
+                    Listes
                   </MobileNavLink>
                 </>
               ) : (
@@ -217,8 +204,8 @@ export const Nav = () => {
                   <MobileNavLink href="/admin" onClick={toggleMenu} icon={<Settings className="w-5 h-5" />}>
                     Modif. liste
                   </MobileNavLink>
-                  <MobileNavLink href="/list?user=Mathieu" onClick={toggleMenu} icon={<Gift className="w-5 h-5" />}>
-                    Liste Mathieu
+                  <MobileNavLink href="/list" onClick={toggleMenu} icon={<Gift className="w-5 h-5" />}>
+                    Listes
                   </MobileNavLink>
                 </>
               )}

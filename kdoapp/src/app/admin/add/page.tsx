@@ -16,10 +16,16 @@ import {
 } from 'lucide-react';
 import { isChristmas } from '@/lib/theme';
 
+const listOptions = [
+  { value: 'marie-eve', label: 'Personne', user: 'Personne' },
+  { value: 'mathieu', label: 'Mathieu', user: 'Mathieu' },
+  { value: 'commune', label: 'Liste commune', user: null },
+];
+
 const formSchema = z.object({
   name: z.string().min(2),
   price: z.number().positive(),
-  user: z.enum(['Personne', 'Mathieu']),
+  list_slug: z.enum(['marie-eve', 'mathieu', 'commune']),
   url: z.string().url({ message: 'Invalid url' }),
   comment: z.string().optional(),
   image: z.union([z.string().url(), z.literal('')]).optional(),
@@ -35,22 +41,22 @@ function AddItem() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log('📝 [ADD-ITEM] Submitting form:', values);
 
-    try {
-      // api instance automatically:
-      // - Adds Bearer token
-      // - Handles Content-Type
-      // - Refreshes token if needed
-      // - Throws on error (no response.ok check needed)
-      const response = await api.post('/api/add-item/', values);
+    // Résoudre le user à partir du list_slug
+    const selectedList = listOptions.find(l => l.value === values.list_slug);
+    const payload = {
+      ...values,
+      user: selectedList?.user || undefined,
+      list_slug: values.list_slug,
+    };
 
-      // Axios stores response data in response.data (not response.json())
+    try {
+      const response = await api.post('/api/add-item/', payload);
       const data = response.data;
       console.log('✅ [ADD-ITEM] Success:', data);
 
       router.push('/admin');
     } catch (error) {
       console.error('❌ [ADD-ITEM] Error:', error);
-      // TODO: Show error message to user
     }
   }
 
@@ -173,9 +179,9 @@ function AddItem() {
               )}
             </div>
 
-            {/* User select */}
+            {/* List select */}
             <div className="relative">
-              <label htmlFor="user" className={`block font-medium mb-2 ${isChristmas ? 'text-white' : 'text-[var(--text-secondary)]'}`}>
+              <label htmlFor="list_slug" className={`block font-medium mb-2 ${isChristmas ? 'text-white' : 'text-[var(--text-secondary)]'}`}>
                 Pour
               </label>
               <div className="relative">
@@ -183,7 +189,7 @@ function AddItem() {
                   <User className={`h-5 w-5 ${isChristmas ? 'text-white/60' : 'text-[var(--text-muted)]'}`} />
                 </div>
                 <select
-                  {...form.register('user')}
+                  {...form.register('list_slug')}
                   className={`
                     block
                     w-full
@@ -200,20 +206,19 @@ function AddItem() {
                       : 'bg-[var(--input-bg)] border border-[var(--border)] text-[var(--text-primary)] focus:ring-[var(--primary)]/30 focus:border-[var(--primary)]'
                     }
                   `}
-                  id="user"
-                  name="user"
+                  id="list_slug"
+                  name="list_slug"
                 >
-                  <option value="Personne" className="text-gray-900">
-                    Personne
-                  </option>
-                  <option value="Mathieu" className="text-gray-900">
-                    Mathieu
-                  </option>
+                  {listOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value} className="text-gray-900">
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
-              {form.formState.errors.user && (
+              {form.formState.errors.list_slug && (
                 <p className="text-[var(--error)] text-sm mt-1 font-medium">
-                  {form.formState.errors.user.message}
+                  {form.formState.errors.list_slug.message}
                 </p>
               )}
             </div>

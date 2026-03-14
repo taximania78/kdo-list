@@ -10,7 +10,7 @@ from sqlalchemy import delete, or_, update
 from sqlalchemy.orm import joinedload, aliased
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from models import Idea, IdeaCreate,IdeaUpdate, RefreshToken, RefreshTokenRequest, User, UserCreate, PasswordChange
+from models import GiftList, GiftListResponse, GiftListToggle, Idea, IdeaCreate, IdeaUpdate, RefreshToken, RefreshTokenRequest, User, UserCreate, PasswordChange
 from database import get_db
 from auth import (
     create_access_token,
@@ -55,53 +55,118 @@ app.add_middleware(
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/login")
 
 
+# ─── Gift Lists Endpoints ───────────────────────────────────────────────
+
+@app.get("/api/lists/")
+async def get_lists(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+    """Retourne les listes visibles pour l'utilisateur connecté."""
+    payload = decode_jwt(token)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
+    
+    username = payload.get("username")
+    is_admin = payload.get("isAdmin")
+    
+    # Récupérer toutes les listes activées
+    result = await db.execute(select(GiftList).where(GiftList.enabled == True))
+    all_lists = result.scalars().all()
+    
+    visible_lists = []
+    for gift_list in all_lists:
+        # Les admins ne voient pas leur propre liste
+        if is_admin and gift_list.user_name == username:
+            continue
+        # Les admins ne voient pas la liste commune
+        if is_admin and gift_list.user_name is None:
+            continue
+        visible_lists.append(GiftListResponse.model_validate(gift_list))
+    
+    return visible_lists
+
+@app.get("/api/lists/all/")
+async def get_all_lists(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+    """Retourne toutes les listes (superadmin only)."""
+    payload = decode_jwt(token)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
+    
+    if not payload.get("isAdmin"):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
+    
+    result = await db.execute(select(GiftList))
+    all_lists = result.scalars().all()
+    return [GiftListResponse.model_validate(gl) for gl in all_lists]
+
+@app.patch("/api/lists/{slug}/toggle")
+async def toggle_list(slug: str, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+    """Active ou désactive une liste (admin only)."""
+    payload = decode_jwt(token)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
+    
+    if not payload.get("isAdmin"):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
+    
+    result = await db.execute(select(GiftList).where(GiftList.slug == slug))
+    gift_list = result.scalars().first()
+    
+    if not gift_list:
+        raise HTTPException(status_code=404, detail="Liste non trouvée")
+    
+    # Toggle l'état
+    new_enabled = not gift_list.enabled
+    stmt = update(GiftList).where(GiftList.slug == slug).values(enabled=new_enabled)
+    await db.execute(stmt)
+    await db.commit()
+    
+    return {"success": True, "slug": slug, "enabled": new_enabled}
+
+
+# ─── Kdos Endpoints ─────────────────────────────────────────────────────
+
 @app.get("/api/kdos/")
-async def get_kdo_list(user: str = "all",token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+async def get_kdo_list(user: str = "all", list: str = None, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     payload = decode_jwt(token)
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
     
     user_owner = aliased(User)
     user_taker = aliased(User)
-    if payload.get("isAdmin"):
-        query = select(
-            Idea.id,
-            Idea.name,
-            Idea.comment,
-            Idea.price,
-            Idea.url,
-            Idea.imageDisplay,
-            Idea.availability,
-            Idea.userId,
-            user_owner.name.label("user"),
-            Idea.takenById,
-            user_taker.name.label("takenBy")
-        ).join(user_owner, Idea.userId == user_owner.id) \
-        .outerjoin(user_taker, Idea.takenById == user_taker.id) \
-        .filter(Idea.userId != int(payload.get("sub")))
-    else:
-        query = select(
-            Idea.id,
-            Idea.name,
-            Idea.comment,
-            Idea.price,
-            Idea.url,
-            Idea.imageDisplay,
-            Idea.availability,
-            Idea.userId,
-            user_owner.name.label("user"),
-            Idea.takenById,
-            user_taker.name.label("takenBy")
-        ).join(user_owner, Idea.userId == user_owner.id) \
-        .outerjoin(user_taker, Idea.takenById == user_taker.id)
+    
+    base_select = select(
+        Idea.id,
+        Idea.name,
+        Idea.comment,
+        Idea.price,
+        Idea.url,
+        Idea.imageDisplay,
+        Idea.availability,
+        Idea.userId,
+        user_owner.name.label("user"),
+        Idea.takenById,
+        user_taker.name.label("takenBy")
+    ).outerjoin(user_owner, Idea.userId == user_owner.id) \
+    .outerjoin(user_taker, Idea.takenById == user_taker.id)
 
-    if user != "all":
-            # Récupérer l'instance User correspondant au nom donné
-            result = await db.execute(select(User).where(User.name == user))
-            user_instance = result.scalars().first()
-            if not user_instance:
-                raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
-            query = query.filter(Idea.userId == user_instance.id)
+    if payload.get("isAdmin"):
+        query = base_select.filter(or_(Idea.userId != int(payload.get("sub")), Idea.userId == None))
+    else:
+        query = base_select
+
+    # Filtre par slug de liste
+    if list:
+        result_list = await db.execute(select(GiftList).where(GiftList.slug == list))
+        gift_list = result_list.scalars().first()
+        if not gift_list:
+            raise HTTPException(status_code=404, detail="Liste non trouvée")
+        query = query.filter(Idea.list_id == gift_list.id)
+    elif user != "all":
+        # Rétrocompatibilité : filtre par nom d'utilisateur
+        result = await db.execute(select(User).where(User.name == user))
+        user_instance = result.scalars().first()
+        if not user_instance:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        query = query.filter(Idea.userId == user_instance.id)
 
     result = await db.execute(query)
 
@@ -253,8 +318,27 @@ async def add_item_api(idea_data: IdeaCreate, token: str = Depends(oauth2_scheme
     if not payload.get("isAdmin"):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
     
-    result = await db.execute(select(User).where(User.name == idea_data.user))
-    user_instance = result.scalars().first()
+    # Résoudre l'utilisateur si fourni
+    user_id = None
+    if idea_data.user:
+        result = await db.execute(select(User).where(User.name == idea_data.user))
+        user_instance = result.scalars().first()
+        if user_instance:
+            user_id = user_instance.id
+
+    # Résoudre la liste si fourni
+    list_id = None
+    if idea_data.list_slug:
+        result_list = await db.execute(select(GiftList).where(GiftList.slug == idea_data.list_slug))
+        gift_list = result_list.scalars().first()
+        if gift_list:
+            list_id = gift_list.id
+            # Si la liste a un user_name associé, utiliser son userId
+            if gift_list.user_name and not user_id:
+                result_user = await db.execute(select(User).where(User.name == gift_list.user_name))
+                user_from_list = result_user.scalars().first()
+                if user_from_list:
+                    user_id = user_from_list.id
 
     url, image, comment = None, None, None
     if idea_data.comment is not None:
@@ -272,7 +356,8 @@ async def add_item_api(idea_data: IdeaCreate, token: str = Depends(oauth2_scheme
         url=url,
         image=image,
         imageDisplay=idea_data.imageDisplay,
-        userId=user_instance.id,
+        userId=user_id,
+        list_id=list_id,
         availability=True,  # Par défaut disponible
         takenById=None,  # Personne ne l'a encore pris
     )
