@@ -12,6 +12,8 @@ const config: Config = {
   testEnvironment: 'jsdom',
   // Add more setup options before each test is run
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+  // Only run files containing .test. (Playwright will use .spec.)
+  testMatch: ['**/?(*.)+(test).[jt]s?(x)'],
   moduleNameMapper: {
     // Handle module aliases (this will be automatically configured for you soon)
     '^@/(.*)$': '<rootDir>/src/$1',
