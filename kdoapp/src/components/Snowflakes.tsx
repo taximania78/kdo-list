@@ -8,6 +8,7 @@ interface Snowflake {
   animationDuration: number;
   opacity: number;
   size: number;
+  animationDelay: number;
 }
 
 export default function Snowflakes() {
@@ -21,8 +22,10 @@ export default function Snowflakes() {
       animationDuration: 3 + Math.random() * 7, // Random fall duration (3-10s)
       opacity: 0.9 + Math.random() * 0.1, // Random opacity (0.7-1)
       size: 2 + Math.random() * 4, // Random size (2-6px)
+      animationDelay: Math.random() * 5, // Random delay
     }));
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSnowflakes(flakes);
   }, []);
 
@@ -35,7 +38,7 @@ export default function Snowflakes() {
           style={{
             left: `${flake.left}%`,
             animationDuration: `${flake.animationDuration}s`,
-            animationDelay: `${Math.random() * 5}s`,
+            animationDelay: `${flake.animationDelay}s`,
             opacity: flake.opacity,
             fontSize: `${flake.size}px`,
           }}

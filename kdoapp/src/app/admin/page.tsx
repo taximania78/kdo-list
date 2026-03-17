@@ -201,6 +201,7 @@ function Admin() {
   // Chargement initial : fetchKdos
   useEffect(() => {
     fetchKdos('Marie-Eve');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
