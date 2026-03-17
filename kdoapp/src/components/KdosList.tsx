@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import api from '@/lib/api';
-import router from 'next/router';
 import { getUserInfo } from '@/lib/auth';
 import DialogKdo from './DialogKdo';
 import Link from 'next/link';
@@ -67,6 +66,7 @@ const KdosList = ({ listSlug, user }: KdosListProps) => {
   useEffect(() => {
     fetchKdos();
     fetchUsername();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listSlug, user]);
 
   if (!kdosList)

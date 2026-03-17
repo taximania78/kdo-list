@@ -29,6 +29,7 @@ export default function FirstConnection() {
     } else {
       // Valid first-connection flow
       console.log('✅ [FIRST-CONNECTION] Valid first-connection flow');
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShouldShowPage(true);
     }
   }, [isAuthenticated, user, isLoading, router]);
