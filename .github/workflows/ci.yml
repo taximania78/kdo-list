@@ -31,8 +31,6 @@ jobs:
         pip install pytest pytest-asyncio httpx
         
     - name: Run Pytest
-      env:
-        NODE_ENV: production
       run: pytest -v
 
   frontend-tests:
