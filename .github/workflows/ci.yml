@@ -47,7 +47,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20' # Or your specific node version
+        node-version: '24' # Or your specific node version
         cache: 'npm'
         cache-dependency-path: './kdoapp/package-lock.json'
         
