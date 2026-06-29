@@ -1,8 +1,37 @@
+# ─── OS / éditeurs ───────────────────────────────
+.DS_Store
+
+# ─── Secrets / config locale ─────────────────────
+.env
+.env.local
+server/dev
+dev/config.json
+
+# ─── Backend Python ──────────────────────────────
 server/__pycache__/
 server/venv/
-server/dev
+__pycache__/
+*.pyc
+
+# ─── Données / volumes runtime ───────────────────
+db/
 static/
-.DS_Store
-.env
-kdoapp/public/kdos
-.env.local
+# Uploads utilisateurs (on garde uniquement unknown.jpg, suivi explicitement)
+kdoapp/public/kdos/
+!kdoapp/public/kdos/unknown.jpg
+
+# ─── Frontend Next.js ────────────────────────────
+kdoapp/node_modules/
+kdoapp/.next/
+kdoapp/out/
+*.tsbuildinfo
+
+# ─── Artefacts de tests / debug ──────────────────
+.playwright-mcp/
+kdoapp/playwright-report/
+kdoapp/test-results/
+
+# ─── Outils IA / config agents (local) ───────────
+.claude/
+CLAUDE.md
+

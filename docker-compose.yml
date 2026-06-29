@@ -26,7 +26,7 @@ services:
       DATABASE_NAME: ${DATABASE_NAME}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.kdo-api.rule=Host(`kdo.mathieuolivares.com`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.kdo-api.rule=Host(`${APP_DOMAIN}`) && PathPrefix(`/api`)"
       - "traefik.http.routers.kdo-api.priority=100"
       - "traefik.http.routers.kdo-api.entrypoints=websecure"
       - "traefik.http.routers.kdo-api.tls.certresolver=tls"
@@ -58,7 +58,7 @@ services:
       NEXT_PUBLIC_THEME: ${NEXT_PUBLIC_THEME}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.kdo-front.rule=Host(`kdo.mathieuolivares.com`)"
+      - "traefik.http.routers.kdo-front.rule=Host(`${APP_DOMAIN}`)"
       - "traefik.http.routers.kdo-front.entrypoints=websecure"
       - "traefik.http.routers.kdo-front.tls.certresolver=tls"
       - "traefik.http.services.kdo-front.loadbalancer.server.port=3000"
