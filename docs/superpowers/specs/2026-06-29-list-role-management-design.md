@@ -22,11 +22,11 @@ Appli concernée : liste de cadeaux familiale (Next.js 15 + FastAPI). Cible volo
 
 ## Décisions de design (validées)
 
-1. **Lien liste→propriétaire = FK `owner_id → users.id`** (nullable = liste commune), **source de vérité unique**. La colonne `user_name` est **supprimée**.
+1. **Lien liste→propriétaire = FK `owner_id → users.id`** (nullable = giftee **sans compte**), **source de vérité unique**. La colonne `user_name` est **supprimée**. Un flag distinct `is_common` marque l'**unique liste commune** (≠ une liste nommée sans compte).
 2. **CRUD listes complet** (créer / renommer / réassigner / supprimer / activer-désactiver), megaadmin uniquement.
 3. **Suppression de liste = cascade** (idées + images supprimées), transactionnelle, avec **confirmation explicite** dans l'UI.
 4. **Gestion de rôle** : le megaadmin peut basculer `isAdmin` sur un user existant et le définir à la création. `isMegaAdmin` n'est **pas** modifiable via l'UI (fixé en base / bootstrap).
-5. **Propriétaire = un compte user existant** (ou « aucun » = commune). Un user possède **au plus une liste**.
+5. **Propriétaire = un compte user existant, OU aucun**. `owner_id = NULL` = liste nommée pour un giftee **sans compte** (ex. un enfant) — visible des admins comme n'importe quelle liste. Un user à compte possède **au plus une liste** ; plusieurs listes sans compte sont autorisées.
 6. **Bootstrap du 1er megaadmin** = script CLI idempotent `create_superadmin.py`, piloté par env.
 7. **Approche A** : extension en place dans `main.py` (style inline existant + helper `ensure_megaadmin`), UI greffée sur `/admin/superadmin`. Pas de modularisation en routers.
 
@@ -34,22 +34,24 @@ Appli concernée : liste de cadeaux familiale (Next.js 15 + FastAPI). Cible volo
 
 ### `GiftList` (modifié)
 ```
-id        int PK
-slug      str unique         # auto-généré depuis label
-label     str
-owner_id  int FK users.id NULL   # NULL = liste commune ; remplace user_name
-enabled   bool
+id         int PK
+slug       str unique          # auto-généré depuis label
+label      str                 # nom affiché, toujours présent (indépendant du owner)
+owner_id   int FK users.id NULL    # NULL = giftee sans compte ; remplace user_name
+is_common  bool default False  # True = l'unique liste commune partagée
+enabled    bool
 ```
 - Suppression de `user_name`.
 - Relation : `GiftList.owner` (User, `foreign_keys=[owner_id]`).
-- Règle applicative : `owner_id` unique parmi les listes non-NULL (un user ≤ 1 liste). Vérifiée à la création/réassignation (pas de contrainte DB partielle, pour rester portable SQLite/PG).
+- Règle applicative : `owner_id` unique parmi les listes à propriétaire (un user à compte ≤ 1 liste). Plusieurs listes `owner_id NULL` (sans compte) sont autorisées. **Au plus une** liste `is_common = True`. Vérifié en applicatif (pas de contrainte DB partielle, pour rester portable SQLite/PG).
+- `is_common` est **immuable via l'API** : il n'est posé qu'au bootstrap/migration. L'UI ne crée que des listes normales (`is_common = False`).
 
 ### `User` — inchangé
 `isAdmin` / `isMegaAdmin` / `firstConnection` existent déjà.
 
 ### Schémas Pydantic (modifiés / ajoutés)
 - `UserCreate` : ajout `isAdmin: bool = False`.
-- `GiftListResponse` : exposer `slug`, `label`, `enabled`, `owner_id: Optional[int]`, `owner_name: Optional[str]` (dérivé de la relation). Retrait de `user_name`.
+- `GiftListResponse` : exposer `slug`, `label`, `enabled`, `is_common: bool`, `owner_id: Optional[int]`, `owner_name: Optional[str]` (dérivé de la relation). Retrait de `user_name`.
 - `GiftListCreate` : `{ label: str (min 1), owner_id: Optional[int] }`.
 - `GiftListUpdate` : `{ label: Optional[str], owner_id: Optional[int] }`.
 - `RoleUpdate` : `{ isAdmin: bool }`.
@@ -58,8 +60,10 @@ enabled   bool
 
 Script `server/migrate_owner_id.py` (PostgreSQL prod ; idempotent) :
 1. `ALTER TABLE gift_lists ADD COLUMN owner_id INTEGER REFERENCES users(id);` (si absent).
-2. Backfill : `UPDATE gift_lists gl SET owner_id = u.id FROM users u WHERE gl.user_name = u.name AND gl.owner_id IS NULL;`
-3. `ALTER TABLE gift_lists DROP COLUMN user_name;` (après backfill).
+2. `ALTER TABLE gift_lists ADD COLUMN is_common BOOLEAN NOT NULL DEFAULT FALSE;` (si absent).
+3. Backfill owner : `UPDATE gift_lists gl SET owner_id = u.id FROM users u WHERE gl.user_name = u.name AND gl.owner_id IS NULL;`
+4. Backfill commune : `UPDATE gift_lists SET is_common = TRUE WHERE user_name IS NULL;` (l'ancienne commune avait `user_name IS NULL`).
+5. `ALTER TABLE gift_lists DROP COLUMN user_name;` (après backfill).
 
 Les tests (SQLite mémoire) créent le schéma via `Base.metadata.create_all`, donc reflètent directement le nouveau modèle ; la migration est testée séparément sur sa logique de backfill.
 
@@ -94,8 +98,8 @@ Tous **megaadmin** (`ensure_megaadmin`, 403 sinon) sauf indication contraire. Le
 Récupérer les idées de la liste → `remove_image(idea.id)` pour chacune → `DELETE FROM ideas WHERE list_id = …` → `DELETE FROM gift_lists WHERE slug = …`, le tout dans une transaction.
 
 ### Répercussion sur les endpoints existants (retrait de `user_name`)
-- `get_lists` : « l'admin ne voit pas sa liste » → `gift_list.owner_id == int(payload["sub"])` ; « ni la commune » → `owner_id is None`.
-- `add-item` / `modify-item` : `userId` de l'idée = `gift_list.owner_id` directement (plus de lookup par nom).
+- `get_lists` : « l'admin ne voit pas sa liste » → `gift_list.owner_id == int(payload["sub"])` ; « ni la commune » → `gift_list.is_common`. **Les listes sans compte (`owner_id NULL`, `is_common False`) restent visibles de tous, admins compris.**
+- `add-item` / `modify-item` : `userId` de l'idée = `gift_list.owner_id` directement (NULL pour les listes sans compte et la commune ; plus de lookup par nom).
 
 ## Bootstrap (1er megaadmin)
 
@@ -104,12 +108,13 @@ Récupérer les idées de la liste → `remove_image(idea.id)` pour chacune → 
 - Si un megaadmin existe déjà → ne fait rien (log).
 - Sinon crée `User(name, hash_password(password), isAdmin=True, isMegaAdmin=True, firstConnection=True)` (mot de passe d'env temporaire, changé à la 1ʳᵉ connexion).
 - `.env.example` documente les deux variables.
-- Ordre déploiement neuf : `create_db.py` → `migrate_owner_id.py` → `create_superadmin.py` → le megaadmin crée users/listes/commune via l'UI.
+- **Seed de la commune** : `create_superadmin.py` crée aussi, si absente, l'unique liste commune (`label "Liste commune"`, `owner_id NULL`, `is_common True`) — car l'UI ne peut pas créer de liste `is_common`.
+- Ordre déploiement neuf : `create_db.py` → `migrate_owner_id.py` → `create_superadmin.py` → le megaadmin crée users/listes (à compte ou sans compte) via l'UI.
 
 ## UI — extension de `/admin/superadmin`
 
 La page gère déjà la table des users (suppression, reset mot de passe) et une section listes (toggle). Ajouts :
-- **Section listes** : bouton « Créer une liste » (label + dropdown propriétaire = users existants + « Aucun (commune) ») ; par ligne, **renommer** (label + propriétaire) et **supprimer** (réutilise le dialog de confirmation déjà présent).
+- **Section listes** : bouton « Créer une liste » (label + dropdown propriétaire = users existants + « Aucun (sans compte) ») ; par ligne, **renommer** (label + propriétaire) et **supprimer** (réutilise le dialog de confirmation déjà présent). La liste commune apparaît mais son flag `is_common` n'est pas modifiable.
 - **Table users** : **toggle « Admin »** par ligne (confirmation ; désactivé sur soi-même et sur le megaadmin) ; case **« Admin »** dans le formulaire de création d'utilisateur.
 
 ### Frontend — dropdowns d'items (lot B intégré)
@@ -127,12 +132,13 @@ La page gère déjà la table des users (suppression, reset mot de passe) et une
 ## Stratégie de tests
 
 ### Backend (pytest, SQLite mémoire — infra existante)
-- **Listes** : création avec/sans owner ; unicité de slug (deux labels identiques → `-2`) ; owner inexistant → 400 ; owner possédant déjà une liste → 400 ; non-megaadmin → 403.
+- **Listes** : création avec owner, sans compte (`owner_id NULL`), et plusieurs listes sans compte autorisées ; l'UI/API ne peut pas créer de liste `is_common` ; unicité de slug (deux labels identiques → `-2`) ; owner inexistant → 400 ; owner possédant déjà une liste → 400 ; non-megaadmin → 403.
+- **Visibilité** : une liste sans compte est visible d'un admin via `get_lists` ; la liste `is_common` reste masquée aux admins.
 - **Rename/réassignation** : label modifié ; owner réassigné ; libère l'ancien owner.
 - **Delete cascade** : idées de la liste supprimées ; `image.remove_image` appelé pour chacune (monkeypatch) ; liste absente après.
 - **Rôles** : promotion/rétrogradation `isAdmin` ; auto-rétrogradation bloquée (400) ; non-megaadmin → 403.
 - **create-user** : `isAdmin=True` respecté.
-- **Migration** : backfill `owner_id` depuis `user_name` sur un jeu de données réduit.
+- **Migration** : backfill `owner_id` depuis `user_name` et `is_common=True` sur l'ancienne commune (`user_name IS NULL`), sur un jeu de données réduit.
 - **Régression** : `get_lists` (admin ne voit pas sa liste/commune), `add-item`/`modify-item` (userId dérivé de owner_id) restent verts.
 
 ### Frontend (jest + Testing Library)
