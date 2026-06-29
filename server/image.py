@@ -48,6 +48,11 @@ def _is_safe_image_url(url: str) -> bool:
 
 
 def get_image(url, name):
+    # Anti-SSRF : schéma http(s), IP résolues non internes, pas de redirection
+    # suivie, timeout, plafond de taille, content-type image.
+    # Risque résiduel ACCEPTÉ : DNS-rebinding (TOCTOU) entre _is_safe_image_url
+    # et requests.get. Jugé faible (endpoint admin-gated, SSRF aveugle, exploit
+    # coûteux). Non fermé volontairement ; voir le design doc.
     if not _is_safe_image_url(url):
         print('URL rejetée (SSRF)')
         return 'unknown.jpg'

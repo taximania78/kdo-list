@@ -152,7 +152,7 @@ La page gère déjà la table des users (suppression, reset mot de passe) et une
 
 Ce design intègre, en plus de la feature :
 - **Lot D** — `ensure_megaadmin` appliqué aux endpoints superadmin **existants ET nouveaux** (finding #1).
-- **SSRF** — validation d'URL (schéma + IP résolues non internes, timeout, taille, content-type) avant `requests.get` (finding #2).
+- **SSRF** — validation d'URL (schéma + IP résolues non internes, timeout, taille, content-type) avant `requests.get`, et redirections non suivies (`allow_redirects=False`, 3xx = échec) (finding #2). Risque résiduel **accepté et documenté** : DNS-rebinding (TOCTOU) — endpoint admin-gated, SSRF aveugle, exploit coûteux ; non fermé volontairement.
 - **Lot A** — gate frontend basé sur `isMegaAdmin` au lieu du nom codé en dur.
 - **Lot B** — dropdowns d'items chargés depuis l'API.
 
