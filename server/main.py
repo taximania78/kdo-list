@@ -63,6 +63,16 @@ def ensure_megaadmin(payload: dict) -> None:
 
 # ─── Gift Lists Endpoints ───────────────────────────────────────────────
 
+def _serialize_list(gl: GiftList) -> GiftListResponse:
+    return GiftListResponse(
+        slug=gl.slug,
+        label=gl.label,
+        owner_id=gl.owner_id,
+        owner_name=gl.owner.name if gl.owner else None,
+        is_common=gl.is_common,
+        enabled=gl.enabled,
+    )
+
 @app.get("/api/lists/")
 async def get_lists(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     """Retourne les listes visibles pour l'utilisateur connecté."""
@@ -72,21 +82,20 @@ async def get_lists(token: str = Depends(oauth2_scheme), db: AsyncSession = Depe
     
     username = payload.get("username")
     is_admin = payload.get("isAdmin")
-    
-    # Récupérer toutes les listes activées
-    result = await db.execute(select(GiftList).where(GiftList.enabled == True))
+
+    result = await db.execute(
+        select(GiftList).options(joinedload(GiftList.owner)).where(GiftList.enabled == True)
+    )
     all_lists = result.scalars().all()
-    
+
     visible_lists = []
     for gift_list in all_lists:
-        # Les admins ne voient pas leur propre liste
-        if is_admin and gift_list.user_name == username:
+        if is_admin and gift_list.owner_id == int(payload.get("sub")):
             continue
-        # Les admins ne voient pas la liste commune
-        if is_admin and gift_list.user_name is None:
+        if is_admin and gift_list.is_common:
             continue
-        visible_lists.append(GiftListResponse.model_validate(gift_list))
-    
+        visible_lists.append(_serialize_list(gift_list))
+
     return visible_lists
 
 @app.get("/api/lists/all/")
@@ -99,9 +108,9 @@ async def get_all_lists(token: str = Depends(oauth2_scheme), db: AsyncSession = 
     if not payload.get("isAdmin"):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
     
-    result = await db.execute(select(GiftList))
+    result = await db.execute(select(GiftList).options(joinedload(GiftList.owner)))
     all_lists = result.scalars().all()
-    return [GiftListResponse.model_validate(gl) for gl in all_lists]
+    return [_serialize_list(gl) for gl in all_lists]
 
 @app.patch("/api/lists/{slug}/toggle")
 async def toggle_list(slug: str, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
@@ -345,12 +354,9 @@ async def add_item_api(idea_data: IdeaCreate, token: str = Depends(oauth2_scheme
         gift_list = result_list.scalars().first()
         if gift_list:
             list_id = gift_list.id
-            # Si la liste a un user_name associé, utiliser son userId
-            if gift_list.user_name and not user_id:
-                result_user = await db.execute(select(User).where(User.name == gift_list.user_name))
-                user_from_list = result_user.scalars().first()
-                if user_from_list:
-                    user_id = user_from_list.id
+            # Si la liste a un propriétaire, utiliser son id comme userId de l'idée
+            if gift_list.owner_id and not user_id:
+                user_id = gift_list.owner_id
 
     url, image, comment = None, None, None
     if idea_data.comment is not None:
@@ -442,12 +448,7 @@ async def modify_item_api(update_data: IdeaUpdate, token: str = Depends(oauth2_s
         gift_list = result_list.scalars().first()
         if gift_list:
             update_values["list_id"] = gift_list.id
-            if gift_list.user_name:
-                result_user = await db.execute(select(User).where(User.name == gift_list.user_name))
-                user_instance = result_user.scalars().first()
-                update_values["userId"] = user_instance.id if user_instance else None
-            else:
-                update_values["userId"] = None
+            update_values["userId"] = gift_list.owner_id
     elif update_data.user:
         # Rétrocompatibilité
         result = await db.execute(select(User).where(User.name == update_data.user))

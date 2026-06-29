@@ -35,33 +35,10 @@ async def setup_test_lists(client: AsyncClient, admin_token: str, user_token: st
     await session.refresh(normal_user)
 
     # Création des listes
-    list_admin = GiftList(
-        slug="admin",
-        label="Admin's List",
-        user_name="admin",
-        enabled=True
-    )
-
-    list_user = GiftList(
-        slug="user",
-        label="User's List",
-        user_name="user",
-        enabled=True
-    )
-
-    list_common = GiftList(
-        slug="common",
-        label="Common List",
-        user_name=None,
-        enabled=True
-    )
-
-    list_disabled = GiftList(
-        slug="disabled",
-        label="Disabled List",
-        user_name="user",
-        enabled=False
-    )
+    list_admin = GiftList(slug="admin", label="Admin's List", owner_id=admin_user.id, enabled=True)
+    list_user = GiftList(slug="user", label="User's List", owner_id=normal_user.id, enabled=True)
+    list_common = GiftList(slug="common", label="Common List", owner_id=None, is_common=True, enabled=True)
+    list_disabled = GiftList(slug="disabled", label="Disabled List", owner_id=normal_user.id, enabled=False)
 
     session.add_all([list_admin, list_user, list_common, list_disabled])
     await session.commit()
