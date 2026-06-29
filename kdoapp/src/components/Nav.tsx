@@ -36,8 +36,8 @@ const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 export const Nav = () => {
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [username, setUsername] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState<string | null>(null);
+  const [isMegaAdmin, setIsMegaAdmin] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -49,8 +49,8 @@ export const Nav = () => {
           const decoded = decodeToken(token);
           if (decoded) {
             setIsUserLoggedIn(true);
-            setUsername(decoded.username);
             setIsAdmin(decoded.isAdmin ? 'true' : 'false');
+            setIsMegaAdmin(decoded.isMegaAdmin === true);
           } else {
             setIsUserLoggedIn(false);
           }
@@ -137,7 +137,7 @@ export const Nav = () => {
                         Listes
                       </NavLink>
                     </>
-                  ) : username === 'Mathieu' ? (
+                  ) : isMegaAdmin ? (
                     <>
                       <NavLink href="/admin/superadmin" icon={<Shield className="w-4 h-4" />}>
                         Admin
@@ -187,7 +187,7 @@ export const Nav = () => {
                     Listes
                   </MobileNavLink>
                 </>
-              ) : username === 'Mathieu' ? (
+              ) : isMegaAdmin ? (
                 <>
                   <MobileNavLink href="/admin/superadmin" onClick={toggleMenu} icon={<Shield className="w-5 h-5" />}>
                     Admin

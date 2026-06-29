@@ -60,7 +60,7 @@ export default function Password({
       if (!isAuthenticated) {
         console.log('🚫 [RESET-PASSWORD] Not authenticated, redirecting to login');
         router.push('/');
-      } else if (user && !user.isMegaAdmin && user.username !== 'Mathieu') {
+      } else if (user && !user.isMegaAdmin) {
         console.log('🚫 [RESET-PASSWORD] Not super admin, redirecting to admin');
         router.push('/admin');
       }

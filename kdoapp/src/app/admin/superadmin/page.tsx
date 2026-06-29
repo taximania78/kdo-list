@@ -51,7 +51,7 @@ function Superadmin() {
       if (!isAuthenticated) {
         console.log('🚫 [SUPERADMIN] Not authenticated, redirecting to login');
         router.push('/');
-      } else if (user && !user.isMegaAdmin && user.username !== 'Mathieu') {
+      } else if (user && !user.isMegaAdmin) {
         console.log('🚫 [SUPERADMIN] Not super admin, redirecting to admin');
         router.push('/admin');
       }
