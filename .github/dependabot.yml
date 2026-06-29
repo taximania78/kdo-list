@@ -81,6 +81,12 @@ updates:
         update-types:
           - "minor"
     # Majors hors groupe -> 1 PR par paquet, merge manuel.
+    ignore:
+      # pydantic-core est couplé au pin EXACT de pydantic (ex. pydantic 2.13.4
+      # -> pydantic-core==2.46.4). Bumpé seul, il rend l'install insoluble
+      # (ResolutionImpossible). On ne le met pas à jour en standalone : il suivra
+      # automatiquement quand Dependabot bumpera pydantic (dep directe).
+      - dependency-name: "pydantic-core"
 
   # ── CI : versions des GitHub Actions ──────────────────────────────────────
   # Faible fréquence, on veut un œil sur les majors -> tous types groupés, manuel.
