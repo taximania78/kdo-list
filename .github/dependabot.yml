@@ -1,15 +1,15 @@
 # Stratégie Dependabot — kdo-list-dev
 #
-# Objectif : garder les dépendances à jour automatiquement quand c'est sûr
-# (patches auto-mergés si la CI est verte), manuellement quand ça mérite un
-# œil humain (minors / majors), sans casser la CI ni s'exposer au supply-chain.
+# Objectif : garder les dépendances à jour avec le moins de bruit possible, et
+# une vraie défense supply-chain (cooldown + quarantaine min-release-age), sans
+# casser la CI. Repo privé en plan gratuit -> ni auto-merge ni ruleset GitHub
+# (features Pro/Team) : tous les merges sont manuels, mais le groupage isole le
+# lot sûr (patches) pour qu'il se relise/merge en un coup.
 #
 # Trois écosystèmes surveillés : npm (frontend), pip (backend), github-actions.
-# L'auto-merge des patches est géré par .github/workflows/dependabot-automerge.yml
-# (il attend que les checks requis soient verts avant de fusionner).
 #
 # Matrice de décision :
-#   patch (npm/pip)    -> 🤖 PR groupée, auto-merge si CI verte
+#   patch (npm/pip)    -> 👀 PR groupée (lot sûr, merge rapide après CI verte)
 #   minor (npm/pip)    -> 👀 PR groupée, merge manuel
 #   major (npm/pip)    -> 👀 PR individuelle, merge manuel (relire les breaking changes)
 #   github-actions     -> 👀 PR groupée tous types, merge manuel
@@ -35,9 +35,8 @@ updates:
     cooldown:
       default-days: 3
     groups:
-      # Patches isolés dans leur propre groupe -> seuls éligibles à l'auto-merge.
-      # (Le type d'une PR groupée = le plus élevé du lot ; un patch noyé dans un
-      # groupe minor ne s'auto-mergerait jamais.)
+      # Patches isolés dans leur propre groupe -> lot à faible risque, relu et
+      # mergé en un coup, séparé des minors qui méritent plus d'attention.
       npm-patches:
         applies-to: version-updates
         update-types:
