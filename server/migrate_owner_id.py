@@ -14,7 +14,7 @@ async def backfill_owner_and_common(conn):
         "WHERE user_name IS NOT NULL AND owner_id IS NULL"
     ))
     # is_common pour l'ancienne commune (user_name NULL)
-    await conn.execute(text("UPDATE gift_lists SET is_common = 1 WHERE user_name IS NULL"))
+    await conn.execute(text("UPDATE gift_lists SET is_common = TRUE WHERE user_name IS NULL"))
 
 
 async def migrate():
