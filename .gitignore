@@ -4,6 +4,7 @@
 # ─── Secrets / config locale ─────────────────────
 .env
 .env.local
+docker-compose.override.yml
 server/dev
 dev/config.json
 

@@ -24,16 +24,6 @@ services:
       DATABASE_HOST: ${DATABASE_HOST}
       DATABASE_PORT: ${DATABASE_PORT}
       DATABASE_NAME: ${DATABASE_NAME}
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.kdo-api.rule=Host(`${APP_DOMAIN}`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.kdo-api.priority=100"
-      - "traefik.http.routers.kdo-api.entrypoints=websecure"
-      - "traefik.http.routers.kdo-api.tls.certresolver=tls"
-      - "traefik.http.routers.kdo-api.middlewares=crowdsec@file"
-      - "traefik.http.services.kdo-api.loadbalancer.server.port=8000"
-    networks:
-      - proxy
 
   nextjs:
     build:
@@ -56,16 +46,6 @@ services:
       DEBUG: ${DEBUG}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       NEXT_PUBLIC_THEME: ${NEXT_PUBLIC_THEME}
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.kdo-front.rule=Host(`${APP_DOMAIN}`)"
-      - "traefik.http.routers.kdo-front.entrypoints=websecure"
-      - "traefik.http.routers.kdo-front.tls.certresolver=tls"
-      - "traefik.http.services.kdo-front.loadbalancer.server.port=3000"
-      - "traefik.http.middlewares.kdo-headers.headers.customResponseHeaders.X-Robots-Tag=noindex, nofollow, nosnippet, noarchive"
-      - "traefik.http.routers.kdo-front.middlewares=crowdsec@file,kdo-headers"
-    networks:
-      - proxy
 
   db:
     image: postgres:17
@@ -79,11 +59,3 @@ services:
       POSTGRES_DB: ${DATABASE_NAME}
     volumes:
       - ./db:/var/lib/postgresql/data
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"
-    networks:
-      - proxy
-
-networks:
-  proxy:
-    external: true
