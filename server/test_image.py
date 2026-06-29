@@ -1,4 +1,5 @@
 import pytest
+import image
 from image import _is_blocked_ip, _is_safe_image_url, get_image
 
 
@@ -31,3 +32,30 @@ def test_get_image_blocked_url_never_fetches(monkeypatch):
         raise AssertionError("requests.get ne doit pas être appelé pour une URL bloquée")
     monkeypatch.setattr("image.requests.get", fake_get)
     assert get_image("http://169.254.169.254/x", "1.jpg") == "unknown.jpg"
+
+
+def test_get_image_rejects_redirect(monkeypatch):
+    """Finding A: les redirections 3xx doivent être rejetées (allow_redirects=False)."""
+    recorded = {}
+
+    class FakeResponse:
+        status_code = 302
+        headers = {}
+
+    def fake_get(*args, **kwargs):
+        recorded["kwargs"] = kwargs
+        return FakeResponse()
+
+    monkeypatch.setattr("image.requests.get", fake_get)
+    result = get_image("https://93.184.216.34/x.jpg", "1.jpg")
+    assert result == "unknown.jpg"
+    assert recorded["kwargs"].get("allow_redirects") is False
+
+
+def test_is_safe_image_url_fails_closed_on_unicode_error(monkeypatch):
+    """Finding B: une UnicodeError (IDNA) doit faire échouer en fail-closed."""
+    def fake_getaddrinfo(*args, **kwargs):
+        raise UnicodeError("malformed hostname")
+
+    monkeypatch.setattr("image.socket.getaddrinfo", fake_getaddrinfo)
+    assert _is_safe_image_url("http://xn--bad/x.jpg") is False

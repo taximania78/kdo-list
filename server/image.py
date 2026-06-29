@@ -39,7 +39,7 @@ def _is_safe_image_url(url: str) -> bool:
         return False
     try:
         infos = socket.getaddrinfo(host, None)
-    except socket.gaierror:
+    except (socket.gaierror, UnicodeError):
         return False
     for info in infos:
         if _is_blocked_ip(info[4][0]):
@@ -58,7 +58,7 @@ def get_image(url, name):
         file_path = "../kdoapp/public/kdos" + name
 
     try:
-        res = requests.get(url, stream=True, timeout=REQUEST_TIMEOUT)
+        res = requests.get(url, stream=True, timeout=REQUEST_TIMEOUT, allow_redirects=False)
     except requests.RequestException:
         print('download NOK')
         return 'unknown.jpg'
