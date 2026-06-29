@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -16,16 +16,12 @@ import {
 } from 'lucide-react';
 import { isChristmas } from '@/lib/theme';
 
-const listOptions = [
-  { value: 'marie-eve', label: 'Marie-Eve', user: 'Marie-Eve' },
-  { value: 'mathieu', label: 'Mathieu', user: 'Mathieu' },
-  { value: 'commune', label: 'Liste commune', user: null },
-];
+type ListOption = { value: string; label: string; user: string | null };
 
 const formSchema = z.object({
   name: z.string().min(2),
   price: z.number().positive(),
-  list_slug: z.enum(['marie-eve', 'mathieu', 'commune']),
+  list_slug: z.string().min(1, { message: 'Sélectionnez une liste' }),
   url: z.string().url({ message: 'Invalid url' }),
   comment: z.string().optional(),
   image: z.union([z.string().url(), z.literal('')]).optional(),
@@ -38,6 +34,26 @@ function AddItem() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   });
+  const [listOptions, setListOptions] = useState<ListOption[]>([]);
+
+  useEffect(() => {
+    api
+      .get('/api/lists/all/')
+      .then((res) => {
+        const opts: ListOption[] = res.data.map(
+          (l: { slug: string; label: string; owner_name: string | null }) => ({
+            value: l.slug,
+            label: l.label,
+            user: l.owner_name,
+          })
+        );
+        setListOptions(opts);
+        if (opts.length > 0) form.setValue('list_slug', opts[0].value);
+      })
+      .catch((error) => console.error('Failed to load lists:', error));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log('📝 [ADD-ITEM] Submitting form:', values);
 
