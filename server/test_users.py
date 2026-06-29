@@ -121,6 +121,7 @@ async def test_get_users(client: AsyncClient, admin_token: str, setup_test_users
     names = [u["name"] for u in data]
     assert "admin" in names
     assert "user" in names
+    assert "isAdmin" in data[0]
 
 @pytest.mark.asyncio
 async def test_modify_password_first_connection(client: AsyncClient, setup_test_users):

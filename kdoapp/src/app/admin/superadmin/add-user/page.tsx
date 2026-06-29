@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -47,6 +47,7 @@ type FormData = z.infer<typeof formSchema>;
 export default function Password() {
   const router = useRouter();
   const { isAuthenticated, user, isLoading } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!isLoading) {
@@ -79,6 +80,7 @@ export default function Password() {
       const response = await api.post(`${ApiAdress}/api/create-user/`, {
         name: data.username,
         password: data.userPassword,
+        isAdmin: isAdmin,
       });
       if (response.status < 200 || response.status >= 300) {
         throw new Error('La réponse réseau n\'était pas OK');
@@ -266,6 +268,12 @@ export default function Password() {
                 </div>
               </div>
             )}
+
+            {/* Admin checkbox */}
+            <label className="flex items-center gap-2 text-[var(--text-secondary)]">
+              <input type="checkbox" checked={isAdmin} onChange={(e) => setIsAdmin(e.target.checked)} />
+              Administrateur (peut gérer sa propre liste)
+            </label>
 
             {/* Buttons */}
             <div className="flex gap-4 pt-2">

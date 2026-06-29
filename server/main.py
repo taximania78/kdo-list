@@ -638,7 +638,7 @@ async def get_username_api(request: Request, token: str = Depends(oauth2_scheme)
 
     if request.method == "GET":
         # Récupérer tous les utilisateurs
-        result = await db.execute(select(User.id, User.name).order_by(User.name))
+        result = await db.execute(select(User.id, User.name, User.isAdmin, User.isMegaAdmin).order_by(User.name))
         
         return result.mappings().all()
     
