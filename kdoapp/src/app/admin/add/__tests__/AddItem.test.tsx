@@ -20,6 +20,6 @@ describe('AddItem list dropdown', () => {
     render(<AddItem />);
     await waitFor(() => expect(screen.getByRole('option', { name: 'Liste 1' })).toBeInTheDocument());
     expect(screen.getByRole('option', { name: 'Liste commune' })).toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: 'Personne' })).toBeNull();
+    expect(screen.queryByRole('option', { name: 'Bob' })).toBeNull();
   });
 });

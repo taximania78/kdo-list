@@ -48,8 +48,8 @@ async def migrate():
         await conn.execute(text("""
             INSERT INTO gift_lists (slug, label, user_name, enabled)
             VALUES 
-                ('marie-eve', 'Personne', 'Personne', true),
-                ('mathieu', 'Mathieu', 'Mathieu', true),
+                ('liste-1', 'Liste 1', 'Personne 1', true),
+                ('liste-2', 'Liste 2', 'Personne 2', true),
                 ('commune', 'Liste commune', NULL, true)
             ON CONFLICT (slug) DO NOTHING
         """))

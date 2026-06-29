@@ -24,7 +24,7 @@ async def test_get_kdos_admin_user_filter(client: AsyncClient, admin_token: str)
     """Vérifie qu'on peut passer un paramètre user."""
     headers = {"Authorization": f"Bearer {admin_token}"}
     # This might return 404 since the DB is empty, or 200 with an empty list depending on query structure
-    response = await client.get("/api/kdos/?user=Personne", headers=headers)
+    response = await client.get("/api/kdos/?user=Alice", headers=headers)
     assert response.status_code in [200, 404]
 
 @pytest.mark.asyncio

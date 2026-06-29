@@ -11,8 +11,8 @@ class GiftList(Base):
     __tablename__ = "gift_lists"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    slug: Mapped[str] = mapped_column(String, unique=True, nullable=False)  # "marie-eve", "mathieu", "commune"
-    label: Mapped[str] = mapped_column(String, nullable=False)  # "Personne", "Mathieu", "Liste commune"
+    slug: Mapped[str] = mapped_column(String, unique=True, nullable=False)  # ex. "liste-1", "liste-2", "commune"
+    label: Mapped[str] = mapped_column(String, nullable=False)  # ex. "Liste 1", "Liste 2", "Liste commune"
     owner_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)  # NULL = giftee sans compte
     is_common: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)  # True = unique liste commune
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
