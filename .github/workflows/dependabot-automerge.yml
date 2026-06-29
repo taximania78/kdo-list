@@ -1,0 +1,37 @@
+name: Dependabot auto-merge
+
+# Auto-merge des PRs Dependabot UNIQUEMENT pour les patches.
+# Repo public : auto-merge GitHub + ruleset disponibles. GitHub n'enclenche le
+# merge qu'une fois les checks requis du ruleset protect-main verts.
+#
+# Prérequis (déjà en place) :
+#   - "Allow auto-merge" activé (Settings > General > Pull Requests).
+#   - Ruleset protect-main avec checks requis "Backend Tests (FastAPI)" et
+#     "Frontend Tests (Next.js)". Sans check requis, --auto fusionnerait aussitôt.
+
+on: pull_request_target
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Récupérer les métadonnées Dependabot
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # update-type d'une PR groupée = le plus élevé du lot. Comme les patches
+      # sont isolés dans leur propre groupe (cf. dependabot.yml), une PR de
+      # patches reste bien 'semver-patch'.
+      - name: Activer l'auto-merge pour les patches
+        if: steps.meta.outputs.update-type == 'version-update:semver-patch'
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
