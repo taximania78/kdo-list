@@ -265,8 +265,7 @@ async def get_kdo_list(user: str = "all", list: str = None, token: str = Depends
         result_list = await db.execute(select(GiftList).where(GiftList.slug == list))
         gift_list = result_list.scalars().first()
         if not gift_list:
-            # Liste inexistante (ex. supprimée) : aucune idée à retourner
-            return []
+            raise HTTPException(status_code=404, detail="Liste non trouvée")
         query = query.filter(Idea.list_id == gift_list.id)
     elif user != "all":
         # Rétrocompatibilité : filtre par nom d'utilisateur

@@ -197,7 +197,8 @@ async def test_delete_list_cascade(client: AsyncClient, admin_token: str, setup_
     headers = {"Authorization": f"Bearer {admin_token}"}
     res = await client.delete("/api/lists/user", headers=headers)
     assert res.status_code == 200
-    # idées de la liste 'user' supprimées
-    kdos = (await client.get("/api/kdos/?list=user", headers=headers)).json()
-    assert kdos == []
-    assert len(removed) >= 1  # remove_image appelé pour chaque idée supprimée
+    # remove_image appelé une fois par idée de la liste 'user' (idea_user + idea_taken)
+    assert len(removed) == 2
+    # la liste 'user' a bien disparu
+    all_lists = (await client.get("/api/lists/all/", headers=headers)).json()
+    assert all(lst["slug"] != "user" for lst in all_lists)

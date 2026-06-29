@@ -1,0 +1,115 @@
+{
+  "version": "2.0.0",
+  "date": "2026-06-29",
+  "mode": "daily",
+  "scope": "full",
+  "diff_mode": false,
+  "phases_run": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+  "attack_surface": {
+    "code": { "public_endpoints": 1, "authenticated": 18, "admin": 8, "api": 19, "uploads": 0, "integrations": 1, "background_jobs": 0, "websockets": 0 },
+    "infrastructure": { "ci_workflows": 2, "webhook_receivers": 0, "container_configs": 3, "iac_configs": 0, "deploy_targets": 1, "secret_management": "env vars (prod) / gitignored dev/config.json (dev)" }
+  },
+  "findings": [
+    {
+      "id": 1,
+      "severity": "HIGH",
+      "confidence": 9,
+      "status": "VERIFIED",
+      "phase": 9,
+      "phase_name": "OWASP A01 Broken Access Control",
+      "category": "OWASP A01",
+      "fingerprint": "a01-main.py-superadmin-isadmin-only",
+      "title": "Superadmin operations gated only by isAdmin, never isMegaAdmin (privilege escalation)",
+      "file": "server/main.py",
+      "line": 547,
+      "commit": null,
+      "description": "create-user, delete-user, modify-password-admin/{user_id}, all-lists and toggle-list check only payload.get('isAdmin'). The frontend restricts these to isMegaAdmin (or username=='Mathieu'), but the backend never enforces isMegaAdmin. The intended admin/superadmin trust boundary does not exist server-side.",
+      "exploit_scenario": "A non-mega admin authenticates, then calls PATCH /api/modify-password-admin/{megaadmin_user_id} with a password of their choosing. The endpoint accepts it (isAdmin true) and sets the superadmin's password + firstConnection=true. The attacker logs in as the superadmin. Full account takeover / vertical privilege escalation.",
+      "impact": "Any admin can take over any other account (including the superadmin), create/delete users, and toggle any list. The megaAdmin privilege level is security theater.",
+      "recommendation": "Add a server-side isMegaAdmin check (e.g. a require_megaadmin dependency) on create-user, delete-user, modify-password-admin, all-lists and toggle-list. For object-level operations, also scope by ownership.",
+      "playbook": null,
+      "verification": "self-verified (code traced; grep confirms no isMegaAdmin enforcement in backend)"
+    },
+    {
+      "id": 2,
+      "severity": "HIGH",
+      "confidence": 8,
+      "status": "VERIFIED",
+      "phase": 10,
+      "phase_name": "SSRF (OWASP A10)",
+      "category": "OWASP A10",
+      "fingerprint": "a10-image.py-get_image-ssrf",
+      "title": "SSRF via unvalidated image URL fetch",
+      "file": "server/image.py",
+      "line": 9,
+      "commit": null,
+      "description": "get_image(url, name) performs requests.get(url) on an admin-supplied URL with no scheme/host allowlist, no timeout, and no content-type/size validation. Reached from add-item and modify-item via the 'image' field.",
+      "exploit_scenario": "An admin submits an item whose image URL is http://169.254.169.254/latest/meta-data/ or an internal-only service URL. The server fetches it. Blind SSRF (body written to a file rather than returned), but internal endpoints can be probed and reached from the server's network position.",
+      "impact": "Server-side requests to internal/cloud-metadata endpoints from an admin-controlled value. Reduced severity because it is admin-gated.",
+      "recommendation": "Validate the URL: require https scheme, resolve and block private/link-local/loopback IP ranges, set a timeout, cap response size, and verify content-type is an image.",
+      "playbook": null,
+      "verification": "self-verified (code traced: url -> requests.get with no validation)"
+    },
+    {
+      "id": 3,
+      "severity": "MEDIUM",
+      "confidence": 8,
+      "status": "VERIFIED",
+      "phase": 9,
+      "phase_name": "OWASP A01 Broken Access Control",
+      "category": "OWASP A01",
+      "fingerprint": "a01-main.py-item-no-ownership",
+      "title": "No object-level ownership check on modify/delete item",
+      "file": "server/main.py",
+      "line": 417,
+      "commit": null,
+      "description": "modify-item and delete-item verify isAdmin but not that the idea belongs to the calling admin's list. Any admin can modify or delete any other admin's items.",
+      "exploit_scenario": "Admin A calls PUT /api/modify-item/ or DELETE /api/delete-item/{id} with the id of an item on admin B's list. The change is applied with no ownership check.",
+      "impact": "Horizontal privilege escalation between admins over gift items. Low practical impact given a small trusted admin set.",
+      "recommendation": "Scope item mutations to items whose list belongs to the calling user (or restrict cross-list edits to megaAdmin).",
+      "playbook": null,
+      "verification": "self-verified (code traced)"
+    },
+    {
+      "id": 4,
+      "severity": "MEDIUM",
+      "confidence": 7,
+      "status": "VERIFIED",
+      "phase": 5,
+      "phase_name": "Infrastructure Shadow Surface",
+      "category": "Infrastructure",
+      "fingerprint": "infra-config.py-db-default-admin",
+      "title": "Production DB credentials default to admin/admin when env unset",
+      "file": "server/config.py",
+      "line": 26,
+      "commit": null,
+      "description": "In production mode, DATABASE_USER/DATABASE_PASSWORD fall back to 'admin'/'admin' if the env vars are not set. Unlike SECRET_KEY (which refuses weak values in prod), the DB credentials have no such guard.",
+      "exploit_scenario": "A production deploy that forgets to set DATABASE_PASSWORD silently runs with admin/admin, which an attacker on the DB network can guess.",
+      "impact": "Weak default DB credentials in production if env is misconfigured.",
+      "recommendation": "Apply the same fail-fast guard used for SECRET_KEY: refuse to start in production if DATABASE_PASSWORD is unset or weak.",
+      "playbook": null,
+      "verification": "self-verified (code traced)"
+    }
+  ],
+  "supply_chain_summary": {
+    "direct_deps": 0, "transitive_deps": 0,
+    "critical_cves": 0, "high_cves": 0,
+    "install_scripts": 0, "lockfile_present": true, "lockfile_tracked": true,
+    "tools_skipped": ["npm audit (not run)", "pip-audit (not installed)"]
+  },
+  "filter_stats": {
+    "candidates_scanned": 11, "hard_exclusion_filtered": 3,
+    "confidence_gate_filtered": 2, "verification_filtered": 0, "reported": 4
+  },
+  "totals": { "critical": 0, "high": 2, "medium": 2, "tentative": 0 },
+  "trend": {
+    "prior_report_date": null,
+    "resolved": 0, "persistent": 0, "new": 4,
+    "direction": "first_run"
+  },
+  "appendix_below_gate": [
+    "untake-api lets any authenticated user release another user's reservation (IDOR, ~6/10, low impact)",
+    "No rate limiting / account lockout on /api/login (A04; rate-limiting is hard-excluded but noted as design rec)",
+    "dependabot/fetch-metadata@v3 is not SHA-pinned (third-party action; pull_request_target workflow does not checkout PR code, so low risk)"
+  ]
+}
