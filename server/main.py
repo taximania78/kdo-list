@@ -98,7 +98,6 @@ async def get_lists(token: str = Depends(oauth2_scheme), db: AsyncSession = Depe
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
     
-    username = payload.get("username")
     is_admin = payload.get("isAdmin")
 
     result = await db.execute(
@@ -221,6 +220,7 @@ async def delete_list_api(slug: str, token: str = Depends(oauth2_scheme), db: As
     if not gift_list:
         raise HTTPException(status_code=404, detail="Liste non trouvée")
     ideas = (await db.execute(select(Idea).where(Idea.list_id == gift_list.id))).scalars().all()
+    # NB: les suppressions d'images ne sont pas transactionnelles avec le commit DB (limite FS).
     for idea in ideas:
         remove_image(idea.id)
     await db.execute(delete(Idea).where(Idea.list_id == gift_list.id))

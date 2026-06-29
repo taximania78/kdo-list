@@ -54,6 +54,7 @@ function Superadmin() {
   const [newListOwner, setNewListOwner] = useState<string>('');
   const [listError, setListError] = useState<string | null>(null);
   const [listToDelete, setListToDelete] = useState<GiftListItem | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [listToEdit, setListToEdit] = useState<GiftListItem | null>(null);
   const [editLabel, setEditLabel] = useState('');
   const [editOwner, setEditOwner] = useState<string>('');
@@ -163,13 +164,16 @@ function Superadmin() {
 
   const handleDeleteList = async () => {
     if (!listToDelete) return;
+    setDeleteError(null);
     try {
       await api.delete(`${ApiAdress}/api/lists/${listToDelete.slug}`);
+      setListToDelete(null);
       fetchGiftLists();
     } catch (error) {
       console.error('Error deleting list:', error);
-    } finally {
-      setListToDelete(null);
+      const detail =
+        (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setDeleteError(detail ?? 'Échec de la suppression');
     }
   };
 
@@ -325,7 +329,7 @@ function Superadmin() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2 justify-end flex-wrap">
-                          {!user.isMegaAdmin && user.id !== me?.sub && (
+                          {!user.isMegaAdmin && user.id !== Number(me?.sub) && (
                             <button
                               onClick={() => handleToggleRole(user, !user.isAdmin)}
                               className="flex items-center gap-2 p-2 px-4 rounded-lg bg-[var(--secondary)] hover:bg-[var(--secondary-hover)] text-white"
@@ -508,7 +512,10 @@ function Superadmin() {
                   </button>
                   {!gList.is_common && (
                     <button
-                      onClick={() => setListToDelete(gList)}
+                      onClick={() => {
+                        setDeleteError(null);
+                        setListToDelete(gList);
+                      }}
                       className="ml-3 p-2 rounded-lg bg-[var(--danger)] hover:bg-[var(--danger-hover)] text-white"
                       title="Supprimer la liste"
                     >
@@ -603,15 +610,16 @@ function Superadmin() {
 
       {listToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 animate-overlayShow" onClick={() => setListToDelete(null)} />
+          <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 animate-overlayShow" onClick={() => { setDeleteError(null); setListToDelete(null); }} />
           <div className="relative z-50 max-w-md w-full rounded-2xl p-8 shadow-xl animate-fadeInUp dialog-surface">
             <h3 className="text-xl font-bold mb-4 text-[var(--text-primary)]">Supprimer la liste</h3>
             <p className="mb-6 text-[var(--text-secondary)]">
               Supprimer <span className="font-bold text-[var(--text-primary)]">&quot;{listToDelete.label}&quot;</span>{' '}
               supprimera aussi toutes ses idées. Action irréversible.
             </p>
+            {deleteError && <p className="mb-4 text-sm text-[var(--error)]">{deleteError}</p>}
             <div className="flex gap-4 justify-end">
-              <button onClick={() => setListToDelete(null)} className="px-6 py-2 rounded-lg bg-[var(--surface-hover)] hover:bg-[var(--surface-muted)] text-[var(--text-secondary)]">Annuler</button>
+              <button onClick={() => { setDeleteError(null); setListToDelete(null); }} className="px-6 py-2 rounded-lg bg-[var(--surface-hover)] hover:bg-[var(--surface-muted)] text-[var(--text-secondary)]">Annuler</button>
               <button onClick={handleDeleteList} className="px-6 py-2 rounded-lg bg-[var(--danger)] hover:bg-[var(--danger-hover)] text-white">Supprimer</button>
             </div>
           </div>
