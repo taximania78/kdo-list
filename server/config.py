@@ -6,11 +6,18 @@ def get_config():
     print(f"Mode d'exécution : {mode}")
 
     if mode in ["production", "testing"]:
-        # Chargement de la configuration depuis un l'environnement pour la production et les tests CI
+        # Chargement de la configuration depuis l'environnement pour la production et les tests CI
+       # En production, refuser de démarrer avec une clé secrète absente ou faible.
+       _secret = os.getenv("SECRET_KEY", "" if mode == "production" else "testing-only-secret")
+       if mode == "production" and (not _secret or len(_secret) < 32):
+           raise RuntimeError(
+               "SECRET_KEY manquante ou trop faible en production : "
+               "définissez une variable d'environnement SECRET_KEY (>= 32 caractères, ex. `openssl rand -hex 32`)."
+           )
        return {
             "MODE" : "production",
             #TOKEN
-            "SECRET_KEY": os.getenv("SECRET_KEY", "1234567890"),  # Clé secrète pour JWT
+            "SECRET_KEY": _secret,  # Clé secrète pour JWT
             "ALGORITHM": os.getenv("ALGORITHM", "HS256"),  # Algorithme de cryptage
             "ACCESS_TOKEN_EXPIRE_MINUTES": int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30)),  # Durée d'expiration du token d'accès
             "REFRESH_TOKEN_EXPIRE_DAYS": int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7)),  # Durée d'expiration du token de rafraîchissement
