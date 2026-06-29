@@ -12,7 +12,7 @@ from sqlalchemy import delete, or_, update
 from sqlalchemy.orm import joinedload, aliased
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from models import GiftList, GiftListCreate, GiftListUpdate, GiftListResponse, GiftListToggle, Idea, IdeaCreate, IdeaUpdate, RefreshToken, RefreshTokenRequest, User, UserCreate, PasswordChange
+from models import GiftList, GiftListCreate, GiftListUpdate, GiftListResponse, GiftListToggle, Idea, IdeaCreate, IdeaUpdate, RefreshToken, RefreshTokenRequest, User, UserCreate, PasswordChange, RoleUpdate
 from database import get_db
 from auth import (
     create_access_token,
@@ -761,7 +761,8 @@ async def create_user_api(user_data: UserCreate, token: str = Depends(oauth2_sch
     hashed_password = hash_password(user_data.password)
     new_user = User(
         name=user_data.name,
-        password=hashed_password
+        password=hashed_password,
+        isAdmin=user_data.isAdmin,
     )
 
     # Ajouter à la session et commit
@@ -770,6 +771,21 @@ async def create_user_api(user_data: UserCreate, token: str = Depends(oauth2_sch
     await db.refresh(new_user)
 
     return {"success": True, "message": "Utilisateur créé avec succès", "id": new_user.id}
+
+@app.patch("/api/users/{user_id}/role")
+async def update_user_role_api(user_id: int, data: RoleUpdate, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+    payload = decode_jwt(token)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
+    ensure_megaadmin(payload)
+    if user_id == int(payload.get("sub")):
+        raise HTTPException(status_code=400, detail="Vous ne pouvez pas modifier votre propre rôle")
+    result = await db.execute(select(User).where(User.id == user_id))
+    if not result.scalars().first():
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    await db.execute(update(User).where(User.id == user_id).values(isAdmin=data.isAdmin))
+    await db.commit()
+    return {"success": True, "isAdmin": data.isAdmin}
 
 @app.get("/api/auth/")
 def auth():

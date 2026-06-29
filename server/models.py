@@ -138,6 +138,7 @@ class PasswordChange(BaseModel):
 class UserCreate(BaseModel):
     name: str
     password: str
+    isAdmin: bool = False
 
     @validator('name')
     def check_name_length(cls, v: str) -> str:
@@ -159,6 +160,9 @@ class UserCreate(BaseModel):
         if not any(c.isdigit() for c in v):
             raise ValueError('Le mot de passe doit contenir au moins un chiffre.')
         return v
+
+class RoleUpdate(BaseModel):
+    isAdmin: bool
 
 class GiftListResponse(BaseModel):
     slug: str

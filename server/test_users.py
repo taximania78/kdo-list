@@ -228,3 +228,34 @@ async def test_get_users_non_mega_forbidden(client: AsyncClient, admin_non_mega_
     headers = {"Authorization": f"Bearer {admin_non_mega_token}"}
     response = await client.get("/api/users/", headers=headers)
     assert response.status_code == 403
+
+@pytest.mark.asyncio
+async def test_create_user_with_admin_role(client: AsyncClient, admin_token: str):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    res = await client.post("/api/create-user/", json={"name": "chief", "password": "Chief@123", "isAdmin": True}, headers=headers)
+    assert res.status_code == 200
+    login = await client.post("/api/login/", data={"username": "chief", "password": "Chief@123"})
+    assert login.json()["isAdmin"] is True
+
+@pytest.mark.asyncio
+async def test_update_role_promote(client: AsyncClient, admin_token: str, setup_test_users):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    user_id = setup_test_users["user"].id
+    res = await client.patch(f"/api/users/{user_id}/role", json={"isAdmin": True}, headers=headers)
+    assert res.status_code == 200
+    import asyncio
+    await asyncio.sleep(1)
+    login = await client.post("/api/login/", data={"username": "user", "password": "NormalUser@123"})
+    assert login.json()["isAdmin"] is True
+
+@pytest.mark.asyncio
+async def test_update_role_self_forbidden(client: AsyncClient, admin_token: str, setup_test_users):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    res = await client.patch("/api/users/1/role", json={"isAdmin": False}, headers=headers)  # sub du admin_token = "1"
+    assert res.status_code == 400
+
+@pytest.mark.asyncio
+async def test_update_role_non_mega_forbidden(client: AsyncClient, admin_non_mega_token: str, setup_test_users):
+    headers = {"Authorization": f"Bearer {admin_non_mega_token}"}
+    res = await client.patch(f"/api/users/{setup_test_users['user'].id}/role", json={"isAdmin": True}, headers=headers)
+    assert res.status_code == 403
