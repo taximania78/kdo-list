@@ -1,7 +1,7 @@
 // FormModifyItem.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
@@ -22,17 +22,13 @@ import {
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
-const listOptions = [
-  { value: 'marie-eve', label: 'Personne', user: 'Personne' },
-  { value: 'mathieu', label: 'Mathieu', user: 'Mathieu' },
-  { value: 'commune', label: 'Liste commune', user: null },
-];
+type ListOption = { value: string; label: string; user: string | null };
 
 const formSchema = z.object({
   id: z.number(),
   name: z.string().min(2),
   price: z.number().positive(),
-  list_slug: z.enum(['marie-eve', 'mathieu', 'commune']),
+  list_slug: z.string().min(1),
   url: z.string().url({ message: 'Invalid url' }),
   comment: z.string().optional().nullable(),
   image: z
@@ -55,24 +51,24 @@ interface FormModifyItemProps {
   };
   id: number;
   onFormSubmit?: () => void;
+  listOptions: ListOption[];
 }
 
 export default function FormModifyItem({
   kdo,
   id,
   onFormSubmit,
+  listOptions,
 }: FormModifyItemProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const initialListSlug = React.useMemo(() => {
-    // Si kdo.user = null/undefined (venant du backend sur la liste commune) => 'commune'
     if (!kdo.user) return 'commune';
-    // Sinon on cherche la correspondance stricte
     const opt = listOptions.find((l) => l.user === kdo.user);
-    return opt ? opt.value as 'marie-eve' | 'mathieu' | 'commune' : 'commune';
-  }, [kdo.user]);
+    return opt ? opt.value : 'commune';
+  }, [kdo.user, listOptions]);
 
-  const { register, handleSubmit } = useForm<FormData>({
+  const { register, handleSubmit, setValue } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: kdo.id,
@@ -84,6 +80,10 @@ export default function FormModifyItem({
       image: kdo.image ?? '',
     },
   });
+
+  useEffect(() => {
+    setValue('list_slug', initialListSlug);
+  }, [initialListSlug, setValue]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const apiUrl = `${ApiAdress}/api/modify-item/`;

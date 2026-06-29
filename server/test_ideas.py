@@ -32,8 +32,8 @@ async def setup_test_ideas(client: AsyncClient, admin_token: str, user_token: st
     await session.refresh(user2)
 
     # Listes
-    list_user = GiftList(slug="user", label="User's List", user_name="user", enabled=True)
-    list_common = GiftList(slug="common", label="Common List", user_name=None, enabled=True)
+    list_user = GiftList(slug="user", label="User's List", owner_id=normal_user.id, enabled=True)
+    list_common = GiftList(slug="common", label="Common List", owner_id=None, is_common=True, enabled=True)
 
     session.add_all([list_user, list_common])
     await session.commit()

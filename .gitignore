@@ -34,4 +34,6 @@ kdoapp/test-results/
 # ─── Outils IA / config agents (local) ───────────
 .claude/
 CLAUDE.md
+.gstack/
+.superpowers/
 

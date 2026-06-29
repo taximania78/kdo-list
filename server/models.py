@@ -13,8 +13,10 @@ class GiftList(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     slug: Mapped[str] = mapped_column(String, unique=True, nullable=False)  # "marie-eve", "mathieu", "commune"
     label: Mapped[str] = mapped_column(String, nullable=False)  # "Personne", "Mathieu", "Liste commune"
-    user_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # NULL pour la liste commune
+    owner_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)  # NULL = giftee sans compte
+    is_common: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)  # True = unique liste commune
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    owner: Mapped[Optional["User"]] = relationship("User", foreign_keys=[owner_id])
     ideas: Mapped[list[Idea]] = relationship(
         "Idea",
         back_populates="gift_list",
@@ -136,6 +138,7 @@ class PasswordChange(BaseModel):
 class UserCreate(BaseModel):
     name: str
     password: str
+    isAdmin: bool = False
 
     @validator('name')
     def check_name_length(cls, v: str) -> str:
@@ -158,10 +161,15 @@ class UserCreate(BaseModel):
             raise ValueError('Le mot de passe doit contenir au moins un chiffre.')
         return v
 
+class RoleUpdate(BaseModel):
+    isAdmin: bool
+
 class GiftListResponse(BaseModel):
     slug: str
     label: str
-    user_name: Optional[str] = None
+    owner_id: Optional[int] = None
+    owner_name: Optional[str] = None
+    is_common: bool
     enabled: bool
 
     class Config:
@@ -169,3 +177,11 @@ class GiftListResponse(BaseModel):
 
 class GiftListToggle(BaseModel):
     enabled: bool
+
+class GiftListCreate(BaseModel):
+    label: str
+    owner_id: Optional[int] = None
+
+class GiftListUpdate(BaseModel):
+    label: Optional[str] = None
+    owner_id: Optional[int] = None

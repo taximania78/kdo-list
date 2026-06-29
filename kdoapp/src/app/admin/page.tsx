@@ -21,12 +21,14 @@ type Kdo = {
   id: number;
   name: string;
   price: number;
-  user: 'Personne' | 'Mathieu';
+  user: string;
   url: string;
   comment?: string | null;
   image?: string | null;
   imageDisplay?: string | null;
 };
+
+type ListOption = { value: string; label: string; user: string | null };
 
 /** ---------------------
  *  Composant Admin
@@ -36,6 +38,7 @@ function Admin() {
   const router = useRouter();
   const { isAuthenticated, user, isLoading } = useAuth();
   const [kdosList, setKdosList] = useState<Kdo[] | null>(null);
+  const [listOptions, setListOptions] = useState<ListOption[]>([]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -50,7 +53,7 @@ function Admin() {
     }
   }, [isAuthenticated, user, isLoading, router]);
 
-  const [selectedUser, setSelectedUser] = useState('Personne');
+  const [selectedUser, setSelectedUser] = useState('');
 
   const handleValueChange = (value: string) => {
     setSelectedUser(value);
@@ -59,10 +62,8 @@ function Admin() {
 
   const fetchKdos = async (selection: string) => {
     let apiUrl = `${ApiAdress}/api/kdos-admin/?format=json`;
-    if (selection === 'commune') {
-      apiUrl += `&list=commune`;
-    } else if (selection) {
-      apiUrl += `&user=${encodeURIComponent(selection)}`;
+    if (selection) {
+      apiUrl += `&list=${encodeURIComponent(selection)}`;
     }
 
     try {
@@ -137,57 +138,15 @@ function Admin() {
           </Select.ScrollUpButton>
 
           <Select.Viewport className="p-2">
-            <Select.Item
-              value="Personne"
-              className={`
-                relative
-                flex
-                cursor-pointer
-                select-none
-                items-center
-                rounded-lg
-                px-4
-                py-2
-                transition-colors
-                hover:bg-[var(--primary)]/10 text-[var(--text-primary)]
-              `}
-            >
-              <Select.ItemText>Personne</Select.ItemText>
-            </Select.Item>
-            <Select.Item
-              value="Mathieu"
-              className={`
-                relative
-                flex
-                cursor-pointer
-                select-none
-                items-center
-                rounded-lg
-                px-4
-                py-2
-                transition-colors
-                hover:bg-[var(--primary)]/10 text-[var(--text-primary)]
-              `}
-            >
-              <Select.ItemText>Mathieu</Select.ItemText>
-            </Select.Item>
-            <Select.Item
-              value="commune"
-              className={`
-                relative
-                flex
-                cursor-pointer
-                select-none
-                items-center
-                rounded-lg
-                px-4
-                py-2
-                transition-colors
-                hover:bg-[var(--primary)]/10 text-[var(--text-primary)]
-              `}
-            >
-              <Select.ItemText>Liste commune</Select.ItemText>
-            </Select.Item>
+            {listOptions.map((opt) => (
+              <Select.Item
+                key={opt.value}
+                value={opt.value}
+                className="relative flex cursor-pointer select-none items-center rounded-lg px-4 py-2 transition-colors hover:bg-[var(--primary)]/10 text-[var(--text-primary)]"
+              >
+                <Select.ItemText>{opt.label}</Select.ItemText>
+              </Select.Item>
+            ))}
           </Select.Viewport>
 
           <Select.ScrollDownButton className="flex h-6 items-center justify-center bg-[var(--input-bg)]">
@@ -198,9 +157,24 @@ function Admin() {
     </Select.Root>
   );
 
-  // Chargement initial : fetchKdos
   useEffect(() => {
-    fetchKdos('Personne');
+    api
+      .get('/api/lists/all/')
+      .then((res) => {
+        const opts: ListOption[] = res.data.map(
+          (l: { slug: string; label: string; owner_name: string | null }) => ({
+            value: l.slug,
+            label: l.label,
+            user: l.owner_name,
+          })
+        );
+        setListOptions(opts);
+        if (opts.length > 0) {
+          setSelectedUser(opts[0].value);
+          fetchKdos(opts[0].value);
+        }
+      })
+      .catch((error) => console.error('Failed to load lists:', error));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -359,6 +333,7 @@ function Admin() {
                           kdo={kdo}
                           id={kdo.id}
                           onFormSubmit={() => fetchKdos(selectedUser)}
+                          listOptions={listOptions}
                         />
                       </td>
                     </tr>
