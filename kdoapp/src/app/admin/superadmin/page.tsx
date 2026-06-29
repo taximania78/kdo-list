@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
-import { Shield, UserPlus, Trash2, Key, Loader2, ListChecks } from 'lucide-react';
+import { Shield, UserPlus, Trash2, Key, Loader2, ListChecks, Pencil } from 'lucide-react';
 import api from '@/lib/api';
 import { isChristmas } from '@/lib/theme';
 
@@ -54,6 +54,10 @@ function Superadmin() {
   const [newListOwner, setNewListOwner] = useState<string>('');
   const [listError, setListError] = useState<string | null>(null);
   const [listToDelete, setListToDelete] = useState<GiftListItem | null>(null);
+  const [listToEdit, setListToEdit] = useState<GiftListItem | null>(null);
+  const [editLabel, setEditLabel] = useState('');
+  const [editOwner, setEditOwner] = useState<string>('');
+  const [editError, setEditError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading) {
@@ -166,6 +170,30 @@ function Superadmin() {
       console.error('Error deleting list:', error);
     } finally {
       setListToDelete(null);
+    }
+  };
+
+  const openEditList = (gList: GiftListItem) => {
+    setListToEdit(gList);
+    setEditLabel(gList.label);
+    setEditOwner(gList.owner_id != null ? String(gList.owner_id) : '');
+    setEditError(null);
+  };
+
+  const handleEditList = async () => {
+    if (!listToEdit) return;
+    setEditError(null);
+    try {
+      const body: { label: string; owner_id?: number | null } = { label: editLabel };
+      if (!listToEdit.is_common) {
+        body.owner_id = editOwner ? Number(editOwner) : null;
+      }
+      await api.patch(`${ApiAdress}/api/lists/${listToEdit.slug}`, body);
+      setListToEdit(null);
+      fetchGiftLists();
+    } catch (error: unknown) {
+      const detail = (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setEditError(detail ?? 'Échec de la modification');
     }
   };
 
@@ -471,6 +499,13 @@ function Superadmin() {
                       </div>
                     )}
                   </button>
+                  <button
+                    onClick={() => openEditList(gList)}
+                    className="ml-3 p-2 rounded-lg bg-[var(--secondary)] hover:bg-[var(--secondary-hover)] text-white"
+                    title="Renommer la liste"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
                   {!gList.is_common && (
                     <button
                       onClick={() => setListToDelete(gList)}
@@ -578,6 +613,49 @@ function Superadmin() {
             <div className="flex gap-4 justify-end">
               <button onClick={() => setListToDelete(null)} className="px-6 py-2 rounded-lg bg-[var(--surface-hover)] hover:bg-[var(--surface-muted)] text-[var(--text-secondary)]">Annuler</button>
               <button onClick={handleDeleteList} className="px-6 py-2 rounded-lg bg-[var(--danger)] hover:bg-[var(--danger-hover)] text-white">Supprimer</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {listToEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 animate-overlayShow" onClick={() => setListToEdit(null)} />
+          <div className="relative z-50 max-w-md w-full rounded-2xl p-8 shadow-xl animate-fadeInUp dialog-surface">
+            <h3 className="text-xl font-bold mb-4 text-[var(--text-primary)]">Modifier la liste</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1 text-[var(--text-secondary)]">Nom de la liste</label>
+              <input
+                value={editLabel}
+                onChange={(e) => setEditLabel(e.target.value)}
+                className="w-full rounded-lg px-3 py-2 bg-[var(--input-bg)] border border-[var(--border)] text-[var(--text-primary)]"
+              />
+            </div>
+            {!listToEdit.is_common && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1 text-[var(--text-secondary)]">Propriétaire</label>
+                <select
+                  value={editOwner}
+                  onChange={(e) => setEditOwner(e.target.value)}
+                  className="w-full rounded-lg px-3 py-2 bg-[var(--input-bg)] border border-[var(--border)] text-[var(--text-primary)]"
+                >
+                  <option value="">Aucun (sans compte)</option>
+                  {(usersList ?? []).map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {editError && <p className="mb-4 text-sm text-[var(--error)]">{editError}</p>}
+            <div className="flex gap-4 justify-end">
+              <button onClick={() => setListToEdit(null)} className="px-6 py-2 rounded-lg bg-[var(--surface-hover)] hover:bg-[var(--surface-muted)] text-[var(--text-secondary)]">Annuler</button>
+              <button
+                onClick={handleEditList}
+                disabled={!editLabel.trim()}
+                className="px-6 py-2 rounded-lg bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white disabled:opacity-50"
+              >
+                Enregistrer
+              </button>
             </div>
           </div>
         </div>
