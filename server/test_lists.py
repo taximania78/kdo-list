@@ -4,6 +4,7 @@ from httpx import AsyncClient
 from main import app
 from models import User, GiftList
 from auth import hash_password
+from test_ideas import setup_test_ideas
 
 @pytest_asyncio.fixture
 async def setup_test_lists(client: AsyncClient, admin_token: str, user_token: str):
@@ -137,3 +138,66 @@ async def test_toggle_list_non_mega_admin_forbidden(client: AsyncClient, admin_n
     headers = {"Authorization": f"Bearer {admin_non_mega_token}"}
     response = await client.patch("/api/lists/user/toggle", headers=headers)
     assert response.status_code == 403
+
+@pytest.mark.asyncio
+async def test_create_list_with_owner(client: AsyncClient, admin_token: str, setup_test_lists):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    # un nouvel user sans liste
+    await client.post("/api/create-user/", json={"name": "carla", "password": "Carla@123"}, headers=headers)
+    users = (await client.get("/api/users/", headers=headers)).json()
+    carla_id = next(u["id"] for u in users if u["name"] == "carla")
+    res = await client.post("/api/lists/", json={"label": "Carla", "owner_id": carla_id}, headers=headers)
+    assert res.status_code == 200
+    assert res.json()["slug"] == "carla"
+
+@pytest.mark.asyncio
+async def test_create_list_without_owner_visible_to_admin(client: AsyncClient, admin_token: str, setup_test_lists):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    res = await client.post("/api/lists/", json={"label": "Léa"}, headers=headers)
+    assert res.status_code == 200
+    slug = res.json()["slug"]
+    assert slug == "lea"
+    lists = (await client.get("/api/lists/", headers=headers)).json()
+    assert slug in [l["slug"] for l in lists]  # liste sans compte visible de l'admin
+
+@pytest.mark.asyncio
+async def test_create_list_slug_uniqueness(client: AsyncClient, admin_token: str, setup_test_lists):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    a = await client.post("/api/lists/", json={"label": "Noël"}, headers=headers)
+    b = await client.post("/api/lists/", json={"label": "Noël"}, headers=headers)
+    assert a.json()["slug"] == "noel"
+    assert b.json()["slug"] == "noel-2"
+
+@pytest.mark.asyncio
+async def test_create_list_owner_already_has_one(client: AsyncClient, admin_token: str, setup_test_lists):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    owner_id = setup_test_lists["user"].id  # possède déjà "user"
+    res = await client.post("/api/lists/", json={"label": "Doublon", "owner_id": owner_id}, headers=headers)
+    assert res.status_code == 400
+
+@pytest.mark.asyncio
+async def test_create_list_non_mega_forbidden(client: AsyncClient, admin_non_mega_token: str):
+    headers = {"Authorization": f"Bearer {admin_non_mega_token}"}
+    res = await client.post("/api/lists/", json={"label": "X"}, headers=headers)
+    assert res.status_code == 403
+
+@pytest.mark.asyncio
+async def test_rename_list(client: AsyncClient, admin_token: str, setup_test_lists):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    res = await client.patch("/api/lists/user", json={"label": "Renommée"}, headers=headers)
+    assert res.status_code == 200
+    lists = (await client.get("/api/lists/all/", headers=headers)).json()
+    assert any(l["slug"] == "user" and l["label"] == "Renommée" for l in lists)
+
+@pytest.mark.asyncio
+async def test_delete_list_cascade(client: AsyncClient, admin_token: str, setup_test_ideas, monkeypatch):
+    import main
+    removed = []
+    monkeypatch.setattr(main, "remove_image", lambda pk: removed.append(pk))
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    res = await client.delete("/api/lists/user", headers=headers)
+    assert res.status_code == 200
+    # idées de la liste 'user' supprimées
+    kdos = (await client.get("/api/kdos/?list=user", headers=headers)).json()
+    assert kdos == []
+    assert len(removed) >= 1  # remove_image appelé pour chaque idée supprimée

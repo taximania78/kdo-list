@@ -173,3 +173,11 @@ class GiftListResponse(BaseModel):
 
 class GiftListToggle(BaseModel):
     enabled: bool
+
+class GiftListCreate(BaseModel):
+    label: str
+    owner_id: Optional[int] = None
+
+class GiftListUpdate(BaseModel):
+    label: Optional[str] = None
+    owner_id: Optional[int] = None

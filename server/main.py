@@ -1,5 +1,7 @@
 import csv
 import io
+import re
+import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 from fastapi import FastAPI, Depends, HTTPException, status, Request, Query
@@ -10,7 +12,7 @@ from sqlalchemy import delete, or_, update
 from sqlalchemy.orm import joinedload, aliased
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from models import GiftList, GiftListResponse, GiftListToggle, Idea, IdeaCreate, IdeaUpdate, RefreshToken, RefreshTokenRequest, User, UserCreate, PasswordChange
+from models import GiftList, GiftListCreate, GiftListUpdate, GiftListResponse, GiftListToggle, Idea, IdeaCreate, IdeaUpdate, RefreshToken, RefreshTokenRequest, User, UserCreate, PasswordChange
 from database import get_db
 from auth import (
     create_access_token,
@@ -62,6 +64,22 @@ def ensure_megaadmin(payload: dict) -> None:
 
 
 # ─── Gift Lists Endpoints ───────────────────────────────────────────────
+
+def _slugify(label: str) -> str:
+    normalized = unicodedata.normalize("NFKD", label).encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^a-z0-9]+", "-", normalized.lower()).strip("-")
+    return slug or "liste"
+
+
+async def _unique_slug(db: AsyncSession, base: str) -> str:
+    candidate, i = base, 2
+    while True:
+        result = await db.execute(select(GiftList).where(GiftList.slug == candidate))
+        if not result.scalars().first():
+            return candidate
+        candidate = f"{base}-{i}"
+        i += 1
+
 
 def _serialize_list(gl: GiftList) -> GiftListResponse:
     return GiftListResponse(
@@ -136,6 +154,81 @@ async def toggle_list(slug: str, token: str = Depends(oauth2_scheme), db: AsyncS
     return {"success": True, "slug": slug, "enabled": new_enabled}
 
 
+@app.post("/api/lists/")
+async def create_list_api(data: GiftListCreate, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+    payload = decode_jwt(token)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
+    ensure_megaadmin(payload)
+    if not data.label or not data.label.strip():
+        raise HTTPException(status_code=400, detail="Le label est requis")
+    if data.owner_id is not None:
+        result = await db.execute(select(User).where(User.id == data.owner_id))
+        if not result.scalars().first():
+            raise HTTPException(status_code=400, detail="Propriétaire introuvable")
+        existing = await db.execute(select(GiftList).where(GiftList.owner_id == data.owner_id))
+        if existing.scalars().first():
+            raise HTTPException(status_code=400, detail="Ce propriétaire possède déjà une liste")
+    slug = await _unique_slug(db, _slugify(data.label))
+    new_list = GiftList(slug=slug, label=data.label.strip(), owner_id=data.owner_id, is_common=False, enabled=True)
+    db.add(new_list)
+    await db.commit()
+    return {"success": True, "slug": slug}
+
+
+@app.patch("/api/lists/{slug}")
+async def update_list_api(slug: str, data: GiftListUpdate, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+    payload = decode_jwt(token)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
+    ensure_megaadmin(payload)
+    result = await db.execute(select(GiftList).where(GiftList.slug == slug))
+    gift_list = result.scalars().first()
+    if not gift_list:
+        raise HTTPException(status_code=404, detail="Liste non trouvée")
+    sent = data.model_dump(exclude_unset=True)
+    values = {}
+    if "label" in sent:
+        if not sent["label"] or not sent["label"].strip():
+            raise HTTPException(status_code=400, detail="Le label est requis")
+        values["label"] = sent["label"].strip()
+    if "owner_id" in sent:
+        new_owner = sent["owner_id"]
+        if new_owner is not None:
+            result_u = await db.execute(select(User).where(User.id == new_owner))
+            if not result_u.scalars().first():
+                raise HTTPException(status_code=400, detail="Propriétaire introuvable")
+            existing = await db.execute(
+                select(GiftList).where(GiftList.owner_id == new_owner, GiftList.slug != slug)
+            )
+            if existing.scalars().first():
+                raise HTTPException(status_code=400, detail="Ce propriétaire possède déjà une liste")
+        values["owner_id"] = new_owner
+    if values:
+        await db.execute(update(GiftList).where(GiftList.slug == slug).values(**values))
+        await db.commit()
+    return {"success": True}
+
+
+@app.delete("/api/lists/{slug}")
+async def delete_list_api(slug: str, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+    payload = decode_jwt(token)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
+    ensure_megaadmin(payload)
+    result = await db.execute(select(GiftList).where(GiftList.slug == slug))
+    gift_list = result.scalars().first()
+    if not gift_list:
+        raise HTTPException(status_code=404, detail="Liste non trouvée")
+    ideas = (await db.execute(select(Idea).where(Idea.list_id == gift_list.id))).scalars().all()
+    for idea in ideas:
+        remove_image(idea.id)
+    await db.execute(delete(Idea).where(Idea.list_id == gift_list.id))
+    await db.execute(delete(GiftList).where(GiftList.id == gift_list.id))
+    await db.commit()
+    return {"success": True}
+
+
 # ─── Kdos Endpoints ─────────────────────────────────────────────────────
 
 @app.get("/api/kdos/")
@@ -172,7 +265,8 @@ async def get_kdo_list(user: str = "all", list: str = None, token: str = Depends
         result_list = await db.execute(select(GiftList).where(GiftList.slug == list))
         gift_list = result_list.scalars().first()
         if not gift_list:
-            raise HTTPException(status_code=404, detail="Liste non trouvée")
+            # Liste inexistante (ex. supprimée) : aucune idée à retourner
+            return []
         query = query.filter(Idea.list_id == gift_list.id)
     elif user != "all":
         # Rétrocompatibilité : filtre par nom d'utilisateur
