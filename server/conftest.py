@@ -50,3 +50,7 @@ async def admin_token():
 @pytest_asyncio.fixture(scope="function")
 async def user_token():
     return create_access_token({"sub": "2", "username": "user", "isAdmin": False, "isMegaAdmin": False})
+
+@pytest_asyncio.fixture(scope="function")
+async def admin_non_mega_token():
+    return create_access_token({"sub": "3", "username": "petit-admin", "isAdmin": True, "isMegaAdmin": False})

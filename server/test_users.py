@@ -108,7 +108,7 @@ async def test_create_user_forbidden(client: AsyncClient, setup_test_users):
         "isAdmin": True
     }
     response = await client.post("/api/create-user/", json=payload, headers=headers)
-    assert response.status_code == 401
+    assert response.status_code == 403
     assert "Non autorisé" in response.json()["detail"]
 
 @pytest.mark.asyncio
@@ -198,7 +198,33 @@ async def test_delete_user(client: AsyncClient, admin_token: str, setup_test_use
     response = await client.delete(f"/api/delete-user/{user_id}", headers=headers)
     assert response.status_code == 200
     assert response.json()["message"] == "Utilisateur supprimé avec succès"
-    
+
     # Verify user is actually deleted
     login_res = await client.post("/api/login/", data={"username": "user", "password": "NormalUser@123"})
     assert login_res.status_code == 401
+
+@pytest.mark.asyncio
+async def test_create_user_non_mega_admin_forbidden(client: AsyncClient, admin_non_mega_token: str):
+    headers = {"Authorization": f"Bearer {admin_non_mega_token}"}
+    response = await client.post("/api/create-user/", json={"name": "newuser", "password": "NewUser@123"}, headers=headers)
+    assert response.status_code == 403
+
+@pytest.mark.asyncio
+async def test_modify_password_admin_non_mega_forbidden(client: AsyncClient, admin_non_mega_token: str, setup_test_users):
+    headers = {"Authorization": f"Bearer {admin_non_mega_token}"}
+    user_id = setup_test_users["user"].id
+    payload = {"password": "Pwned@1234", "passwordConfirmation": "Pwned@1234", "firstConnection": True}
+    response = await client.patch(f"/api/modify-password-admin/{user_id}", json=payload, headers=headers)
+    assert response.status_code == 403
+
+@pytest.mark.asyncio
+async def test_delete_user_non_mega_forbidden(client: AsyncClient, admin_non_mega_token: str, setup_test_users):
+    headers = {"Authorization": f"Bearer {admin_non_mega_token}"}
+    response = await client.delete(f"/api/delete-user/{setup_test_users['user'].id}", headers=headers)
+    assert response.status_code == 403
+
+@pytest.mark.asyncio
+async def test_get_users_non_mega_forbidden(client: AsyncClient, admin_non_mega_token: str, setup_test_users):
+    headers = {"Authorization": f"Bearer {admin_non_mega_token}"}
+    response = await client.get("/api/users/", headers=headers)
+    assert response.status_code == 403

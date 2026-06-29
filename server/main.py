@@ -55,6 +55,12 @@ app.add_middleware(
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/login")
 
 
+def ensure_megaadmin(payload: dict) -> None:
+    """Exige un token de super administrateur (isMegaAdmin)."""
+    if not payload.get("isMegaAdmin"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Non autorisé")
+
+
 # ─── Gift Lists Endpoints ───────────────────────────────────────────────
 
 @app.get("/api/lists/")
@@ -103,10 +109,9 @@ async def toggle_list(slug: str, token: str = Depends(oauth2_scheme), db: AsyncS
     payload = decode_jwt(token)
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    
-    if not payload.get("isAdmin"):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
-    
+
+    ensure_megaadmin(payload)
+
     result = await db.execute(select(GiftList).where(GiftList.slug == slug))
     gift_list = result.scalars().first()
     
@@ -535,9 +540,8 @@ async def get_username_api(request: Request, token: str = Depends(oauth2_scheme)
 
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    if not payload.get("isAdmin"):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
-    
+    ensure_megaadmin(payload)
+
     if request.method == "GET":
         # Récupérer tous les utilisateurs
         result = await db.execute(select(User.id, User.name).order_by(User.name))
@@ -549,14 +553,13 @@ async def modify_password_api_admin(user_id: int, payload: PasswordChange, token
     verifToken = decode_jwt(token)
     if not verifToken:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    
-    if not verifToken.get("isAdmin"):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
-    
+
+    ensure_megaadmin(verifToken)
+
     # Vérifier si l'utilisateur existe
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()
-    
+
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
 
@@ -620,17 +623,16 @@ async def delete_user_api(user_id: int, token: str = Depends(oauth2_scheme), db:
     payload = decode_jwt(token)
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    
-    if not payload.get("isAdmin"):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
-    
+
+    ensure_megaadmin(payload)
+
     # Vérifier si l'utilisateur existe
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()
-    
+
     if not user:
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
-    
+
     stmt = update(Idea).where(Idea.takenById == user_id).values(takenById=None, availability=True)
     await db.execute(stmt)
     await db.commit()
@@ -651,10 +653,9 @@ async def create_user_api(user_data: UserCreate, token: str = Depends(oauth2_sch
     payload = decode_jwt(token)
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    
-    if not payload.get("isAdmin"):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
-    
+
+    ensure_megaadmin(payload)
+
     # Vérifier si l'utilisateur existe déjà
     result = await db.execute(select(User).where(User.name == user_data.name))
     existing_user = result.scalars().first()

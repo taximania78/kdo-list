@@ -145,7 +145,7 @@ async def test_toggle_list_as_admin(client: AsyncClient, admin_token: str, setup
 async def test_toggle_list_as_user(client: AsyncClient, user_token: str, setup_test_lists):
     headers = {"Authorization": f"Bearer {user_token}"}
     response = await client.patch("/api/lists/user/toggle", headers=headers)
-    assert response.status_code == 401
+    assert response.status_code == 403
     assert "Non autorisé" in response.json()["detail"]
 
 @pytest.mark.asyncio
@@ -154,3 +154,9 @@ async def test_toggle_list_not_found(client: AsyncClient, admin_token: str, setu
     response = await client.patch("/api/lists/non-existent/toggle", headers=headers)
     assert response.status_code == 404
     assert response.json()["detail"] == "Liste non trouvée"
+
+@pytest.mark.asyncio
+async def test_toggle_list_non_mega_admin_forbidden(client: AsyncClient, admin_non_mega_token: str, setup_test_lists):
+    headers = {"Authorization": f"Bearer {admin_non_mega_token}"}
+    response = await client.patch("/api/lists/user/toggle", headers=headers)
+    assert response.status_code == 403
