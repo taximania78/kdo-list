@@ -1,5 +1,6 @@
 import csv
 import io
+import os.path
 import re
 import unicodedata
 from datetime import datetime, timezone
@@ -807,13 +808,15 @@ async def fetch_image(
         raise HTTPException(400, "Chemin invalide")
 
     if MODE == "production":
-        base_dir = Path("/shared/kdos").resolve()
+        base_dir = "/shared/kdos"
     else:
-        base_dir = Path("../kdoapp/public/kdos").resolve()
-    # Défense en profondeur : le chemin résolu doit rester sous base_dir
-    image_path = (base_dir / filename).resolve()
-    if not image_path.is_relative_to(base_dir):
+        base_dir = "../kdoapp/public/kdos"
+    # Défense en profondeur : normalisation lexicale (aucun accès disque),
+    # le chemin doit rester sous base_dir
+    full_path = os.path.normpath(os.path.join(base_dir, filename))
+    if not full_path.startswith(base_dir + os.sep):
         raise HTTPException(400, "Chemin invalide")
+    image_path = Path(full_path)
     if not image_path.is_file():
         raise HTTPException(404, "Image non trouvée")
 
