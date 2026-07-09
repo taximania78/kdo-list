@@ -1,0 +1,301 @@
+@import 'tailwindcss';
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Theme variables */
+@layer base {
+  :root {
+    --background: #F7EDE2;
+    --foreground: #2D3436;
+
+    /* Couleurs primaires - Corail #F28482 */
+    --primary: #F28482;
+    --primary-hover: #E07270;
+    --primary-light: #F5CAC3;
+    --on-primary: #ffffff;
+
+    /* Couleurs secondaires - Vert sauge #84A59D */
+    --secondary: #84A59D;
+    --secondary-hover: #6B8B83;
+    --secondary-light: #B8CCC7;
+
+    /* Surfaces et fonds */
+    --surface: #ffffff;
+    --surface-hover: #F7EDE2;
+    --surface-muted: #F5CAC3;
+
+    /* Texte - tons gris chaleureux */
+    --text-primary: #2D3436;
+    --text-secondary: #636E72;
+    --text-muted: #636c70;
+
+    /* Bordures - tons beige */
+    --border: #E8DED5;
+    --border-light: #F7EDE2;
+
+    /* Ombres */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-primary: 0 10px 15px -3px rgba(242, 132, 130, 0.3);
+
+    /* États */
+    --danger: #E74C3C;
+    --danger-hover: #C0392B;
+    --success: #84A59D;
+
+    /* Inputs - fond crème */
+    --input-bg: #F7EDE2;
+    --input-border: #E8DED5;
+    --input-focus: #F28482;
+
+    /* Focus rings - corail */
+    --ring: #F28482;
+    --ring-opacity: 0.3;
+
+    /* Liens - vert sauge */
+    --link: #84A59D;
+    --link-hover: #6B8B83;
+
+    /* Erreurs de formulaire */
+    --error: #E74C3C;
+    --error-bg: #FDEAEA;
+
+    /* Table header */
+    --table-header: #F7EDE2;
+
+    /* Dialog overlay */
+    --dialog-bg: #ffffff;
+
+    /* Navbar */
+    --nav-bg: rgb(255 255 255 / 0.7);
+    --nav-text: #636E72;
+    --nav-text-hover: #F28482;
+    --nav-border: #F7EDE2;
+
+    /* Footer */
+    --footer-bg: #ffffff;
+    --footer-text: #636E72;
+    --footer-text-muted: #B2BEC3;
+
+    /* Logo */
+    --logo-from: #F28482;
+    --logo-to: #F5CAC3;
+  }
+
+  .theme-christmas {
+    /* Couleurs primaires */
+    --primary: var(--color-red-700);
+    --primary-hover: var(--color-red-800);
+    --primary-light: var(--color-red-100);
+    --on-primary: var(--color-white);
+
+    /* Couleurs secondaires */
+    --secondary: var(--color-green-700);
+    --secondary-hover: var(--color-green-800);
+    --secondary-light: var(--color-green-100);
+
+    /* Surfaces et fonds */
+    --surface: rgb(255 255 255 / 0.1);
+    --surface-hover: rgb(255 255 255 / 0.2);
+    --surface-muted: rgb(255 255 255 / 0.05);
+
+    /* Texte */
+    --text-primary: var(--color-white);
+    --text-secondary: rgb(255 255 255 / 0.9);
+    --text-muted: rgb(255 255 255 / 0.6);
+
+    /* Bordures */
+    --border: rgb(255 255 255 / 0.2);
+    --border-light: rgb(255 255 255 / 0.1);
+
+    /* Ombres */
+    --shadow-sm: 0 1px 2px 0 rgb(255 255 255 / 0.1);
+    --shadow-primary: 0 10px 15px -3px rgb(255 255 255 / 0.2);
+
+    /* États */
+    --danger: var(--color-red-500);
+    --danger-hover: var(--color-red-600);
+    --success: var(--color-green-600);
+
+    /* Inputs */
+    --input-bg: rgb(255 255 255 / 0.2);
+    --input-border: rgb(255 255 255 / 0.3);
+    --input-focus: rgb(255 255 255 / 0.5);
+
+    /* Focus rings */
+    --ring: rgb(255 255 255 / 0.5);
+    --ring-opacity: 0.5;
+
+    /* Liens */
+    --link: var(--color-green-600);
+    --link-hover: var(--color-green-700);
+
+    /* Erreurs de formulaire (même style, fond adapté au thème sombre) */
+    --error: var(--color-red-400);
+    --error-bg: rgb(255 255 255 / 0.1);
+
+    /* Table header */
+    --table-header: rgb(127 29 29 / 0.3);
+
+    /* Dialog overlay */
+    --dialog-bg: rgb(127 29 29 / 0.9);
+
+    /* Navbar - fond clair contrasté */
+    --nav-bg: rgb(255 255 255 / 0.9);
+    --nav-text: #991B1B;
+    --nav-text-hover: #166534;
+    --nav-border: #DC2626;
+
+    /* Footer - fond blanc solide */
+    --footer-bg: #ffffff;
+    --footer-text: #991B1B;
+    --footer-text-muted: #636E72;
+
+    /* Logo - dégradé rouge → vert festif */
+    --logo-from: #DC2626;
+    --logo-to: #16A34A;
+  }
+}
+
+/* Page gradient utility */
+.page-gradient {
+  background: linear-gradient(
+    to bottom right,
+    #F7EDE2,
+    #FDFBF9,
+    #F5CAC3
+  );
+}
+
+.theme-christmas .page-gradient {
+  background: linear-gradient(
+    to bottom right,
+    var(--color-red-700),
+    var(--color-green-800),
+    var(--color-red-900)
+  );
+}
+
+/* Surface card utility (glassmorphism for Christmas) */
+.surface-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.theme-christmas .surface-card {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Dialog surface utility */
+.dialog-surface {
+  background: var(--dialog-bg);
+  border: 1px solid var(--border);
+}
+
+.theme-christmas .dialog-surface {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Dark mode désactivé pour garder le thème cohérent */
+/* @media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+} */
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Custom Animations */
+@keyframes snowfall {
+  0% {
+    transform: translateY(-10px) translateX(0);
+  }
+  100% {
+    transform: translateY(100vh) translateX(100px);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-10px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(10px);
+  }
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+  }
+}
+
+.animate-snowfall {
+  animation: snowfall linear infinite;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 15s ease infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}

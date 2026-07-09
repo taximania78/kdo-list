@@ -1,0 +1,107 @@
+# Stratégie Dependabot — kdo-list
+#
+# Objectif : garder les dépendances à jour automatiquement quand c'est sûr
+# (patches auto-mergés si la CI est verte), manuellement quand ça mérite un œil
+# humain (minors / majors), avec une vraie défense supply-chain (cooldown +
+# quarantaine min-release-age) et sans casser la CI.
+#
+# Repo public -> auto-merge et ruleset GitHub disponibles. L'auto-merge des
+# patches est géré par .github/workflows/dependabot-automerge.yml (il n'enclenche
+# le merge qu'une fois les checks requis du ruleset protect-main verts).
+#
+# Trois écosystèmes surveillés : npm (frontend), pip (backend), github-actions.
+#
+# Matrice de décision :
+#   patch (npm/pip)    -> 🤖 PR groupée, auto-merge si CI verte
+#   minor (npm/pip)    -> 👀 PR groupée, merge manuel
+#   major (npm/pip)    -> 👀 PR individuelle, merge manuel (relire les breaking changes)
+#   github-actions     -> 👀 PR groupée tous types, merge manuel
+#   @types/node major  -> 🚫 ignoré (runtime CI = Node 24, on ne chasse pas les majors)
+#   faille de sécurité -> 🤖 PR Dependabot security update (toujours, hors cycle)
+version: 2
+updates:
+  # ── Frontend : Next.js / npm (lit package-lock.json) ──────────────────────
+  - package-ecosystem: "npm"
+    directory: "/kdoapp"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "frontend"
+      - "dependencies"
+    # Délai avant de PROPOSER une version fraîchement publiée (3 j). Ne couvre que
+    # les deps directes bumpées par Dependabot. La quarantaine à la résolution
+    # (transitives comprises) est assurée par kdoapp/.npmrc -> min-release-age=3,
+    # alignée sur ce délai. Les deux couches sont complémentaires.
+    cooldown:
+      default-days: 3
+    groups:
+      # Patches isolés dans leur propre groupe -> seuls éligibles à l'auto-merge.
+      # (Le type d'une PR groupée = le plus élevé du lot ; un patch noyé dans un
+      # groupe minor ne s'auto-mergerait jamais.)
+      npm-patches:
+        applies-to: version-updates
+        update-types:
+          - "patch"
+      # Minors groupés -> 1 PR, merge manuel.
+      npm-minors:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+    # Majors hors groupe -> 1 PR par paquet, merge manuel.
+    ignore:
+      # Le runtime tourne sur Node 24 (CI node-version: 24). On ne saute pas les
+      # majors de @types/node pour ne pas typer contre des API non exécutées.
+      - dependency-name: "@types/node"
+        update-types:
+          - "version-update:semver-major"
+
+  # ── Backend : FastAPI / pip (lit requirements.txt) ────────────────────────
+  - package-ecosystem: "pip"
+    directory: "/server"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "backend"
+      - "dependencies"
+    cooldown:
+      default-days: 3
+    groups:
+      pip-patches:
+        applies-to: version-updates
+        update-types:
+          - "patch"
+      pip-minors:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+    # Majors hors groupe -> 1 PR par paquet, merge manuel.
+    ignore:
+      # pydantic-core est couplé au pin EXACT de pydantic (ex. pydantic 2.13.4
+      # -> pydantic-core==2.46.4). Bumpé seul, il rend l'install insoluble
+      # (ResolutionImpossible). On ne le met pas à jour en standalone : il suivra
+      # automatiquement quand Dependabot bumpera pydantic (dep directe).
+      - dependency-name: "pydantic-core"
+
+  # ── CI : versions des GitHub Actions ──────────────────────────────────────
+  # Faible fréquence, on veut un œil sur les majors -> tous types groupés, manuel.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "ci"
+      - "dependencies"
+    groups:
+      github-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"
