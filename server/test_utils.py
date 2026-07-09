@@ -83,3 +83,17 @@ async def test_fetch_image_invalid_path(client: AsyncClient):
     # For startswith("/"), we URL-encode the slash so it reaches the path variable
     response = await client.get("/api/kdos/%2Fetc%2Fpasswd")
     assert response.status_code in [400, 404]
+
+@pytest.mark.asyncio
+async def test_fetch_image_encoded_traversal(client: AsyncClient):
+    """Les '..' encodés (%2e%2e) sont décodés avant le routage => rejetés."""
+    response = await client.get("/api/kdos/%2e%2e/%2e%2e/main.py")
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Chemin invalide"
+
+@pytest.mark.asyncio
+async def test_fetch_image_nested_traversal(client: AsyncClient):
+    """Une traversée au milieu du chemin (sub/../../x) est rejetée."""
+    response = await client.get("/api/kdos/sub/..%2f..%2fserver%2fmain.py")
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Chemin invalide"

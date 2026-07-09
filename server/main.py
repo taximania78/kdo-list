@@ -807,9 +807,13 @@ async def fetch_image(
         raise HTTPException(400, "Chemin invalide")
 
     if MODE == "production":
-        image_path = Path("/shared/kdos") / filename
+        base_dir = Path("/shared/kdos").resolve()
     else:
-        image_path = Path("../kdoapp/public/kdos") / filename
+        base_dir = Path("../kdoapp/public/kdos").resolve()
+    # Défense en profondeur : le chemin résolu doit rester sous base_dir
+    image_path = (base_dir / filename).resolve()
+    if not image_path.is_relative_to(base_dir):
+        raise HTTPException(400, "Chemin invalide")
     if not image_path.is_file():
         raise HTTPException(404, "Image non trouvée")
 
