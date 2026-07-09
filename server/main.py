@@ -811,10 +811,11 @@ async def fetch_image(
         base_dir = "/shared/kdos"
     else:
         base_dir = "../kdoapp/public/kdos"
-    # Défense en profondeur : normalisation lexicale (aucun accès disque),
-    # le chemin doit rester sous base_dir
-    full_path = os.path.normpath(os.path.join(base_dir, filename))
-    if not full_path.startswith(base_dir + os.sep):
+    # Défense en profondeur : realpath résout aussi les symlinks,
+    # le chemin final doit rester sous base_dir
+    real_base = os.path.realpath(base_dir)
+    full_path = os.path.realpath(os.path.join(base_dir, filename))
+    if not full_path.startswith(real_base + os.sep):
         raise HTTPException(400, "Chemin invalide")
     image_path = Path(full_path)
     if not image_path.is_file():
