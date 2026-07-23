@@ -6,8 +6,6 @@ services:
     depends_on:
       - db
     container_name: kdo-api
-    ports:
-      - "8000:8000"
     volumes:
       - ./kdoapp/public/kdos:/shared/kdos
     restart: unless-stopped
@@ -36,8 +34,6 @@ services:
       - fastapi
     container_name: kdo-frontend
     restart: unless-stopped
-    ports:
-      - "3001:3000"
     volumes:
       - ./kdoapp/public/kdos:/app/public/kdos
     environment:
@@ -51,8 +47,6 @@ services:
     image: postgres:17
     container_name: kdo-db
     restart: unless-stopped
-    ports:
-      - "5433:5432"
     environment:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}

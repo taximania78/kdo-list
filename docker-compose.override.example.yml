@@ -6,12 +6,13 @@
 #
 #   cp docker-compose.override.example.yml docker-compose.override.yml
 #
-# Exemple ci-dessous : exposition derrière Traefik + CrowdSec sur un réseau `proxy` externe.
+# Exemple ci-dessous : exposition derrière Traefik + CrowdSec avec isolation de la base.
 services:
   fastapi:
-    networks: [proxy]
+    networks: [edge-kdo, data-kdo]
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=edge-kdo"
       - "traefik.http.routers.kdo-api.rule=Host(`${APP_DOMAIN}`) && PathPrefix(`/api`)"
       - "traefik.http.routers.kdo-api.priority=100"
       - "traefik.http.routers.kdo-api.entrypoints=websecure"
@@ -20,9 +21,10 @@ services:
       - "traefik.http.services.kdo-api.loadbalancer.server.port=8000"
 
   nextjs:
-    networks: [proxy]
+    networks: [edge-kdo]
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=edge-kdo"
       - "traefik.http.routers.kdo-front.rule=Host(`${APP_DOMAIN}`)"
       - "traefik.http.routers.kdo-front.entrypoints=websecure"
       - "traefik.http.routers.kdo-front.tls.certresolver=tls"
@@ -31,10 +33,12 @@ services:
       - "traefik.http.routers.kdo-front.middlewares=crowdsec@file,kdo-headers"
 
   db:
-    networks: [proxy]
+    networks: [data-kdo]
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
 networks:
-  proxy:
+  edge-kdo:
     external: true
+  data-kdo:
+    internal: true
