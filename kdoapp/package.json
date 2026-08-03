@@ -12,14 +12,14 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
-    "@radix-ui/react-accordion": "^1.2.18",
-    "@radix-ui/react-alert-dialog": "^1.1.21",
-    "@radix-ui/react-select": "^2.3.5",
+    "@radix-ui/react-accordion": "^1.2.20",
+    "@radix-ui/react-alert-dialog": "^1.1.23",
+    "@radix-ui/react-select": "^2.3.7",
     "axios": "^1.18.1",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^1.26.0",
-    "next": "^16.2.11",
-    "radix-ui": "^1.6.5",
+    "next": "^16.2.12",
+    "radix-ui": "^1.6.7",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-icons": "^5.7.0",
@@ -35,10 +35,10 @@
     "@testing-library/user-event": "^14.6.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.9.5",
-    "@types/react": "19.2.17",
-    "@types/react-dom": "19.2.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
     "eslint": "^9.21.0",
-    "eslint-config-next": "^16.2.11",
+    "eslint-config-next": "^16.2.12",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
     "prettier": "^3.9.6",
@@ -47,8 +47,8 @@
     "typescript": "^6.0.3"
   },
   "overrides": {
-    "@types/react": "19.2.17",
-    "@types/react-dom": "19.2.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
     "next": {
       "postcss": ">=8.5.10"
     }
