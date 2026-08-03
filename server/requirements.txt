@@ -1,5 +1,5 @@
 aiosqlite==0.22.1
-annotated-doc==0.0.4
+annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.14.2
 argon2-cffi==25.1.0
@@ -13,7 +13,7 @@ click==8.4.2
 cross-web==0.7.0
 dnspython==2.8.0
 email-validator==2.3.0
-fastapi==0.139.2
+fastapi==0.141.1
 fastapi-cli==0.0.32
 graphql-core==3.2.11
 greenlet==3.5.4
@@ -58,7 +58,7 @@ typer==0.27.0
 typing-inspection==0.4.2
 typing_extensions==4.16.0
 urllib3==2.7.0
-uvicorn==0.51.0
+uvicorn==0.52.0
 uvloop==0.22.1
 watchfiles==1.2.0
 websockets==17.0
