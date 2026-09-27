@@ -197,3 +197,96 @@
 @media (min-width: 45rem) {
   .sheet-panel[data-state='open'] { animation: sheet-dialog-in 0.24s cubic-bezier(0.2, 0.8, 0.2, 1); }
 }
+
+/* ── Neige posée (Noël) ── */
+.snowcap {
+  display: none;
+  position: absolute;
+  z-index: 3;
+  left: -3px;
+  right: -3px;
+  top: -8px;
+  height: 15px;
+  pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 16' preserveAspectRatio='none'%3E%3Cpath d='M0 9 Q6 2 14 6 T30 5 T46 8 T62 3 T80 7 T96 4 T114 8 T130 3 T148 7 T166 4 T184 8 T200 5 V16 H0Z' fill='%23FFFFFF'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+  filter: drop-shadow(0 2px 1px rgb(20 50 60 / 0.22));
+}
+
+.theme-christmas .snowcap {
+  display: block;
+}
+
+/* ── Ouverture « déballage » ── */
+.unwrap {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  cursor: pointer;
+}
+
+.unwrap-flap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 51%;
+  background-color: var(--wrap-paper);
+  background-image:
+    radial-gradient(var(--wrap-dot) 2.2px, transparent 2.6px),
+    radial-gradient(var(--wrap-dot) 2.2px, transparent 2.6px);
+  background-size: 34px 34px;
+  background-position: 0 0, 17px 17px;
+}
+
+.theme-christmas .unwrap-flap {
+  background-image:
+    radial-gradient(var(--wrap-dot) 1.4px, transparent 1.8px),
+    radial-gradient(color-mix(in srgb, var(--wrap-dot) 50%, transparent) 1px, transparent 1.4px);
+  background-size: 28px 28px;
+  background-position: 0 0, 14px 14px;
+}
+
+.unwrap-flap-l {
+  left: 0;
+  clip-path: polygon(0 0, 100% 0, 97% 6%, 100% 12%, 96% 19%, 100% 26%, 97% 33%, 100% 41%, 96% 48%, 100% 56%, 97% 63%, 100% 71%, 96% 78%, 100% 86%, 97% 93%, 100% 100%, 0 100%);
+}
+
+.unwrap-flap-r {
+  right: 0;
+  clip-path: polygon(3% 0, 100% 0, 100% 100%, 0 100%, 4% 93%, 0 86%, 3% 78%, 0 71%, 4% 63%, 0 56%, 3% 48%, 0 41%, 4% 33%, 0 26%, 3% 19%, 0 12%, 4% 6%);
+}
+
+.unwrap-rib-v,
+.unwrap-rib-h {
+  position: absolute;
+  background: var(--foil);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--foil) 60%, #000);
+}
+
+.unwrap-rib-v { top: 0; bottom: 0; left: 50%; width: 34px; translate: -50% 0; }
+.unwrap-rib-h { left: 0; right: 0; top: 50%; height: 34px; translate: 0 -50%; }
+.unwrap-bow { position: absolute; left: 50%; top: 50%; width: 180px; height: 130px; translate: -50% -60%; }
+
+.unwrap-hint {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 36px;
+  text-align: center;
+  font: 500 13px var(--font-dm-mono), monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--wrap-dot);
+}
+
+.unwrap.is-opening .unwrap-bow { animation: unwrap-bow 0.32s ease-in both; }
+.unwrap.is-opening .unwrap-rib-v { animation: unwrap-rib-v 0.38s 0.12s cubic-bezier(0.6, 0, 0.4, 1) both; }
+.unwrap.is-opening .unwrap-rib-h { animation: unwrap-rib-h 0.38s 0.12s cubic-bezier(0.6, 0, 0.4, 1) both; }
+.unwrap.is-opening .unwrap-hint { animation: unwrap-fade 0.2s both; }
+.unwrap.is-opening .unwrap-flap-l { animation: unwrap-left 0.6s 0.42s cubic-bezier(0.7, 0, 0.2, 1) both; }
+.unwrap.is-opening .unwrap-flap-r { animation: unwrap-right 0.6s 0.42s cubic-bezier(0.7, 0, 0.2, 1) both; }
+
+@keyframes unwrap-bow { to { transform: scale(0.2) rotate(40deg); opacity: 0; } }
+@keyframes unwrap-rib-v { to { transform: translateY(-110%); } }
+@keyframes unwrap-rib-h { to { transform: translateX(110%); } }
+@keyframes unwrap-fade { to { opacity: 0; } }
+@keyframes unwrap-left { to { transform: translateX(-104%) rotate(-4deg); } }
+@keyframes unwrap-right { to { transform: translateX(104%) rotate(4deg); } }

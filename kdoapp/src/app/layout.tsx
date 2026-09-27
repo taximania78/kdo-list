@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { AppHeader } from '@/components/AppHeader';
 import { TabBar } from '@/components/TabBar';
-import Snowflakes from '@/components/Snowflakes';
+import Snowfall from '@/components/decor/Snowfall';
+import UnwrapIntro from '@/components/decor/UnwrapIntro';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { fontVariables } from '@/lib/fonts';
 import { THEMES } from '@/lib/theme';
@@ -27,16 +28,16 @@ export default async function RootLayout({
   const theme = await getTheme();
   const themeConfig = THEMES[theme];
 
+  // Couches : grain (body::before, z-0) → neige arrière (z-0) → contenu (z-10)
+  // → neige avant (z-30) → en-tête et onglets (z-40) → panneaux (z-50) → ouverture (z-100).
   return (
     <html lang="fr-FR" className={`${fontVariables} ${themeConfig.themeClass}`}>
-      <body className="flex min-h-screen flex-col antialiased">
+      <body className="flex min-h-dvh flex-col antialiased">
         <ThemeProvider theme={theme}>
+          {themeConfig.showSnowflakes && <Snowfall />}
+          <UnwrapIntro />
           <AppHeader />
-          <div className="relative z-10 flex flex-1 flex-col overflow-hidden">
-            {themeConfig.showSnowflakes && <Snowflakes />}
-            <main className="flex-1">{children}</main>
-            {themeConfig.showSnowflakes && <div className="h-28" />}
-          </div>
+          <main className="relative z-10 flex-1">{children}</main>
           <TabBar />
         </ThemeProvider>
       </body>
