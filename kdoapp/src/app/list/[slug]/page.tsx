@@ -7,7 +7,7 @@ import { Mountains_of_Christmas, Atma } from 'next/font/google';
 import KdosList from '@/components/KdosList';
 import Link from 'next/link';
 import { Gift, Sparkles, ArrowLeft } from 'lucide-react';
-import { isChristmas, themeConfig } from '@/lib/theme';
+import { useTheme } from '@/components/ThemeProvider';
 import api from '@/lib/api';
 
 const mountains_of_christmas = Mountains_of_Christmas({
@@ -30,6 +30,7 @@ type GiftListItem = {
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 function ListDetail() {
+  const { isChristmas, config: themeConfig } = useTheme();
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;

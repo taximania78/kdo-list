@@ -8,7 +8,7 @@ import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import * as Accordion from '@radix-ui/react-accordion';
 import { z } from 'zod';
 import api from '@/lib/api';
-import { isChristmas } from '@/lib/theme';
+import { useTheme } from '@/components/ThemeProvider';
 import {
   ChevronDown,
   Tag,
@@ -60,6 +60,7 @@ export default function FormModifyItem({
   onFormSubmit,
   listOptions,
 }: FormModifyItemProps) {
+  const { isChristmas } = useTheme();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const initialListSlug = React.useMemo(() => {

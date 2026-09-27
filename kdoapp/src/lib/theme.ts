@@ -34,9 +34,3 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
 export function isThemeName(value: unknown): value is ThemeName {
   return typeof value === 'string' && (THEME_NAMES as readonly string[]).includes(value);
 }
-
-// TEMPORAIRE : exports hérités, supprimés en Task 4 une fois les composants migrés vers useTheme().
-const legacyName = process.env.NEXT_PUBLIC_THEME;
-const legacyTheme: ThemeName = isThemeName(legacyName) ? legacyName : DEFAULT_THEME;
-export const isChristmas = legacyTheme === 'christmas';
-export const themeConfig = THEMES[legacyTheme];

@@ -10,7 +10,7 @@ import {
   decodeToken,
   clearAuthStorage,
 } from '@/lib/auth';
-import { isChristmas, themeConfig } from '@/lib/theme';
+import { useTheme } from '@/components/ThemeProvider';
 import {
   Menu,
   X,
@@ -34,6 +34,7 @@ const atma = Atma({
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 export const Nav = () => {
+  const { isChristmas, config: themeConfig } = useTheme();
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState<string | null>(null);

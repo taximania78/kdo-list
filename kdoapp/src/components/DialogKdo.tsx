@@ -1,8 +1,10 @@
+'use client';
+
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import { useState } from 'react';
 import api from '@/lib/api';
 import { Gift, CheckCircle, X } from 'lucide-react';
-import { isChristmas } from '@/lib/theme';
+import { useTheme } from '@/components/ThemeProvider';
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
@@ -25,6 +27,7 @@ const DialogKdo = ({
   userLogged,
   onValidation,
 }: DialogTakeKdoProps) => {
+  const { isChristmas } = useTheme();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const takeKdo = async () => {

@@ -4,11 +4,12 @@ import { useEffect, FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { User, Lock, LogIn, Gift, Sparkles } from 'lucide-react';
-import { isChristmas } from '@/lib/theme';
+import { useTheme } from '@/components/ThemeProvider';
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 export default function LoginPage() {
+  const { isChristmas } = useTheme();
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
   const [error, setError] = useState<string | null>(null);

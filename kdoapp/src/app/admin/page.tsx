@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { Plus, ChevronDown, ChevronUp, Settings, Download } from 'lucide-react';
 import * as Select from '@radix-ui/react-select';
 import FormModifyItem from '@/components/FormModifyItem';
-import { isChristmas } from '@/lib/theme';
+import { useTheme } from '@/components/ThemeProvider';
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
@@ -35,6 +35,7 @@ type ListOption = { value: string; label: string; user: string | null };
  * --------------------- */
 
 function Admin() {
+  const { isChristmas } = useTheme();
   const router = useRouter();
   const { isAuthenticated, user, isLoading } = useAuth();
   const [kdosList, setKdosList] = useState<Kdo[] | null>(null);

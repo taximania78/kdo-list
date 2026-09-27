@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import FormModifyPwd from '@/components/FormModifyPwd';
 import { KeyRound, Gift, Sparkles } from 'lucide-react';
-import { isChristmas, themeConfig } from '@/lib/theme';
+import { useTheme } from '@/components/ThemeProvider';
 
 export default function FirstConnection() {
+  const { isChristmas, config: themeConfig } = useTheme();
   const router = useRouter();
   const { isAuthenticated, user, isLoading } = useAuth();
   const [shouldShowPage, setShouldShowPage] = useState(false);

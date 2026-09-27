@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
 import Link from 'next/link';
 import { Gift, Sparkles, Users, ChevronRight } from 'lucide-react';
-import { isChristmas, themeConfig } from '@/lib/theme';
+import { useTheme } from '@/components/ThemeProvider';
 import api from '@/lib/api';
 
 const mountains_of_christmas = Mountains_of_Christmas({
@@ -86,12 +86,13 @@ const slugColorIndex = (slug: string, count: number) => {
   return Math.abs(hash) % count;
 };
 
-const getListColors = (slug: string) => {
+const getListColors = (slug: string, isChristmas: boolean) => {
   const palettes = isChristmas ? christmasPalettes : defaultPalettes;
   return palettes[slugColorIndex(slug, palettes.length)];
 };
 
 function ListSelector() {
+  const { isChristmas, config: themeConfig } = useTheme();
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
   const [lists, setLists] = useState<GiftListItem[] | null>(null);
@@ -193,7 +194,7 @@ function ListSelector() {
         {lists && lists.length > 0 && (
           <div className="flex flex-wrap justify-center gap-6">
             {lists.map((list, index) => {
-              const colors = getListColors(list.slug);
+              const colors = getListColors(list.slug, isChristmas);
               const icon = listIcons[list.slug] || <Gift className="w-10 h-10" />;
 
               return (

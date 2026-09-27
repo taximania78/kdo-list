@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { Nav } from '@/components/Nav';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 jest.mock('next/navigation', () => ({ usePathname: () => '/admin' }));
 jest.mock('@/lib/auth', () => ({
@@ -25,5 +26,21 @@ describe('Nav role-based links', () => {
     (decodeToken as jest.Mock).mockReturnValue({ username: 'whoever', isAdmin: true, isMegaAdmin: false });
     render(<Nav />);
     expect(screen.queryByText('Admin')).toBeNull();
+  });
+
+  it('shows the Christmas title when the theme is christmas', () => {
+    (decodeToken as jest.Mock).mockReturnValue({ username: 'whoever', isAdmin: false, isMegaAdmin: false });
+    render(
+      <ThemeProvider theme="christmas">
+        <Nav />
+      </ThemeProvider>,
+    );
+    expect(screen.getByText(/Liste de Noël/)).toBeInTheDocument();
+  });
+
+  it('shows the birthday title by default', () => {
+    (decodeToken as jest.Mock).mockReturnValue({ username: 'whoever', isAdmin: false, isMegaAdmin: false });
+    render(<Nav />);
+    expect(screen.getByText(/Liste d'anniversaire/)).toBeInTheDocument();
   });
 });
