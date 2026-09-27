@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import api from '@/lib/api';
@@ -35,7 +35,7 @@ export default function FormModifyPwd({ firstConnection = false }: { firstConnec
   const [isLoading, setIsLoading] = useState(false);
   const form = useForm<FormData>({ resolver: zodResolver(formSchema) });
   const { errors } = form.formState;
-  const password = form.watch('password') ?? '';
+  const password = useWatch({ control: form.control, name: 'password' }) ?? '';
 
   // Retour immédiat pendant la saisie de la confirmation, sans attendre l'envoi
   const checkConfirmation = (value: string) => {

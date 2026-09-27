@@ -7,6 +7,7 @@ export function PasswordRules({ password }: { password: string }) {
       {passwordChecks(password).map((rule) => (
         <li
           key={rule.label}
+          data-met={rule.met}
           className={`flex items-center gap-2 ${rule.met ? 'font-semibold text-on-bg' : 'text-on-bg-muted'}`}
         >
           {rule.met ? <Check className="size-4" aria-hidden /> : <X className="size-4" aria-hidden />}
