@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from fastapi import FastAPI, Depends, HTTPException, status, Request, Query
 from fastapi.responses import FileResponse, Response
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import delete, or_, update
 from sqlalchemy.orm import joinedload, aliased
@@ -25,6 +25,7 @@ from auth import (
     verify_password,
     verify_and_update_password,
 )
+from deps import CurrentUser, get_current_user, oauth2_scheme, require_admin, require_megaadmin
 from image import get_image, remove_image
 from config import MODE, URL_CONNECTION
 
@@ -58,16 +59,6 @@ app.add_middleware(
 
 logger = logging.getLogger(__name__)
 
-# Utilisé pour récupérer le token dans les headers (Bearer <token>)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/login")
-
-
-def ensure_megaadmin(payload: dict) -> None:
-    """Exige un token de super administrateur (isMegaAdmin)."""
-    if not payload.get("isMegaAdmin"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Non autorisé")
-
-
 # ─── Gift Lists Endpoints ───────────────────────────────────────────────
 
 def _slugify(label: str) -> str:
@@ -97,14 +88,8 @@ def _serialize_list(gl: GiftList) -> GiftListResponse:
     )
 
 @app.get("/api/lists/")
-async def get_lists(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+async def get_lists(current_user: CurrentUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     """Retourne les listes visibles pour l'utilisateur connecté."""
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    
-    is_admin = payload.get("isAdmin")
-
     result = await db.execute(
         select(GiftList).options(joinedload(GiftList.owner)).where(GiftList.enabled == True)
     )
@@ -112,9 +97,9 @@ async def get_lists(token: str = Depends(oauth2_scheme), db: AsyncSession = Depe
 
     visible_lists = []
     for gift_list in all_lists:
-        if is_admin and gift_list.owner_id == int(payload.get("sub")):
+        if current_user.is_admin and gift_list.owner_id == current_user.id:
             continue
-        if is_admin and gift_list.is_common:
+        if current_user.is_admin and gift_list.is_common:
             continue
         visible_lists.append(_serialize_list(gift_list))
 
@@ -134,15 +119,9 @@ async def get_all_lists(token: str = Depends(oauth2_scheme), db: AsyncSession = 
     all_lists = result.scalars().all()
     return [_serialize_list(gl) for gl in all_lists]
 
-@app.patch("/api/lists/{slug}/toggle")
-async def toggle_list(slug: str, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    """Active ou désactive une liste (admin only)."""
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-
-    ensure_megaadmin(payload)
-
+@app.patch("/api/lists/{slug}/toggle", dependencies=[Depends(require_megaadmin)])
+async def toggle_list(slug: str, db: AsyncSession = Depends(get_db)):
+    """Active ou désactive une liste (super admin only)."""
     result = await db.execute(select(GiftList).where(GiftList.slug == slug))
     gift_list = result.scalars().first()
     
@@ -158,12 +137,8 @@ async def toggle_list(slug: str, token: str = Depends(oauth2_scheme), db: AsyncS
     return {"success": True, "slug": slug, "enabled": new_enabled}
 
 
-@app.post("/api/lists/")
-async def create_list_api(data: GiftListCreate, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    ensure_megaadmin(payload)
+@app.post("/api/lists/", dependencies=[Depends(require_megaadmin)])
+async def create_list_api(data: GiftListCreate, db: AsyncSession = Depends(get_db)):
     if not data.label or not data.label.strip():
         raise HTTPException(status_code=400, detail="Le label est requis")
     if data.owner_id is not None:
@@ -180,12 +155,8 @@ async def create_list_api(data: GiftListCreate, token: str = Depends(oauth2_sche
     return {"success": True, "slug": slug}
 
 
-@app.patch("/api/lists/{slug}")
-async def update_list_api(slug: str, data: GiftListUpdate, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    ensure_megaadmin(payload)
+@app.patch("/api/lists/{slug}", dependencies=[Depends(require_megaadmin)])
+async def update_list_api(slug: str, data: GiftListUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(GiftList).where(GiftList.slug == slug))
     gift_list = result.scalars().first()
     if not gift_list:
@@ -214,12 +185,8 @@ async def update_list_api(slug: str, data: GiftListUpdate, token: str = Depends(
     return {"success": True}
 
 
-@app.delete("/api/lists/{slug}")
-async def delete_list_api(slug: str, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    ensure_megaadmin(payload)
+@app.delete("/api/lists/{slug}", dependencies=[Depends(require_megaadmin)])
+async def delete_list_api(slug: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(GiftList).where(GiftList.slug == slug))
     gift_list = result.scalars().first()
     if not gift_list:
@@ -237,11 +204,7 @@ async def delete_list_api(slug: str, token: str = Depends(oauth2_scheme), db: As
 # ─── Kdos Endpoints ─────────────────────────────────────────────────────
 
 @app.get("/api/kdos/")
-async def get_kdo_list(user: str = "all", list: str = None, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    
+async def get_kdo_list(user: str = "all", list: str = None, current_user: CurrentUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     user_owner = aliased(User)
     user_taker = aliased(User)
     
@@ -260,8 +223,8 @@ async def get_kdo_list(user: str = "all", list: str = None, token: str = Depends
     ).outerjoin(user_owner, Idea.userId == user_owner.id) \
     .outerjoin(user_taker, Idea.takenById == user_taker.id)
 
-    if payload.get("isAdmin"):
-        query = base_select.filter(or_(Idea.userId != int(payload.get("sub")), Idea.userId == None))
+    if current_user.is_admin:
+        query = base_select.filter(or_(Idea.userId != current_user.id, Idea.userId == None))
     else:
         query = base_select
 
@@ -584,11 +547,7 @@ async def modify_item_api(update_data: IdeaUpdate, token: str = Depends(oauth2_s
 
 
 @app.post("/api/take-api/{kdo_pk}")
-async def take_api(kdo_pk: int, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    
+async def take_api(kdo_pk: int, current_user: CurrentUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     # Vérifier si l'objet existe
     result = await db.execute(select(Idea).where(Idea.id == kdo_pk))
     idea = result.scalars().first()
@@ -600,7 +559,7 @@ async def take_api(kdo_pk: int, token: str = Depends(oauth2_scheme), db: AsyncSe
         stmt = (
         update(Idea)
         .where(Idea.id == kdo_pk)
-        .values(takenById=int(payload.get("sub")), availability=False)
+        .values(takenById=current_user.id, availability=False)
         )
         await db.execute(stmt)
         await db.commit()
@@ -608,12 +567,8 @@ async def take_api(kdo_pk: int, token: str = Depends(oauth2_scheme), db: AsyncSe
     else:
         raise HTTPException(status_code=400, detail="Idée déjà prise")
 
-@app.post("/api/untake-api/{kdo_pk}")
-async def untake_api(kdo_pk: int, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    
+@app.post("/api/untake-api/{kdo_pk}", dependencies=[Depends(get_current_user)])
+async def untake_api(kdo_pk: int, db: AsyncSession = Depends(get_db)):
     # Vérifier si l'objet existe
     result = await db.execute(select(Idea).where(Idea.id == kdo_pk))
     idea = result.scalars().first()
@@ -633,28 +588,16 @@ async def untake_api(kdo_pk: int, token: str = Depends(oauth2_scheme), db: Async
     else:
         raise HTTPException(status_code=400, detail="Idée déjà libérée")
 
-@app.api_route("/api/users/", methods=["GET"])
-async def get_username_api(request: Request, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    payload = decode_jwt(token)
-
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    ensure_megaadmin(payload)
-
+@app.api_route("/api/users/", methods=["GET"], dependencies=[Depends(require_megaadmin)])
+async def get_username_api(request: Request, db: AsyncSession = Depends(get_db)):
     if request.method == "GET":
         # Récupérer tous les utilisateurs
         result = await db.execute(select(User.id, User.name, User.isAdmin, User.isMegaAdmin).order_by(User.name))
         
         return result.mappings().all()
     
-@app.patch("/api/modify-password-admin/{user_id}")
-async def modify_password_api_admin(user_id: int, payload: PasswordChange, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    verifToken = decode_jwt(token)
-    if not verifToken:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-
-    ensure_megaadmin(verifToken)
-
+@app.patch("/api/modify-password-admin/{user_id}", dependencies=[Depends(require_megaadmin)])
+async def modify_password_api_admin(user_id: int, payload: PasswordChange, db: AsyncSession = Depends(get_db)):
     # Vérifier si l'utilisateur existe
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()
@@ -675,12 +618,8 @@ async def modify_password_api_admin(user_id: int, payload: PasswordChange, token
     return {"success": True, "message": "Mot de passe mis à jour avec succès"}
 
 @app.post("/api/modify-password/")
-async def modify_password_api(payload: PasswordChange, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    verifToken = decode_jwt(token)
-    if not verifToken:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    
-    user_id= int(verifToken.get("sub"))
+async def modify_password_api(payload: PasswordChange, current_user: CurrentUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    user_id = current_user.id
 
     # Vérifier si l'utilisateur existe
     result = await db.execute(select(User).where(User.id == user_id))
@@ -717,14 +656,8 @@ async def modify_password_api(payload: PasswordChange, token: str = Depends(oaut
 
     return {"success": True, "message": "Mot de passe mis à jour avec succès"}
 
-@app.delete("/api/delete-user/{user_id}")
-async def delete_user_api(user_id: int, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-
-    ensure_megaadmin(payload)
-
+@app.delete("/api/delete-user/{user_id}", dependencies=[Depends(require_megaadmin)])
+async def delete_user_api(user_id: int, db: AsyncSession = Depends(get_db)):
     # Vérifier si l'utilisateur existe
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()
@@ -747,14 +680,8 @@ async def delete_user_api(user_id: int, token: str = Depends(oauth2_scheme), db:
 
     return {"success": True, "message": "Utilisateur supprimé avec succès"}
 
-@app.post("/api/create-user/")
-async def create_user_api(user_data: UserCreate, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-
-    ensure_megaadmin(payload)
-
+@app.post("/api/create-user/", dependencies=[Depends(require_megaadmin)])
+async def create_user_api(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     # Vérifier si l'utilisateur existe déjà
     result = await db.execute(select(User).where(User.name == user_data.name))
     existing_user = result.scalars().first()
@@ -778,12 +705,8 @@ async def create_user_api(user_data: UserCreate, token: str = Depends(oauth2_sch
     return {"success": True, "message": "Utilisateur créé avec succès", "id": new_user.id}
 
 @app.patch("/api/users/{user_id}/role")
-async def update_user_role_api(user_id: int, data: RoleUpdate, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    ensure_megaadmin(payload)
-    if user_id == int(payload.get("sub")):
+async def update_user_role_api(user_id: int, data: RoleUpdate, current_user: CurrentUser = Depends(require_megaadmin), db: AsyncSession = Depends(get_db)):
+    if user_id == current_user.id:
         raise HTTPException(status_code=400, detail="Vous ne pouvez pas modifier votre propre rôle")
     result = await db.execute(select(User).where(User.id == user_id))
     if not result.scalars().first():
@@ -810,13 +733,9 @@ async def get_theme_api(db: AsyncSession = Depends(get_db)):
         return {"theme": DEFAULT_THEME}
     return {"theme": setting.value}
 
-@app.put("/api/settings/theme", response_model=ThemeResponse)
-async def update_theme_api(data: ThemeUpdate, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+@app.put("/api/settings/theme", response_model=ThemeResponse, dependencies=[Depends(require_megaadmin)])
+async def update_theme_api(data: ThemeUpdate, db: AsyncSession = Depends(get_db)):
     """Change le thème de l'application (super admin uniquement)."""
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    ensure_megaadmin(payload)
     setting = await db.get(AppSetting, THEME_KEY)
     if setting is None:
         db.add(AppSetting(key=THEME_KEY, value=data.theme))

@@ -1,6 +1,12 @@
+from datetime import datetime, timedelta, timezone
+
+import jwt
 import pytest
 import pytest_asyncio
 from httpx import AsyncClient
+
+from auth import create_refresh_token
+from config import SECRET_KEY, ALGORITHM
 
 # Test if access without token is blocked
 @pytest.mark.asyncio
@@ -55,3 +61,32 @@ async def test_test_token(client: AsyncClient):
     response = await client.get("/api/test_token/")
     assert response.status_code == 200
     assert response.json() == {"Hello": "World"}
+
+
+@pytest.mark.asyncio
+async def test_refresh_token_rejected_on_real_endpoint(client: AsyncClient):
+    """Un refresh token ne doit pas servir de jeton d'accès."""
+    token, _ = create_refresh_token({"sub": "2"})
+    response = await client.get("/api/kdos/", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_legacy_access_token_on_real_endpoint(client: AsyncClient):
+    """Jeton d'accès émis avant le typage (sans claim type) → 401, pas 403/500."""
+    exp = datetime.now(timezone.utc) + timedelta(minutes=5)
+    token = jwt.encode(
+        {"sub": "1", "username": "admin", "isAdmin": True, "isMegaAdmin": True, "exp": exp},
+        SECRET_KEY, algorithm=ALGORITHM,
+    )
+    response = await client.get("/api/users/", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_invalid_sub_on_real_endpoint(client: AsyncClient):
+    """sub non numérique → 401 (auparavant : erreur 500 sur int())."""
+    exp = datetime.now(timezone.utc) + timedelta(minutes=5)
+    token = jwt.encode({"sub": "abc", "type": "access", "exp": exp}, SECRET_KEY, algorithm=ALGORITHM)
+    response = await client.get("/api/lists/", headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 401
