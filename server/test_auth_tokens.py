@@ -39,3 +39,9 @@ def test_decode_jwt_of_type_rejects_token_without_type():
 
 def test_decode_jwt_of_type_rejects_garbage():
     assert decode_jwt_of_type("pas-un-jwt", "access") is None
+
+
+def test_refresh_tokens_are_unique_within_the_same_second():
+    first, _ = create_refresh_token({"sub": "1"})
+    second, _ = create_refresh_token({"sub": "1"})
+    assert first != second

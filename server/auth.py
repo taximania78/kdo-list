@@ -1,4 +1,5 @@
 import jwt
+from uuid import uuid4
 from datetime import datetime, timedelta, timezone
 from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
 from pwdlib import PasswordHash
@@ -16,7 +17,8 @@ def create_access_token(data: dict):
 def create_refresh_token(data: dict):
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({"exp": expire, "type": "refresh"})
+    # jti : identifiant unique, sinon deux jetons émis dans la même seconde seraient identiques
+    to_encode.update({"exp": expire, "type": "refresh", "jti": uuid4().hex})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM), expire
 
 # Décoder un JWT
