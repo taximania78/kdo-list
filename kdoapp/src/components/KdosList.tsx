@@ -14,6 +14,10 @@ import { PaperState } from '@/components/ui/PaperState';
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 const TIE_DURATION_MS = 1400;
 
+function kdosUrl(listSlug: string): string {
+  return `${ApiAdress}/api/kdos/?format=json&list=${encodeURIComponent(listSlug)}`;
+}
+
 const FILTERS: { key: GiftFilter; label: string }[] = [
   { key: 'all', label: 'Tout' },
   { key: 'free', label: 'Libres' },
@@ -74,7 +78,7 @@ export default function KdosList({ listSlug }: { listSlug: string }) {
 
   const fetchKdos = useCallback(async () => {
     try {
-      const response = await api.get(`${ApiAdress}/api/kdos/?format=json&list=${encodeURIComponent(listSlug)}`);
+      const response = await api.get(kdosUrl(listSlug));
       setKdos(response.data);
       setLoadError(false);
     } catch (error) {
@@ -84,9 +88,24 @@ export default function KdosList({ listSlug }: { listSlug: string }) {
   }, [listSlug]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchKdos();
-  }, [fetchKdos]);
+    // Ignore une réponse périmée : si listSlug change avant que cette requête ne
+    // revienne, on ne doit pas écraser la liste de la nouvelle liste avec l'ancienne.
+    let ignore = false;
+    api
+      .get(kdosUrl(listSlug))
+      .then((response) => {
+        if (ignore) return;
+        setKdos(response.data);
+        setLoadError(false);
+      })
+      .catch((error) => {
+        console.error('Failed to fetch kdos:', error);
+        if (!ignore) setLoadError(true);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [listSlug]);
 
   useEffect(() => {
     if (tyingId === null) return;
@@ -103,8 +122,11 @@ export default function KdosList({ listSlug }: { listSlug: string }) {
       await fetchKdos(); // l'état a pu changer entre-temps : on montre le vrai
       throw error; // ConfirmSheet affiche le message et reste ouvert
     }
-    if (pending.kind === 'take') setTyingId(pending.kdo.id);
-    await fetchKdos();
+    await fetchKdos(); // recharge d'abord : le nœud ne démarre que sur la carte déjà réservée
+    if (pending.kind === 'take') {
+      setTyingId(pending.kdo.id);
+      if (filter === 'free') setFilter('all'); // sinon l'idée fraîchement emballée disparaît aussitôt
+    }
   };
 
   if (!kdos && loadError) {
