@@ -1,10 +1,12 @@
+import { createRef } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Button } from '@/components/ui/Button';
-import { Field, Input } from '@/components/ui/Field';
+import { Button, buttonClass } from '@/components/ui/Button';
+import { Field, Input, Select, Textarea } from '@/components/ui/Field';
 import { Chip } from '@/components/ui/Chip';
 import { PaperState } from '@/components/ui/PaperState';
 import { PageTitle } from '@/components/ui/PageTitle';
+import { PageShell } from '@/components/ui/PageShell';
 
 describe('Button', () => {
   it('is a plain button by default and fires onClick', async () => {
@@ -21,6 +23,38 @@ describe('Button', () => {
     const button = screen.getByRole('button', { name: 'Envoyer' });
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute('aria-busy', 'true');
+  });
+
+  it('fires onClick for the outline variant', async () => {
+    const onClick = jest.fn();
+    render(
+      <Button variant="outline" onClick={onClick}>
+        Annuler
+      </Button>
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Annuler' }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('fires onClick for the ghost variant', async () => {
+    const onClick = jest.fn();
+    render(
+      <Button variant="ghost" onClick={onClick}>
+        Fermer
+      </Button>
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Fermer' }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('buttonClass() returns a class string usable on a non-button element like a Link', () => {
+    render(
+      <a href="/liste" className={buttonClass('ghost')}>
+        Voir la liste
+      </a>
+    );
+    const link = screen.getByRole('link', { name: 'Voir la liste' });
+    expect(link.className.length).toBeGreaterThan(0);
   });
 });
 
@@ -42,6 +76,63 @@ describe('Field', () => {
       </Field>
     );
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('renders the hint content', () => {
+    render(
+      <Field label="Prix" htmlFor="price" hint={<span>En euros</span>}>
+        <Input id="price" />
+      </Field>
+    );
+    expect(screen.getByText('En euros')).toBeInTheDocument();
+  });
+
+  it('still links the label to the control when tone is "paper"', () => {
+    render(
+      <Field label="Prix" htmlFor="price" tone="paper">
+        <Input id="price" />
+      </Field>
+    );
+    expect(screen.getByLabelText('Prix')).toBeInTheDocument();
+  });
+});
+
+describe('Input', () => {
+  it('exposes the underlying <input> element via ref', () => {
+    const ref = createRef<HTMLInputElement>();
+    render(<Input ref={ref} aria-label="Nom" />);
+    expect(ref.current).toBeInstanceOf(HTMLInputElement);
+    expect(ref.current).toBe(screen.getByRole('textbox'));
+  });
+});
+
+describe('Select', () => {
+  it('is linked to its label via Field, renders its options and reports the chosen value', async () => {
+    render(
+      <Field label="Liste" htmlFor="list">
+        <Select id="list" defaultValue="paul">
+          <option value="paul">Liste de Paul</option>
+          <option value="julie">Liste de Julie</option>
+        </Select>
+      </Field>
+    );
+    const select = screen.getByLabelText('Liste') as HTMLSelectElement;
+    expect(screen.getByRole('option', { name: 'Liste de Julie' })).toBeInTheDocument();
+    await userEvent.selectOptions(select, 'julie');
+    expect(select.value).toBe('julie');
+  });
+});
+
+describe('Textarea', () => {
+  it('is linked to its label via Field and accepts typed text', async () => {
+    render(
+      <Field label="Commentaire" htmlFor="comment">
+        <Textarea id="comment" />
+      </Field>
+    );
+    const textarea = screen.getByLabelText('Commentaire');
+    await userEvent.type(textarea, 'Merci beaucoup');
+    expect(textarea).toHaveValue('Merci beaucoup');
   });
 });
 
@@ -71,5 +162,16 @@ describe('PageTitle', () => {
     render(<PageTitle hand="personne ne saura qui offre quoi">À qui fait-on plaisir ?</PageTitle>);
     expect(screen.getByRole('heading', { level: 1, name: 'À qui fait-on plaisir ?' })).toBeInTheDocument();
     expect(screen.getByText('personne ne saura qui offre quoi')).toBeInTheDocument();
+  });
+});
+
+describe('PageShell', () => {
+  it('renders its children', () => {
+    render(
+      <PageShell>
+        <p>Contenu de la page</p>
+      </PageShell>
+    );
+    expect(screen.getByText('Contenu de la page')).toBeInTheDocument();
   });
 });

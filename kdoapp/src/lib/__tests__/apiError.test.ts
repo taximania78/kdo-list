@@ -16,4 +16,11 @@ describe('apiErrorMessage', () => {
     expect(apiErrorMessage(new Error('Network Error'))).toBe('Une erreur est survenue. Réessaie.');
     expect(apiErrorMessage(null)).toBe('Une erreur est survenue. Réessaie.');
   });
+
+  it('falls back when detail or message is empty or whitespace-only', () => {
+    expect(apiErrorMessage({ response: { data: { detail: '' } } })).toBe('Une erreur est survenue. Réessaie.');
+    expect(apiErrorMessage({ response: { data: { detail: '   ' } } })).toBe('Une erreur est survenue. Réessaie.');
+    expect(apiErrorMessage({ response: { data: { message: '' } } })).toBe('Une erreur est survenue. Réessaie.');
+    expect(apiErrorMessage({ response: { data: { message: '  \n\t' } } })).toBe('Une erreur est survenue. Réessaie.');
+  });
 });
