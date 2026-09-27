@@ -17,7 +17,7 @@ const users = [
 ];
 
 describe('UsersPanel', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => jest.resetAllMocks());
 
   it('deletes a person after confirmation', async () => {
     mocked.delete.mockResolvedValue({ status: 200, data: {} });
@@ -116,7 +116,7 @@ describe('UsersPanel', () => {
 
 describe('ListsPanel', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
     mocked.get.mockResolvedValue({
       status: 200,
       data: [{ slug: 'lea', label: 'Léa', owner_id: 2, owner_name: 'Léa', is_common: false, enabled: true }],
