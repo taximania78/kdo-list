@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { Lock, Check, X } from 'lucide-react';
 import Link from 'next/link';
 import axios, { AxiosError } from 'axios';
-import { isChristmas } from '@/lib/theme';
+import { useTheme } from '@/components/ThemeProvider';
 
 interface FormModifyPwdProps {
   firstConnection?: boolean;
@@ -22,6 +22,7 @@ interface ApiErrorResponse {
 }
 
 export default function FormModifyPwd({ firstConnection }: FormModifyPwdProps) {
+  const { isChristmas } = useTheme();
   const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);

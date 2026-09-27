@@ -10,7 +10,7 @@ import { z } from 'zod';
 import { UserPlus, User, Lock, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 import api from '@/lib/api';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
-import { isChristmas } from '@/lib/theme';
+import { useTheme } from '@/components/ThemeProvider';
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
@@ -45,6 +45,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 export default function Password() {
+  const { isChristmas } = useTheme();
   const router = useRouter();
   const { isAuthenticated, user, isLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);

@@ -2,7 +2,7 @@
 
 import { Mountains_of_Christmas } from 'next/font/google';
 import { Heart, Gift, Sparkles } from 'lucide-react';
-import { isChristmas } from '@/lib/theme';
+import { useTheme } from '@/components/ThemeProvider';
 
 const mountainsOfChristmas = Mountains_of_Christmas({
   weight: '700',
@@ -10,6 +10,7 @@ const mountainsOfChristmas = Mountains_of_Christmas({
 });
 
 export const Footer = () => {
+  const { isChristmas } = useTheme();
   const currentYear = new Date().getFullYear();
 
   return (

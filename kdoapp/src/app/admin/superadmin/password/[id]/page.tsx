@@ -10,7 +10,7 @@ import { Key, Lock, CheckCircle, XCircle, ArrowLeft } from 'lucide-react';
 import api from '@/lib/api';
 import { use, useState, useEffect } from 'react';
 import { Mountains_of_Christmas, Atma } from 'next/font/google';
-import { isChristmas } from '@/lib/theme';
+import { useTheme } from '@/components/ThemeProvider';
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
@@ -46,6 +46,7 @@ export default function Password({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const { isChristmas } = useTheme();
   const router = useRouter();
   const { isAuthenticated, user, isLoading } = useAuth();
   const searchParams = useSearchParams();

@@ -1,5 +1,6 @@
 import csv
 import io
+import logging
 import os.path
 import re
 import unicodedata
@@ -11,9 +12,10 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import delete, or_, update
 from sqlalchemy.orm import joinedload, aliased
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from models import GiftList, GiftListCreate, GiftListUpdate, GiftListResponse, GiftListToggle, Idea, IdeaCreate, IdeaUpdate, RefreshToken, RefreshTokenRequest, User, UserCreate, PasswordChange, RoleUpdate
+from models import GiftList, GiftListCreate, GiftListUpdate, GiftListResponse, GiftListToggle, Idea, IdeaCreate, IdeaUpdate, RefreshToken, RefreshTokenRequest, User, UserCreate, PasswordChange, RoleUpdate, AppSetting, ThemeResponse, ThemeUpdate, THEME_NAMES, DEFAULT_THEME
 from database import get_db
 from auth import (
     create_access_token,
@@ -53,6 +55,8 @@ app.add_middleware(
     allow_methods=["*"],  # Autoriser toutes les méthodes (GET, POST, PUT, DELETE, etc.)
     allow_headers=["*"],  # Autoriser tous les headers
 )
+
+logger = logging.getLogger(__name__)
 
 # Utilisé pour récupérer le token dans les headers (Bearer <token>)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/login")
@@ -787,6 +791,39 @@ async def update_user_role_api(user_id: int, data: RoleUpdate, token: str = Depe
     await db.execute(update(User).where(User.id == user_id).values(isAdmin=data.isAdmin))
     await db.commit()
     return {"success": True, "isAdmin": data.isAdmin}
+
+# ─── Settings Endpoints ─────────────────────────────────────────────────
+
+THEME_KEY = "theme"
+
+@app.get("/api/settings/theme", response_model=ThemeResponse)
+async def get_theme_api(db: AsyncSession = Depends(get_db)):
+    """Thème courant. Public : la page de connexion est thémée."""
+    try:
+        setting = await db.get(AppSetting, THEME_KEY)
+    except SQLAlchemyError:
+        # Table absente (migration pas encore lancée) ou base indisponible : on ne casse pas le rendu
+        logger.warning("Lecture du thème impossible, repli sur '%s'", DEFAULT_THEME, exc_info=True)
+        await db.rollback()
+        return {"theme": DEFAULT_THEME}
+    if setting is None or setting.value not in THEME_NAMES:
+        return {"theme": DEFAULT_THEME}
+    return {"theme": setting.value}
+
+@app.put("/api/settings/theme", response_model=ThemeResponse)
+async def update_theme_api(data: ThemeUpdate, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+    """Change le thème de l'application (super admin uniquement)."""
+    payload = decode_jwt(token)
+    if not payload:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
+    ensure_megaadmin(payload)
+    setting = await db.get(AppSetting, THEME_KEY)
+    if setting is None:
+        db.add(AppSetting(key=THEME_KEY, value=data.theme))
+    else:
+        setting.value = data.theme
+    await db.commit()
+    return {"theme": data.theme}
 
 @app.get("/api/auth/")
 def auth():

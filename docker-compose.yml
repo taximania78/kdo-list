@@ -29,7 +29,6 @@ services:
       network: host
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-        NEXT_PUBLIC_THEME: ${NEXT_PUBLIC_THEME}
     depends_on:
       - fastapi
     container_name: kdo-frontend
@@ -41,7 +40,7 @@ services:
       URL_CONNECTION: ${URL_CONNECTION}
       DEBUG: ${DEBUG}
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-      NEXT_PUBLIC_THEME: ${NEXT_PUBLIC_THEME}
+      INTERNAL_API_URL: http://kdo-api:8000
 
   db:
     image: postgres:17

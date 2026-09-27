@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import FormModifyPwd from '@/components/FormModifyPwd';
 import { Lock } from 'lucide-react';
-import { isChristmas } from '@/lib/theme';
+import { useTheme } from '@/components/ThemeProvider';
 
 export default function ChangePassword() {
+  const { isChristmas } = useTheme();
   const router = useRouter();
   const { isAuthenticated, user, isLoading } = useAuth();
 

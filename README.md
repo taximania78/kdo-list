@@ -46,7 +46,7 @@ Variables principales :
 | `DATABASE_USER` / `DATABASE_PASSWORD` | Identifiants PostgreSQL |
 | `DATABASE_NAME` / `DATABASE_HOST` / `DATABASE_PORT` | Connexion base |
 | `NEXT_PUBLIC_API_URL` | URL de l'API exposée au frontend |
-| `NEXT_PUBLIC_THEME` | Thème de l'interface (`christmas`, `birthday`, …) |
+| `INTERNAL_API_URL` | URL de l'API vue par le serveur Next.js (défaut : `NEXT_PUBLIC_API_URL`, `http://kdo-api:8000` en Docker) |
 
 > ⚠️ Générez une `SECRET_KEY` forte, par exemple : `openssl rand -hex 32`.
 
@@ -58,6 +58,23 @@ docker compose up --build
 
 - Frontend : http://localhost:3001
 - API : http://localhost:8000
+
+### Thème
+
+Le thème (`Anniversaire` ou `Noël`) se choisit dans **Admin → Super admin → Apparence**.
+Il est enregistré en base et s'applique à tous les utilisateurs au chargement suivant,
+sans rebuild ni redémarrage.
+
+### Mise à jour / migrations
+
+Après une mise à jour, lancer une fois les scripts de migration nécessaires
+(ils sont idempotents et ne modifient pas les données existantes) :
+
+```bash
+docker compose exec fastapi python migrate_app_settings.py   # table des réglages (thème)
+```
+
+Tant que la migration n'est pas lancée, l'application s'affiche avec le thème par défaut.
 
 ### Développement local
 

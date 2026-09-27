@@ -14,7 +14,7 @@ import {
   MessageSquare,
   Image as ImageIcon,
 } from 'lucide-react';
-import { isChristmas } from '@/lib/theme';
+import { useTheme } from '@/components/ThemeProvider';
 
 type ListOption = { value: string; label: string; user: string | null };
 
@@ -30,6 +30,7 @@ const formSchema = z.object({
 });
 
 function AddItem() {
+  const { isChristmas } = useTheme();
   const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
