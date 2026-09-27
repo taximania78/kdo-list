@@ -86,3 +86,26 @@ def test_remove_image_deletes_inside_kdos_dir(monkeypatch, tmp_path):
     image.remove_image(5)
 
     assert not (tmp_path / "5.jpg").exists()
+
+
+def test_get_image_refuses_path_outside_kdos_dir(monkeypatch, tmp_path):
+    """Défense en profondeur : un nom de fichier ne doit jamais sortir du dossier des images."""
+    kdos = tmp_path / "kdos"
+    kdos.mkdir()
+    monkeypatch.setattr(image, "KDOS_DIR", str(kdos))
+    monkeypatch.setattr(image, "_is_safe_image_url", lambda url: True)
+    monkeypatch.setattr("image.requests.get", lambda *a, **k: _FakeImageResponse())
+
+    assert get_image("https://93.184.216.34/x.jpg", "../evil.jpg") == "unknown.jpg"
+    assert not (tmp_path / "evil.jpg").exists()
+
+
+def test_remove_image_refuses_path_outside_kdos_dir(monkeypatch, tmp_path):
+    kdos = tmp_path / "kdos"
+    kdos.mkdir()
+    monkeypatch.setattr(image, "KDOS_DIR", str(kdos))
+    (tmp_path / "evil.jpg").write_bytes(b"x")
+
+    image.remove_image("../evil")
+
+    assert (tmp_path / "evil.jpg").exists()
