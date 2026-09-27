@@ -53,7 +53,7 @@ class Idea(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    comment: Mapped[str] = mapped_column(String)
+    comment: Mapped[Optional[str]] = mapped_column(String)
     # Utiliser "users.id" (note le 's') pour la FK
     userId: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
     user: Mapped[Optional[User]] = relationship(
@@ -74,9 +74,9 @@ class Idea(Base):
         foreign_keys=[takenById],
         back_populates="take"
     )
-    price: Mapped[float] = mapped_column(Float)
-    url: Mapped[str] = mapped_column(String)
-    image: Mapped[str] = mapped_column(String)
+    price: Mapped[Optional[float]] = mapped_column(Float)
+    url: Mapped[Optional[str]] = mapped_column(String)
+    image: Mapped[Optional[str]] = mapped_column(String)
     imageDisplay: Mapped[str] = mapped_column(String, default="unknown.jpg", nullable=False)
 
 class IdeaCreate(BaseModel):

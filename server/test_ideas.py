@@ -186,3 +186,11 @@ async def test_delete_item_as_user_forbidden(client: AsyncClient, user_token: st
     idea_id = setup_test_ideas["idea_user"].id
     response = await client.delete(f"/api/delete-item/{idea_id}/", headers=headers)
     assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_add_item_without_optional_fields(client: AsyncClient, admin_token: str, setup_test_ideas):
+    """Commentaire, URL et image sont facultatifs (auparavant : 500 sur une base créée depuis les modèles)."""
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    response = await client.post("/api/add-item/", json={"name": "Vélo", "price": 10.0, "list_slug": "user"}, headers=headers)
+    assert response.status_code == 200
