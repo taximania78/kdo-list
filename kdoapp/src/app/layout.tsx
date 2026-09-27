@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { Nav } from '@/components/Nav';
-import { Footer } from '@/components/Footer';
+import { AppHeader } from '@/components/AppHeader';
+import { TabBar } from '@/components/TabBar';
 import Snowflakes from '@/components/Snowflakes';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { fontVariables } from '@/lib/fonts';
@@ -31,13 +31,13 @@ export default async function RootLayout({
     <html lang="fr-FR" className={`${fontVariables} ${themeConfig.themeClass}`}>
       <body className="flex min-h-screen flex-col antialiased">
         <ThemeProvider theme={theme}>
-          <Nav />
+          <AppHeader />
           <div className="relative z-10 flex flex-1 flex-col overflow-hidden">
             {themeConfig.showSnowflakes && <Snowflakes />}
             <main className="flex-1">{children}</main>
             {themeConfig.showSnowflakes && <div className="h-28" />}
           </div>
-          <Footer />
+          <TabBar />
         </ThemeProvider>
       </body>
     </html>
