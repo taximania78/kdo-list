@@ -50,14 +50,18 @@ Variables principales :
 
 > ⚠️ Générez une `SECRET_KEY` forte, par exemple : `openssl rand -hex 32`.
 
-### Lancer avec Docker
+### Déployer avec Docker
+
+Docker Compose sert au **déploiement** : dans `.env.local`, mettez `NODE_ENV=production`
+et une `SECRET_KEY` forte (l'API refuse de démarrer sinon).
+
+`docker-compose.yml` n'expose aucun port : l'accès passe par un reverse-proxy, décrit
+dans un `docker-compose.override.yml` (non versionné). Partez de l'exemple Traefik fourni :
 
 ```bash
-docker compose up --build
+cp docker-compose.override.example.yml docker-compose.override.yml   # puis adaptez-le
+docker compose --env-file .env.local up --build -d
 ```
-
-- Frontend : http://localhost:3001
-- API : http://localhost:8000
 
 ### Thème
 
@@ -77,6 +81,10 @@ docker compose exec fastapi python migrate_app_settings.py   # table des réglag
 Tant que la migration n'est pas lancée, l'application s'affiche avec le thème par défaut.
 
 ### Développement local
+
+Il faut une base PostgreSQL accessible (`DATABASE_*` dans `.env.local`, par ex.
+`DATABASE_HOST=localhost`). Hors production, l'API charge automatiquement le
+`.env.local` de la racine du dépôt (une variable déjà définie dans le shell reste prioritaire).
 
 Backend :
 ```bash
