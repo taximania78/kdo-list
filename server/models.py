@@ -1,6 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
-from typing import Optional, List as TypingList
+from typing import Literal, Optional, List as TypingList
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Float, Boolean
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from database import Base  # On suppose que Base est défini dans database.py
@@ -185,3 +185,21 @@ class GiftListCreate(BaseModel):
 class GiftListUpdate(BaseModel):
     label: Optional[str] = None
     owner_id: Optional[int] = None
+
+# ─── Réglages de l'application ───────────────────────────────────────────
+
+class AppSetting(Base):
+    __tablename__ = "app_settings"
+
+    key: Mapped[str] = mapped_column(String, primary_key=True)  # ex. "theme"
+    value: Mapped[str] = mapped_column(String, nullable=False)
+
+ThemeName = Literal["default", "christmas"]
+THEME_NAMES: tuple[str, ...] = ("default", "christmas")
+DEFAULT_THEME = "default"
+
+class ThemeResponse(BaseModel):
+    theme: ThemeName
+
+class ThemeUpdate(BaseModel):
+    theme: ThemeName
