@@ -13,7 +13,7 @@ import models  # noqa: F401 — enregistre les tables dans Base.metadata
 from database import Base
 
 ALEMBIC_INI = Path(__file__).parent / "alembic.ini"
-HEAD = "0002"
+HEAD = "0003"
 
 
 def _alembic(db_path: Path) -> Config:
@@ -104,7 +104,7 @@ def test_upgrade_makes_idea_fields_optional_on_existing_database(tmp_path):
     with engine.begin() as conn:
         conn.execute(text("DROP TABLE ideas"))
         conn.execute(text(
-            "CREATE TABLE ideas (id INTEGER PRIMARY KEY, name VARCHAR NOT NULL, comment VARCHAR NOT NULL, "
+            "CREATE TABLE ideas (id INTEGER NOT NULL PRIMARY KEY, name VARCHAR NOT NULL, comment VARCHAR NOT NULL, "
             '"userId" INTEGER REFERENCES users(id), list_id INTEGER REFERENCES gift_lists(id), '
             'availability BOOLEAN NOT NULL, "takenById" INTEGER REFERENCES users(id), price FLOAT NOT NULL, '
             'url VARCHAR NOT NULL, image VARCHAR NOT NULL, "imageDisplay" VARCHAR NOT NULL)'
@@ -119,3 +119,52 @@ def test_upgrade_makes_idea_fields_optional_on_existing_database(tmp_path):
     not_null = {row[1]: row[3] for row in sqlite3.connect(db).execute("PRAGMA table_info(ideas)")}
     assert [not_null[c] for c in ("comment", "price", "url", "image")] == [0, 0, 0, 0]
     assert sqlite3.connect(db).execute("SELECT name, comment FROM ideas").fetchall() == [("Vélo", "rouge")]
+
+
+# Structure réelle de la prod (\d du 2026-09-27), avant 0003
+PRODUCTION_SCHEMA = [
+    'CREATE TABLE users (id INTEGER NOT NULL PRIMARY KEY, name VARCHAR NOT NULL, password VARCHAR NOT NULL, '
+    '"isAdmin" BOOLEAN NOT NULL, "isMegaAdmin" BOOLEAN, "firstConnection" BOOLEAN DEFAULT true)',
+    "CREATE INDEX ix_users_id ON users (id)",
+    "CREATE INDEX ix_users_name ON users (name)",
+    "CREATE TABLE gift_lists (id INTEGER NOT NULL PRIMARY KEY, slug VARCHAR NOT NULL UNIQUE, label VARCHAR NOT NULL, "
+    "enabled BOOLEAN DEFAULT true, owner_id INTEGER REFERENCES users(id), is_common BOOLEAN NOT NULL DEFAULT false)",
+    "CREATE INDEX ix_gift_lists_id ON gift_lists (id)",
+    'CREATE TABLE ideas (id INTEGER NOT NULL PRIMARY KEY, name VARCHAR NOT NULL, comment VARCHAR, "userId" INTEGER REFERENCES users(id), '
+    'availability BOOLEAN NOT NULL, "takenById" INTEGER REFERENCES users(id), price FLOAT, url VARCHAR, image VARCHAR, '
+    '"imageDisplay" VARCHAR NOT NULL, list_id INTEGER REFERENCES gift_lists(id))',
+    "CREATE INDEX ix_ideas_id ON ideas (id)",
+    "CREATE INDEX ix_ideas_name ON ideas (name)",
+    "CREATE TABLE refresh_tokens (id INTEGER NOT NULL PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), "
+    "refresh_token VARCHAR NOT NULL UNIQUE, expires_at DATE)",
+    "CREATE INDEX ix_refresh_tokens_id ON refresh_tokens (id)",
+    "CREATE TABLE app_settings (key VARCHAR NOT NULL PRIMARY KEY, value VARCHAR NOT NULL)",
+]
+
+
+def test_upgrade_aligns_production_schema(tmp_path):
+    """0003 aligne la prod sur les modèles sans changer le comportement des valeurs vides."""
+    db = tmp_path / "prod.db"
+    with _sync_engine(db).begin() as conn:
+        for statement in PRODUCTION_SCHEMA:
+            conn.execute(text(statement))
+        conn.execute(text(
+            'INSERT INTO users (id, name, password, "isAdmin", "isMegaAdmin", "firstConnection") '
+            "VALUES (1, 'paul', 'x', 0, NULL, NULL)"
+        ))
+        conn.execute(text("INSERT INTO gift_lists (id, slug, label, enabled, is_common) VALUES (1, 'paul', 'Liste de Paul', NULL, 0)"))
+        conn.execute(text(
+            "INSERT INTO refresh_tokens (id, user_id, refresh_token, expires_at) "
+            "VALUES (1, 1, 'avec-date', '2026-10-01'), (2, 1, 'sans-date', NULL)"
+        ))
+
+    command.upgrade(_alembic(db), "head")
+
+    con = sqlite3.connect(db)
+    assert _revision(db) == HEAD
+    assert con.execute('SELECT "isMegaAdmin", "firstConnection" FROM users').fetchall() == [(0, 0)]
+    assert con.execute("SELECT enabled FROM gift_lists").fetchall() == [(0,)]
+    tokens = con.execute("SELECT refresh_token, expires_at FROM refresh_tokens").fetchall()
+    assert [t for t, _ in tokens] == ["avec-date"]
+    assert tokens[0][1].startswith("2026-10-02 00:00:00")
+    assert _schema_diff(db) == []
