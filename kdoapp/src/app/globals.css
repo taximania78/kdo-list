@@ -185,3 +185,15 @@
 .animate-snowfall { animation: snowfall linear infinite; }
 .animate-fadeInUp { animation: fadeInUp 0.8s ease-out forwards; }
 /* ─────────── ALIAS HÉRITÉS : fin ─────────── */
+
+/* ── Panneau / fenêtre ── */
+@keyframes sheet-fade { from { opacity: 0; } }
+@keyframes sheet-up { from { transform: translateY(100%); } }
+@keyframes sheet-dialog-in { from { opacity: 0; transform: translateY(8px); } }
+
+.sheet-overlay[data-state='open'] { animation: sheet-fade 0.2s ease-out; }
+.sheet-panel[data-state='open'] { animation: sheet-up 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+@media (min-width: 45rem) {
+  .sheet-panel[data-state='open'] { animation: sheet-dialog-in 0.24s cubic-bezier(0.2, 0.8, 0.2, 1); }
+}
