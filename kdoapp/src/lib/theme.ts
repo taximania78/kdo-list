@@ -1,11 +1,42 @@
-export const THEME_NAME = process.env.NEXT_PUBLIC_THEME || 'default';
-export const isChristmas = THEME_NAME === 'christmas';
+export const THEME_NAMES = ['default', 'christmas'] as const;
+export type ThemeName = (typeof THEME_NAMES)[number];
 
-export const themeConfig = {
-  bodyClass: isChristmas ? 'theme-christmas' : '',
-  appTitle: isChristmas ? 'Liste de Noël' : "Liste d'anniversaire",
-  titleEmoji: isChristmas ? '🎄' : '',
-  showSnowflakes: isChristmas,
-} as const;
+export type ThemeConfig = {
+  label: string;
+  bodyClass: string;
+  appTitle: string;
+  titleEmoji: string;
+  showSnowflakes: boolean;
+  swatches: string[]; // aperçu dans l'admin (primaire, secondaire, fond)
+};
 
-export type ThemeName = 'default' | 'christmas';
+export const DEFAULT_THEME: ThemeName = 'default';
+
+export const THEMES: Record<ThemeName, ThemeConfig> = {
+  default: {
+    label: 'Anniversaire',
+    bodyClass: '',
+    appTitle: "Liste d'anniversaire",
+    titleEmoji: '',
+    showSnowflakes: false,
+    swatches: ['#F28482', '#84A59D', '#F7EDE2'],
+  },
+  christmas: {
+    label: 'Noël',
+    bodyClass: 'theme-christmas',
+    appTitle: 'Liste de Noël',
+    titleEmoji: '🎄',
+    showSnowflakes: true,
+    swatches: ['#B91C1C', '#15803D', '#166534'],
+  },
+};
+
+export function isThemeName(value: unknown): value is ThemeName {
+  return typeof value === 'string' && (THEME_NAMES as readonly string[]).includes(value);
+}
+
+// TEMPORAIRE : exports hérités, supprimés en Task 4 une fois les composants migrés vers useTheme().
+const legacyName = process.env.NEXT_PUBLIC_THEME;
+const legacyTheme: ThemeName = isThemeName(legacyName) ? legacyName : DEFAULT_THEME;
+export const isChristmas = legacyTheme === 'christmas';
+export const themeConfig = THEMES[legacyTheme];
