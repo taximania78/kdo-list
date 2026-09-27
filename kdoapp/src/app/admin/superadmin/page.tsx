@@ -8,6 +8,7 @@ import { Mountains_of_Christmas, Atma } from 'next/font/google';
 import { Shield, UserPlus, Trash2, Key, Loader2, ListChecks, Pencil } from 'lucide-react';
 import api from '@/lib/api';
 import { useTheme } from '@/components/ThemeProvider';
+import ThemeSettings from '@/components/ThemeSettings';
 
 type User = {
   id: number;
@@ -529,6 +530,8 @@ function Superadmin() {
             </div>
           )}
         </div>
+
+        <ThemeSettings />
       </div>
 
       {/* Delete confirmation dialog */}
