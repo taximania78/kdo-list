@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="fr" data-theme="noel">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kdo-list · Papier cadeau</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@500..700&family=DM+Mono:wght@400;500&family=Figtree:wght@400..700&display=swap" rel="stylesheet">
+<style>
+/* ---------- Tokens ---------- */
+:root, [data-theme="anniversaire"] {
+  --bg: #F2E4C9;
+  --paper: #FFFBF2;
+  --paper-2: #F6ECD8;
+  --ink: #2B2019;
+  --ink-muted: #7A6752;
+  --on-bg: #2B2019;
+  --on-bg-muted: #7A6752;
+  --accent: #D8432B;
+  --accent-hover: #B8351F;
+  --accent-deep: #9E2C19;
+  --on-accent: #FFF8EE;
+  --foil: #E9A93A;
+  --mine: #2F6B4E;
+  --line: #E4D4B3;
+  --grain: .10;
+  --grain-blend: multiply;
+  --shadow: drop-shadow(0 1px 0 rgba(60,40,20,.10)) drop-shadow(0 10px 14px rgba(90,60,25,.16));
+  --wrap-a: #D8432B;  /* papier du déballage */
+  --wrap-dot: #FFE3B8;
+}
+[data-theme="noel"] {
+  --bg: #10291F;
+  --paper: #F6EEDD;
+  --paper-2: #EADFC7;
+  --ink: #221D16;
+  --ink-muted: #6E6352;
+  --on-bg: #F6EEDD;
+  --on-bg-muted: #9DB3A6;
+  --accent: #C21F3A;
+  --accent-hover: #A0162E;
+  --accent-deep: #7E0F22;
+  --on-accent: #FFF6EA;
+  --foil: #D4A548;
+  --mine: #1F6B45;
+  --line: #D8C9A8;
+  --grain: .07;
+  --grain-blend: overlay;
+  --shadow: drop-shadow(0 1px 0 rgba(0,0,0,.25)) drop-shadow(0 12px 16px rgba(0,0,0,.35));
+  --wrap-a: #0B1F17;
+  --wrap-dot: #D4A548;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--bg); color: var(--on-bg); transition: background .4s; }
+body { font-family: 'Figtree', sans-serif; font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
+a { color: inherit; }
+svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+.display { font-family: 'Bricolage Grotesque', sans-serif; font-variation-settings: 'opsz' 96; font-weight: 800; letter-spacing: -.035em; line-height: .92; }
+.mono { font-family: 'DM Mono', monospace; font-feature-settings: 'tnum'; }
+.hand { font-family: 'Caveat', cursive; font-weight: 600; }
+
+/* ---------- Preview chrome ---------- */
+.pv-bar { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: space-between; padding: 12px 20px; background: var(--bg); border-bottom: 1px solid color-mix(in srgb, var(--on-bg) 14%, transparent); }
+.pv-bar .brand { font-family: 'Bricolage Grotesque'; font-weight: 700; font-size: 18px; letter-spacing: -.02em; }
+.pv-bar .brand span { color: var(--on-bg-muted); font-weight: 500; }
+.seg { display: inline-flex; padding: 3px; border-radius: 8px; background: color-mix(in srgb, var(--on-bg) 10%, transparent); }
+.seg button { padding: 7px 14px; border-radius: 6px; font-weight: 600; font-size: 14px; color: var(--on-bg-muted); }
+.seg button[aria-pressed="true"] { background: var(--paper); color: var(--ink); }
+.pv-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pv-link { font-size: 14px; font-weight: 600; padding: 7px 12px; border-radius: 6px; border: 1.5px solid color-mix(in srgb, var(--on-bg) 25%, transparent); }
+
+.pv { max-width: 1320px; margin: 0 auto; padding: 48px 20px 120px; }
+.pv-intro { display: grid; gap: 24px; grid-template-columns: 1fr; margin-bottom: 72px; }
+@media (min-width: 900px) { .pv-intro { grid-template-columns: 7fr 5fr; align-items: end; } }
+.pv-intro h1 { font-size: clamp(48px, 8vw, 104px); }
+.pv-intro p { color: var(--on-bg-muted); max-width: 52ch; font-size: 17px; }
+.pv-intro .hand { font-size: 28px; color: var(--foil); display: block; margin-top: 8px; }
+.pv-sec { margin-top: 88px; }
+.pv-sec > header { display: grid; gap: 8px; margin-bottom: 28px; max-width: 760px; }
+.pv-sec h2 { font-size: clamp(32px, 4.4vw, 52px); }
+.pv-sec header p { color: var(--on-bg-muted); }
+.pv-num { font-family: 'DM Mono'; font-size: 13px; color: var(--foil); letter-spacing: .08em; }
+.phones { display: flex; flex-wrap: wrap; gap: 28px; margin-top: 28px; align-items: flex-start; }
+.cap { font-size: 13px; color: var(--on-bg-muted); margin-top: 10px; font-family: 'DM Mono'; }
+
+/* ---------- Devices ---------- */
+.device { position: relative; container-type: inline-size; overflow: hidden; background: var(--bg); transition: background .4s; }
+.device-desktop { width: 100%; height: 780px; border-radius: 12px; outline: 1px solid color-mix(in srgb, var(--on-bg) 18%, transparent); }
+.device-desktop .chrome { position: relative; z-index: 6; height: 34px; display: flex; align-items: center; gap: 6px; padding: 0 12px; background: color-mix(in srgb, var(--on-bg) 8%, var(--bg)); }
+.device-desktop .chrome i { width: 10px; height: 10px; border-radius: 50%; background: color-mix(in srgb, var(--on-bg) 25%, transparent); }
+.device-desktop .chrome span { margin-left: 12px; font: 12px 'DM Mono'; color: var(--on-bg-muted); padding: 3px 10px; border-radius: 5px; background: color-mix(in srgb, var(--on-bg) 8%, transparent); }
+.device-mobile { width: 390px; max-width: 100%; height: 800px; border-radius: 46px; border: 11px solid #151311; box-shadow: 0 30px 60px -30px rgba(0,0,0,.6); }
+.device-mobile .notch { position: absolute; z-index: 20; top: 8px; left: 50%; translate: -50% 0; width: 110px; height: 30px; border-radius: 20px; background: #151311; }
+.scroller { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; z-index: 1; scrollbar-width: thin; }
+.device-desktop .scroller { top: 34px; }
+.device-mobile .app-head { height: auto; padding-top: 50px; padding-bottom: 12px; }
+.snow { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; display: none; }
+.device-desktop .snow { top: 34px; height: calc(100% - 34px); }
+.snow.back { z-index: 0; }
+.snow.front { z-index: 5; }
+[data-theme="noel"] .snow { display: block; }
+.device::after { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: var(--grain); mix-blend-mode: var(--grain-blend);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .15 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* ---------- App shell ---------- */
+.app { min-height: 100%; display: flex; flex-direction: column; }
+.app-head { position: sticky; top: 0; z-index: 4; display: flex; align-items: center; justify-content: space-between; height: 60px; padding: 0 20px; background: var(--bg); transition: background .4s; }
+.wordmark { display: flex; align-items: center; gap: 9px; font-family: 'Bricolage Grotesque'; font-weight: 700; font-size: 19px; letter-spacing: -.02em; text-decoration: none; }
+.wordmark svg { color: var(--accent); width: 24px; height: 24px; }
+[data-theme="noel"] .wordmark svg { color: var(--foil); }
+.top-nav { display: none; gap: 4px; align-items: center; }
+.top-nav a { text-decoration: none; font-weight: 600; font-size: 15px; padding: 8px 12px; border-radius: 6px; color: var(--on-bg-muted); }
+.top-nav a.on { color: var(--on-bg); box-shadow: inset 0 -2px 0 var(--accent); border-radius: 0; }
+.top-nav a:hover { color: var(--on-bg); }
+.app-main { flex: 1; padding: 8px 20px 32px; }
+.tabbar { position: sticky; bottom: 0; z-index: 4; display: grid; grid-template-columns: repeat(3, 1fr); padding: 8px 12px 22px; background: var(--paper); color: var(--ink-muted); border-top: 1px solid var(--line); }
+.tabbar a { display: grid; justify-items: center; gap: 2px; text-decoration: none; font-size: 12px; font-weight: 600; padding: 6px 0; }
+.tabbar a.on { color: var(--accent); }
+@container (min-width: 720px) {
+  .top-nav { display: flex; }
+  .tabbar { display: none; }
+  .app-head { height: 72px; padding: 0 40px; }
+  .app-main { padding: 16px 40px 64px; }
+}
+
+/* ---------- Buttons ---------- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 15px; padding: 11px 16px; border-radius: 6px; transition: background .15s, transform .1s; }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--accent); color: var(--on-accent); }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-ghost { color: var(--ink); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--ink) 22%, transparent); }
+.btn-ghost:hover { background: var(--paper-2); }
+.btn-block { width: 100%; }
+
+/* ---------- Snow cap (Noël) ---------- */
+.snowcap { display: none; position: absolute; z-index: 3; left: -3px; right: -3px; top: -8px; height: 15px; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 16' preserveAspectRatio='none'%3E%3Cpath d='M0 9 Q6 2 14 6 T30 5 T46 8 T62 3 T80 7 T96 4 T114 8 T130 3 T148 7 T166 4 T184 8 T200 5 V16 H0Z' fill='%23FFFFFF'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+  filter: drop-shadow(0 2px 1px rgba(20,50,60,.22)); }
+[data-theme="noel"] .snowcap { display: block; }
+.tag .snowcap { left: 4px; right: 18px; }
+@container (min-width: 720px) { .tag .snowcap { left: 17px; right: 17px; } }
+
+/* ---------- Selector ---------- */
+.sel { display: grid; gap: 28px; }
+.sel-head h1 { font-size: 44px; }
+.sel-head .hand { display: block; font-size: 24px; color: var(--on-bg-muted); margin-top: 10px; }
+[data-theme="noel"] .sel-head .hand { color: var(--foil); }
+.bands { display: grid; gap: 18px; padding-top: 6px; }
+.band { position: relative; display: block; text-decoration: none; filter: var(--shadow); transition: transform .2s ease-out; }
+.band:hover { transform: translateY(-2px); }
+.band-paper { position: relative; display: grid; align-content: center; min-height: 104px; padding: 16px 110px 16px 20px; background: var(--paper); color: var(--ink); border-radius: 8px; overflow: hidden; }
+.band-name { font-size: 44px; }
+.band-count { font-size: 13px; color: var(--ink-muted); margin-top: 6px; }
+.band-ribbon { position: absolute; top: 0; bottom: 0; right: 64px; width: 18px; background: linear-gradient(90deg, var(--accent-deep) 0 2px, var(--accent) 2px calc(100% - 2px), var(--accent-deep) calc(100% - 2px)); }
+.band-arrow { position: absolute; right: 20px; top: 50%; translate: 0 -50%; color: var(--ink); }
+.band.common .band-ribbon { background: linear-gradient(90deg, #a47a22 0 2px, var(--foil) 2px calc(100% - 2px), #a47a22 calc(100% - 2px)); }
+@container (min-width: 720px) {
+  .sel { grid-template-columns: 5fr 7fr; gap: 56px; align-items: start; padding-top: 24px; }
+  .sel-head { position: sticky; top: 96px; }
+  .sel-head h1 { font-size: clamp(56px, 7.4cqi, 92px); }
+  .band-paper { min-height: 124px; padding-left: 28px; }
+  .band-name { font-size: 58px; }
+}
+
+/* ---------- List detail ---------- */
+.back { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--on-bg-muted); text-decoration: none; margin-bottom: 14px; }
+.lh-of { font-size: 17px; color: var(--on-bg-muted); }
+.lh-name { font-size: clamp(88px, 30cqi, 190px); margin: 2px 0 18px -4px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 26px; }
+.chip { display: inline-flex; gap: 6px; align-items: baseline; padding: 7px 12px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--on-bg-muted); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--on-bg) 22%, transparent); }
+.chip .mono { font-size: 12px; }
+.chip.on { background: var(--on-bg); color: var(--bg); box-shadow: none; }
+@container (min-width: 720px) {
+  .lh { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 24px; margin-bottom: 32px; }
+  .lh-name { margin-bottom: 0; font-size: clamp(110px, 17cqi, 210px); }
+  .chips { margin-bottom: 12px; }
+}
+
+.tags { display: grid; gap: 22px; }
+@container (min-width: 720px) { .tags { grid-template-columns: repeat(auto-fill, minmax(236px, 1fr)); gap: 44px 24px; padding-top: 18px; } }
+
+.tag { position: relative; filter: var(--shadow); }
+.tag-paper { position: relative; background: var(--paper); color: var(--ink); display: grid; grid-template-columns: 38% 1fr; gap: 0 14px; padding: 12px 34px 12px 12px;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%); border-radius: 8px 0 0 8px; }
+.hole { position: absolute; width: 11px; height: 11px; border-radius: 50%; background: var(--bg); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ink) 18%, transparent); right: 13px; top: 50%; translate: 0 -50%; transition: background .4s; }
+.string { display: none; }
+.tag-img { position: relative; aspect-ratio: 1; border-radius: 5px; overflow: hidden; display: grid; place-items: center; background: var(--tint); }
+.tag-img .word { font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 30px; letter-spacing: -.04em; color: color-mix(in srgb, var(--tint-ink) 75%, transparent); transform: rotate(-8deg); }
+.t1 { --tint: color-mix(in srgb, var(--accent) 16%, var(--paper)); --tint-ink: var(--accent-deep); }
+.t2 { --tint: color-mix(in srgb, var(--foil) 30%, var(--paper)); --tint-ink: #7a5412; }
+.t3 { --tint: color-mix(in srgb, var(--mine) 16%, var(--paper)); --tint-ink: var(--mine); }
+.tag-body { display: flex; flex-direction: column; min-width: 0; }
+.tag-name { font-family: 'Bricolage Grotesque'; font-weight: 700; font-size: 19px; line-height: 1.12; letter-spacing: -.02em; font-variation-settings: 'opsz' 24; }
+.tag-meta { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; margin-top: 6px; font-size: 14px; }
+.price { font-size: 14px; }
+.plink { color: var(--accent); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+.tag-comment { font-size: 14px; color: var(--ink-muted); margin-top: 4px; }
+.tag-action { margin-top: auto; padding-top: 10px; }
+.tag-action .btn { padding: 9px 12px; font-size: 14px; width: 100%; }
+.taken-note { font-size: 12px; color: var(--ink-muted); letter-spacing: .02em; }
+.mine-note { font-size: 21px; color: var(--mine); line-height: 1; display: block; margin-bottom: 6px; }
+@container (min-width: 720px) {
+  .tag-paper { grid-template-columns: 1fr; gap: 0; padding: 30px 14px 16px; clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%, 0 18px); border-radius: 0 0 8px 8px; }
+  .hole { right: auto; left: 50%; top: 11px; translate: -50% 0; }
+  .string { display: block; position: absolute; z-index: 3; left: 50%; top: -26px; width: 30px; height: 44px; translate: -50% 0; pointer-events: none; }
+  .tag-img { aspect-ratio: 4 / 3; margin-bottom: 14px; }
+  .tag-img .word { font-size: 44px; }
+  .tag-name { font-size: 21px; }
+  .tag-action { padding-top: 16px; }
+}
+
+/* Emballage (réservé) */
+.wrap { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+.is-taken .wrap { opacity: 1; }
+.rib-h, .rib-v { position: absolute; background: var(--accent); }
+.rib-h { left: 0; right: 0; top: 50%; height: 14px; translate: 0 -50%; transform-origin: left center;
+  background: linear-gradient(180deg, var(--accent-deep) 0 2px, var(--accent) 2px calc(100% - 2px), var(--accent-deep) calc(100% - 2px)); }
+.rib-v { top: 0; bottom: 0; left: 50%; width: 14px; translate: -50% 0; transform-origin: center top;
+  background: linear-gradient(90deg, var(--accent-deep) 0 2px, var(--accent) 2px calc(100% - 2px), var(--accent-deep) calc(100% - 2px)); }
+.bow { position: absolute; left: 50%; top: 50%; width: 64px; height: 46px; translate: -50% -58%; }
+.stamp { position: absolute; left: 6px; bottom: 8px; white-space: nowrap; font: 500 9px/1 'DM Mono'; letter-spacing: .08em; text-transform: uppercase; padding: 5px 7px; border: 1.5px solid currentColor; border-radius: 3px; background: color-mix(in srgb, var(--paper) 88%, transparent); color: var(--ink-muted); rotate: -6deg; }
+.is-mine .stamp { color: var(--mine); }
+@container (min-width: 720px) { .stamp { font-size: 12px; left: 10px; bottom: 10px; } .bow { width: 84px; height: 60px; } .rib-h, .rib-v { --w: 18px; } .rib-h { height: 18px; } .rib-v { width: 18px; } }
+
+/* Nouage */
+.tying .rib-h { animation: ribH .34s cubic-bezier(.2,.7,.2,1) both; }
+.tying .rib-v { animation: ribV .34s .16s cubic-bezier(.2,.7,.2,1) both; }
+.tying .bow { animation: bowPop .5s .42s cubic-bezier(.3,1.6,.5,1) both; }
+.tying .stamp { animation: stampIn .32s .78s cubic-bezier(.2,.9,.3,1.2) both; }
+.tying .mine-note { animation: fadeUp .4s .95s ease-out both; }
+@keyframes ribH { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes ribV { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes bowPop { 0% { transform: scale(0) rotate(-20deg); } 100% { transform: scale(1) rotate(0); } }
+@keyframes stampIn { 0% { opacity: 0; transform: scale(1.8); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.untying .wrap { animation: untie .35s ease-in both; }
+@keyframes untie { to { opacity: 0; transform: scale(.96); } }
+
+/* ---------- Feuille de réservation ---------- */
+.layer { position: absolute; inset: 0; z-index: 10; display: none; }
+.layer.open { display: block; }
+.backdrop { position: absolute; inset: 0; background: rgba(15,10,5,.42); animation: fadeIn .2s both; }
+@keyframes fadeIn { from { opacity: 0; } }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; background: var(--paper); color: var(--ink); border-radius: 16px 16px 0 0; padding: 10px 20px 30px; animation: sheetUp .28s cubic-bezier(.2,.8,.2,1) both; }
+.sheet .grab { width: 40px; height: 4px; border-radius: 4px; background: var(--line); margin: 0 auto 18px; }
+@keyframes sheetUp { from { transform: translateY(100%); } }
+.sheet-row { display: grid; grid-template-columns: 72px 1fr; gap: 14px; align-items: center; margin: 14px 0 20px; padding: 12px; background: var(--paper-2); border-radius: 8px; }
+.sheet-row .tag-img .word { font-size: 17px; }
+.sheet h3 { font-size: 30px; }
+.sheet .hand { font-size: 22px; color: var(--mine); }
+.sheet-actions { display: grid; gap: 10px; margin-top: 18px; }
+@container (min-width: 720px) {
+  .sheet { left: 50%; top: 50%; bottom: auto; right: auto; width: 440px; translate: -50% -50%; border-radius: 10px; padding: 28px; animation: dialogIn .24s cubic-bezier(.2,.8,.2,1) both; }
+  .sheet .grab { display: none; }
+  .sheet-actions { grid-template-columns: 1fr 1fr; }
+  .sheet-actions .btn-primary { order: 2; }
+}
+@keyframes dialogIn { from { opacity: 0; transform: translateY(8px); } }
+
+/* ---------- Admin ---------- */
+.adm-title { font-size: 40px; margin: 4px 0 16px; }
+.scroll-chips { display: flex; gap: 8px; overflow-x: auto; margin: 0 -20px 16px; padding: 0 20px 4px; scrollbar-width: none; }
+.scroll-chips .chip { flex-shrink: 0; }
+.sheetlist { background: var(--paper); color: var(--ink); border-radius: 8px; filter: var(--shadow); margin-top: 16px; }
+.row { display: grid; grid-template-columns: 48px 1fr; gap: 12px; padding: 14px; align-items: center; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+.row .tag-img { width: 48px; border-radius: 5px; }
+.row .tag-img .word { font-size: 12px; }
+.row-name { font-weight: 700; line-height: 1.2; }
+.row-meta { font-size: 12.5px; color: var(--ink-muted); margin-top: 2px; }
+.row-actions { grid-column: 2; display: flex; gap: 16px; font-size: 14px; font-weight: 700; margin-top: 4px; }
+.row-actions .edit { color: var(--accent); }
+.row-actions .del { color: var(--ink-muted); }
+.tabs { display: flex; gap: 22px; border-bottom: 1.5px solid color-mix(in srgb, var(--on-bg) 18%, transparent); margin-bottom: 20px; }
+.tabs a { text-decoration: none; font-weight: 700; font-size: 15px; padding: 10px 0; color: var(--on-bg-muted); }
+.tabs a.on { color: var(--on-bg); box-shadow: inset 0 -2.5px 0 var(--accent); }
+.themes { display: grid; gap: 14px; }
+.theme-opt { display: grid; grid-template-columns: 96px 1fr; gap: 14px; align-items: center; padding: 12px; background: var(--paper); color: var(--ink); border-radius: 8px; box-shadow: inset 0 0 0 2px transparent; }
+.theme-opt.sel { box-shadow: inset 0 0 0 2.5px var(--accent); }
+.mini { position: relative; height: 72px; border-radius: 6px; overflow: hidden; }
+.mini i { position: absolute; left: 14px; top: 16px; width: 44px; height: 40px; border-radius: 3px; }
+.mini b { position: absolute; left: 32px; top: 16px; width: 7px; height: 40px; }
+.theme-opt h4 { font-family: 'Bricolage Grotesque'; font-size: 20px; letter-spacing: -.02em; }
+.theme-opt p { font-size: 13px; color: var(--ink-muted); }
+.theme-opt .on { font: 500 11px 'DM Mono'; color: var(--mine); letter-spacing: .06em; text-transform: uppercase; }
+
+/* ---------- Login ---------- */
+.login h1 { font-size: 48px; margin: 36px 0 28px; }
+.field { display: grid; gap: 6px; margin-bottom: 16px; }
+.field label { font-size: 14px; font-weight: 600; color: var(--on-bg-muted); }
+.field input { font: inherit; padding: 13px 14px; border-radius: 6px; border: 1.5px solid var(--line); background: var(--paper); color: var(--ink); }
+.field input:focus { outline: 2.5px solid var(--accent); outline-offset: 1px; }
+.login .hand { display: block; margin-top: 18px; font-size: 22px; color: var(--on-bg-muted); }
+[data-theme="noel"] .login .hand { color: var(--foil); }
+
+/* ---------- Système ---------- */
+.sys { display: grid; gap: 24px; }
+@media (min-width: 900px) { .sys { grid-template-columns: 1fr 1fr; } }
+.pal { border-radius: 10px; padding: 22px; }
+.pal h3 { font-family: 'Bricolage Grotesque'; font-size: 28px; letter-spacing: -.02em; margin-bottom: 16px; }
+.sw { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 10px; }
+.sw div { border-radius: 6px; overflow: hidden; font: 12px/1.35 'DM Mono'; }
+.sw div span { display: block; height: 58px; }
+.sw div p { padding: 7px 8px; }
+.type-spec { display: grid; gap: 28px; }
+.spec { display: grid; gap: 6px; padding-bottom: 24px; border-bottom: 1px solid color-mix(in srgb, var(--on-bg) 15%, transparent); }
+.spec small { font: 12px 'DM Mono'; color: var(--on-bg-muted); letter-spacing: .04em; }
+
+/* ---------- Déballage (ouverture) ---------- */
+.unwrap { position: fixed; inset: 0; z-index: 100; cursor: pointer; }
+.unwrap.gone { display: none; }
+.flap { position: absolute; top: 0; bottom: 0; width: 51%; background-color: var(--wrap-a);
+  background-image: radial-gradient(var(--wrap-dot) 2.2px, transparent 2.6px), radial-gradient(var(--wrap-dot) 2.2px, transparent 2.6px);
+  background-size: 34px 34px; background-position: 0 0, 17px 17px; }
+[data-theme="noel"] .flap { background-image: radial-gradient(var(--wrap-dot) 1.4px, transparent 1.8px), radial-gradient(color-mix(in srgb, var(--wrap-dot) 50%, transparent) 1px, transparent 1.4px); background-size: 28px 28px; background-position: 0 0, 14px 14px; }
+.flap.l { left: 0; clip-path: polygon(0 0, 100% 0, 97% 6%, 100% 12%, 96% 19%, 100% 26%, 97% 33%, 100% 41%, 96% 48%, 100% 56%, 97% 63%, 100% 71%, 96% 78%, 100% 86%, 97% 93%, 100% 100%, 0 100%); }
+.flap.r { right: 0; clip-path: polygon(3% 0, 100% 0, 100% 100%, 0 100%, 4% 93%, 0 86%, 3% 78%, 0 71%, 4% 63%, 0 56%, 3% 48%, 0 41%, 4% 33%, 0 26%, 3% 19%, 0 12%, 4% 6%); }
+.u-rib-v, .u-rib-h { position: absolute; background: var(--foil); box-shadow: 0 0 0 2px color-mix(in srgb, var(--foil) 60%, #000) inset; }
+.u-rib-v { top: 0; bottom: 0; left: 50%; width: 34px; translate: -50% 0; }
+.u-rib-h { left: 0; right: 0; top: 50%; height: 34px; translate: 0 -50%; }
+.u-bow { position: absolute; left: 50%; top: 50%; width: 180px; height: 130px; translate: -50% -60%; }
+.u-hint { position: absolute; left: 0; right: 0; bottom: 36px; text-align: center; font: 500 13px 'DM Mono'; letter-spacing: .08em; color: var(--wrap-dot); text-transform: uppercase; }
+.unwrap.play .u-bow { animation: uBow .32s ease-in both; }
+.unwrap.play .u-rib-v { animation: uRibV .38s .12s cubic-bezier(.6,0,.4,1) both; }
+.unwrap.play .u-rib-h { animation: uRibH .38s .12s cubic-bezier(.6,0,.4,1) both; }
+.unwrap.play .u-hint { animation: uFade .2s both; }
+.unwrap.play .flap.l { animation: uL .6s .42s cubic-bezier(.7,0,.2,1) both; }
+.unwrap.play .flap.r { animation: uR .6s .42s cubic-bezier(.7,0,.2,1) both; }
+@keyframes uBow { to { transform: scale(.2) rotate(40deg); opacity: 0; } }
+@keyframes uRibV { to { transform: translateY(-110%); } }
+@keyframes uRibH { to { transform: translateX(110%); } }
+@keyframes uFade { to { opacity: 0; } }
+@keyframes uL { to { transform: translateX(-104%) rotate(-4deg); } }
+@keyframes uR { to { transform: translateX(104%) rotate(4deg); } }
+</style>
+</head>
+<body>
+
+<!-- Ouverture « déballage » -->
+<div class="unwrap" id="unwrap" title="Toucher pour ouvrir">
+  <div class="flap l"></div><div class="flap r"></div>
+  <div class="u-rib-v"></div><div class="u-rib-h"></div>
+  <svg class="u-bow" viewBox="0 0 64 46"><use href="#bow"/></svg>
+  <div class="u-hint">Toucher pour ouvrir</div>
+</div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="bow" viewBox="0 0 64 46">
+      <path d="M31 22 C22 4 4 2 5 14 C6 25 22 26 31 22Z" fill="var(--accent)" stroke="var(--accent-deep)" stroke-width="1.6"/>
+      <path d="M33 22 C42 4 60 2 59 14 C58 25 42 26 33 22Z" fill="var(--accent)" stroke="var(--accent-deep)" stroke-width="1.6"/>
+      <path d="M12 12 C18 15 24 18 30 21 M52 12 C46 15 40 18 34 21" stroke="var(--accent-deep)" stroke-width="1.2" fill="none" opacity=".55"/>
+      <path d="M29 24 L20 44 L25 41 L28 45 L31 25Z M35 24 L44 44 L39 41 L36 45 L33 25Z" fill="var(--accent)" stroke="var(--accent-deep)" stroke-width="1.4"/>
+      <rect x="27" y="17" width="10" height="10" rx="3" fill="var(--accent-deep)"/>
+    </symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  </defs>
+</svg>
+
+<div class="pv-bar">
+  <div class="brand">kdo-list <span>· Papier cadeau</span></div>
+  <div class="pv-actions">
+    <div class="seg" role="group" aria-label="Thème">
+      <button data-set-theme="anniversaire" aria-pressed="false">Anniversaire</button>
+      <button data-set-theme="noel" aria-pressed="true">Noël</button>
+    </div>
+    <button class="pv-link" id="replay">Rejouer l'ouverture</button>
+  </div>
+</div>
+
+<main class="pv">
+  <section class="pv-intro">
+    <div>
+      <h1 class="display">Ouvrir l'app, c'est déballer un cadeau.</h1>
+    </div>
+    <div>
+      <p>Du papier, un ruban, des étiquettes. Les deux thèmes partagent exactement les mêmes écrans : seules les couleurs et deux couches décoratives changent. Tout est cliquable : réserve un cadeau pour voir le ruban se nouer, change de thème en haut.</p>
+      <span class="hand">chut… personne ne saura qui offre quoi</span>
+    </div>
+  </section>
+
+  <!-- 1. Choisir une liste -->
+  <section class="pv-sec">
+    <header>
+      <span class="pv-num">01 · CHOISIR UNE LISTE</span>
+      <h2 class="display">Un annuaire de prénoms</h2>
+      <p>Le prénom est le héros de l'écran. Chaque liste est une bande de papier traversée d'un ruban ; la liste commune a le ruban doré. Sur ordinateur, la question reste à gauche pendant qu'on parcourt.</p>
+    </header>
+    <div class="device device-desktop" data-snow>
+      <div class="chrome"><i></i><i></i><i></i><span>kdo-list / list</span></div>
+      <canvas class="snow back"></canvas>
+      <div class="scroller"><div class="app" data-screen="selector"></div></div>
+      <canvas class="snow front"></canvas>
+    </div>
+    <div class="phones">
+      <div>
+        <div class="device device-mobile" data-snow>
+          <div class="notch"></div>
+          <canvas class="snow back"></canvas>
+          <div class="scroller"><div class="app" data-screen="selector"></div></div>
+          <canvas class="snow front"></canvas>
+        </div>
+        <p class="cap">Mobile · une bande par ligne, sous le pouce</p>
+      </div>
+      <div>
+        <div class="device device-mobile" data-snow>
+          <div class="notch"></div>
+          <canvas class="snow back"></canvas>
+          <div class="scroller"><div class="app" data-screen="login"></div></div>
+          <canvas class="snow front"></canvas>
+        </div>
+        <p class="cap">Connexion · même grammaire, sans carte blanche</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Une liste -->
+  <section class="pv-sec">
+    <header>
+      <span class="pv-num">02 · LA LISTE DE LÉA</span>
+      <h2 class="display">Des étiquettes, pas des cartes</h2>
+      <p>Chaque idée est une étiquette découpée avec son trou et sa ficelle. Un cadeau réservé reste à sa place et devient « emballé » : ruban croisé, nœud, tampon. L'image reste nette. Appuie sur « Je prends ! ».</p>
+    </header>
+    <div class="device device-desktop" data-snow>
+      <div class="chrome"><i></i><i></i><i></i><span>kdo-list / list / lea</span></div>
+      <canvas class="snow back"></canvas>
+      <div class="scroller"><div class="app" data-screen="list"></div></div>
+      <canvas class="snow front"></canvas>
+      <div class="layer"></div>
+    </div>
+    <div class="phones">
+      <div>
+        <div class="device device-mobile" data-snow>
+          <div class="notch"></div>
+          <canvas class="snow back"></canvas>
+          <div class="scroller"><div class="app" data-screen="list"></div></div>
+          <canvas class="snow front"></canvas>
+          <div class="layer"></div>
+        </div>
+        <p class="cap">Mobile · étiquettes horizontales compactes</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Admin -->
+  <section class="pv-sec">
+    <header>
+      <span class="pv-num">03 · ADMIN</span>
+      <h2 class="display">Plus de tableau qui déborde</h2>
+      <p>Sur mobile, le tableau devient des lignes empilées sur une seule feuille. Le super-admin a trois onglets ; le choix du thème montre les deux papiers en miniature.</p>
+    </header>
+    <div class="phones">
+      <div>
+        <div class="device device-mobile" data-snow>
+          <div class="notch"></div>
+          <canvas class="snow back"></canvas>
+          <div class="scroller"><div class="app" data-screen="admin"></div></div>
+          <canvas class="snow front"></canvas>
+        </div>
+        <p class="cap">Modifier les idées</p>
+      </div>
+      <div>
+        <div class="device device-mobile" data-snow>
+          <div class="notch"></div>
+          <canvas class="snow back"></canvas>
+          <div class="scroller"><div class="app" data-screen="theme"></div></div>
+          <canvas class="snow front"></canvas>
+        </div>
+        <p class="cap">Super admin · Thème</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Système -->
+  <section class="pv-sec">
+    <header>
+      <span class="pv-num">04 · LE SYSTÈME</span>
+      <h2 class="display">Deux papiers, une seule grammaire</h2>
+      <p>Les composants ne connaissent que des jetons. Passer de l'anniversaire à Noël change le papier, le ruban et la neige ; rien d'autre.</p>
+    </header>
+    <div class="sys">
+      <div class="pal" style="background:#F2E4C9;color:#2B2019">
+        <h3>Anniversaire</h3>
+        <div class="sw">
+          <div style="background:#FFFBF2"><span style="background:#F2E4C9"></span><p>fond<br>#F2E4C9</p></div>
+          <div style="background:#FFFBF2"><span style="background:#FFFBF2;box-shadow:inset 0 -1px #E4D4B3"></span><p>étiquette<br>#FFFBF2</p></div>
+          <div style="background:#FFFBF2"><span style="background:#2B2019"></span><p>encre<br>#2B2019</p></div>
+          <div style="background:#FFFBF2"><span style="background:#7A6752"></span><p>discret<br>#7A6752</p></div>
+          <div style="background:#FFFBF2"><span style="background:#D8432B"></span><p>ruban<br>#D8432B</p></div>
+          <div style="background:#FFFBF2"><span style="background:#E9A93A"></span><p>moutarde<br>#E9A93A</p></div>
+          <div style="background:#FFFBF2"><span style="background:#2F6B4E"></span><p>à toi<br>#2F6B4E</p></div>
+        </div>
+      </div>
+      <div class="pal" style="background:#10291F;color:#F6EEDD">
+        <h3>Noël</h3>
+        <div class="sw" style="color:#221D16">
+          <div style="background:#F6EEDD"><span style="background:#10291F"></span><p>sapin<br>#10291F</p></div>
+          <div style="background:#F6EEDD"><span style="background:#F6EEDD;box-shadow:inset 0 -1px #D8C9A8"></span><p>ivoire<br>#F6EEDD</p></div>
+          <div style="background:#F6EEDD"><span style="background:#221D16"></span><p>encre<br>#221D16</p></div>
+          <div style="background:#F6EEDD"><span style="background:#9DB3A6"></span><p>givre<br>#9DB3A6</p></div>
+          <div style="background:#F6EEDD"><span style="background:#C21F3A"></span><p>canneberge<br>#C21F3A</p></div>
+          <div style="background:#F6EEDD"><span style="background:#D4A548"></span><p>or<br>#D4A548</p></div>
+          <div style="background:#F6EEDD"><span style="background:#1F6B45"></span><p>à toi<br>#1F6B45</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="type-spec" style="margin-top:48px">
+      <div class="spec"><small>TITRES & PRÉNOMS · BRICOLAGE GROTESQUE 800</small><div class="display" style="font-size:clamp(56px,9vw,120px)">Camille</div></div>
+      <div class="spec"><small>NOM D'UNE IDÉE · BRICOLAGE GROTESQUE 700</small><div style="font:700 26px/1.1 'Bricolage Grotesque';letter-spacing:-.02em">Coffret de thés de Noël</div></div>
+      <div class="spec"><small>TEXTE & FORMULAIRES · FIGTREE 400 / 600</small><p style="max-width:60ch;font-size:17px">Plutôt la version en blanc, taille M. Le lien vers la boutique est juste en dessous si tu veux vérifier le modèle.</p></div>
+      <div class="spec"><small>PRIX & TAMPONS · DM MONO</small><div class="mono" style="font-size:24px">42,00 € · RÉSERVÉ · 12 IDÉES</div></div>
+      <div class="spec" style="border:0"><small>UNE SEULE TOUCHE MANUSCRITE · CAVEAT 600</small><div class="hand" style="font-size:40px;color:var(--foil)">chut… c'est toi qui l'offres</div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const ic = (id, cls = 'i') => `<svg class="${cls}"><use href="#i-${id}"/></svg>`;
+const lists = [
+  { name: 'Léa', n: 12, t: 5 },
+  { name: 'Hugo', n: 8, t: 2 },
+  { name: 'Camille', n: 15, t: 9 },
+  { name: 'Antoine', n: 6, t: 1 },
+  { name: 'Liste commune', n: 4, t: 0, common: true },
+];
+const gifts = [
+  { id: 1, name: 'Casque audio sans fil', w: 'Casque', price: '89,00 €', link: true, comment: 'Plutôt en blanc', tint: 't1', state: 'free' },
+  { id: 2, name: 'Coffret de thés de Noël', w: 'Thés', price: '24,90 €', link: true, tint: 't2', state: 'free' },
+  { id: 3, name: 'Le Petit Prince, édition illustrée', w: 'Livre', price: '32,00 €', link: true, tint: 't3', state: 'mine' },
+  { id: 4, name: 'Pull en laine côtelée', w: 'Pull', price: '55,00 €', comment: 'Taille M', tint: 't1', state: 'taken' },
+  { id: 5, name: 'Carnet à dessin A4', w: 'Carnet', tint: 't2', state: 'free' },
+  { id: 6, name: "Entrée au musée d'Orsay pour deux", w: 'Orsay', price: '32,00 €', link: true, tint: 't3', state: 'free' },
+  { id: 7, name: 'Plante suspendue (pothos)', w: 'Pothos', price: '18,50 €', tint: 't1', state: 'taken' },
+  { id: 8, name: 'Puzzle 1000 pièces', w: 'Puzzle', price: '21,00 €', link: true, tint: 't2', state: 'free' },
+];
+
+const head = (active) => `
+  <header class="app-head">
+    <a class="wordmark" href="#">${ic('gift')}<span class="wm-title"></span></a>
+    <nav class="top-nav"><a class="${active==='list'?'on':''}" href="#">Listes</a><a class="${active==='admin'?'on':''}" href="#">Mes idées</a><a href="#">Admin</a><a href="#">Déconnexion</a></nav>
+  </header>`;
+const tabbar = (active) => `
+  <nav class="tabbar">
+    <a class="${active==='list'?'on':''}" href="#">${ic('list')}Listes</a>
+    <a class="${active==='admin'?'on':''}" href="#">${ic('pencil')}Mes idées</a>
+    <a class="${active==='super'?'on':''}" href="#">${ic('shield')}Admin</a>
+  </nav>`;
+
+const img = (g) => `<div class="tag-img ${g.tint}"><span class="word">${g.w}</span>
+  <div class="wrap"><i class="rib-h"></i><i class="rib-v"></i><svg class="bow"><use href="#bow"/></svg><span class="stamp">${g.state === 'mine' ? 'À toi · chut !' : 'Déjà emballé'}</span></div></div>`;
+
+function tagHTML(g) {
+  const action = g.state === 'free'
+    ? `<button class="btn btn-primary" data-take="${g.id}">${ic('gift')}Je prends !</button>`
+    : g.state === 'mine'
+      ? `<span class="hand mine-note">chut… c'est toi qui l'offres</span><button class="btn btn-ghost" data-untie="${g.id}">Dénouer le ruban</button>`
+      : `<span class="mono taken-note">Quelqu'un s'en occupe</span>`;
+  return `<article class="tag ${g.state !== 'free' ? 'is-taken' : ''} ${g.state === 'mine' ? 'is-mine' : ''}" data-id="${g.id}">
+    <svg class="string" viewBox="0 0 30 44"><path d="M15 38 C 6 26, 24 16, 15 0" fill="none" stroke="var(--foil)" stroke-width="2"/></svg>
+    <div class="snowcap"></div>
+    <div class="tag-paper"><span class="hole"></span>${img(g)}
+      <div class="tag-body">
+        <h3 class="tag-name">${g.name}</h3>
+        <p class="tag-meta">${g.price ? `<span class="mono price">${g.price}</span>` : ''}${g.link ? `<a class="plink" href="#">Voir le produit ↗</a>` : ''}</p>
+        ${g.comment ? `<p class="tag-comment">${g.comment}</p>` : ''}
+        <div class="tag-action">${action}</div>
+      </div>
+    </div>
+  </article>`;
+}
+
+const screens = {
+  selector: () => `${head('list')}
+    <main class="app-main"><div class="sel">
+      <div class="sel-head"><h1 class="display">À qui fait-on plaisir ?</h1><span class="hand">personne ne saura qui offre quoi</span></div>
+      <div class="bands">${lists.map(l => `
+        <a class="band ${l.common ? 'common' : ''}" href="#"><div class="snowcap"></div>
+          <div class="band-paper"><span class="display band-name">${l.name}</span>
+            <span class="mono band-count">${l.n} idées · ${l.t} déjà emballées</span>
+            <i class="band-ribbon"></i>${ic('arrow', 'i band-arrow')}</div></a>`).join('')}
+      </div></div></main>${tabbar('list')}`,
+  list: () => {
+    const free = gifts.filter(g => g.state === 'free').length, mine = gifts.filter(g => g.state === 'mine').length;
+    return `${head('list')}
+    <main class="app-main">
+      <a class="back" href="#">${ic('back')}Toutes les listes</a>
+      <div class="lh"><div><p class="lh-of">Les envies de</p><h1 class="display lh-name">Léa</h1></div>
+        <div class="chips"><span class="chip on">Tout <span class="mono">${gifts.length}</span></span><span class="chip">Libres <span class="mono c-free">${free}</span></span><span class="chip">Les miens <span class="mono c-mine">${mine}</span></span></div></div>
+      <div class="tags">${gifts.map(tagHTML).join('')}</div>
+    </main>${tabbar('list')}`;
+  },
+  login: () => `<header class="app-head"><a class="wordmark" href="#">${ic('gift')}<span class="wm-title"></span></a></header>
+    <main class="app-main login"><h1 class="display">Les bonnes idées restent en famille.</h1>
+      <div class="field"><label>Nom d'utilisateur</label><input value="camille"></div>
+      <div class="field"><label>Mot de passe</label><input type="password" value="secret123"></div>
+      <button class="btn btn-primary btn-block" style="margin-top:6px;padding:14px">Se connecter</button>
+      <span class="hand">mot de passe oublié ? demande à l'admin</span></main>`,
+  admin: () => `${head('admin')}
+    <main class="app-main">
+      <h1 class="display adm-title">Modifier les idées</h1>
+      <div class="scroll-chips">${lists.map((l, i) => `<span class="chip ${i === 0 ? 'on' : ''}">${l.name}</span>`).join('')}</div>
+      <button class="btn btn-primary btn-block">${ic('plus')}Ajouter une idée</button>
+      <div class="sheetlist">${gifts.slice(0, 6).map(g => `
+        <div class="row"><div class="tag-img ${g.tint}"><span class="word">${g.w}</span></div>
+          <div><div class="row-name">${g.name}</div><div class="row-meta mono">${g.price || 'sans prix'} · Léa</div></div>
+          <div class="row-actions"><button class="edit">Modifier</button><button class="del">Supprimer</button></div></div>`).join('')}
+      </div></main>${tabbar('admin')}`,
+  theme: () => `${head('super')}
+    <main class="app-main">
+      <h1 class="display adm-title">Super admin</h1>
+      <nav class="tabs"><a href="#">Personnes</a><a href="#">Listes</a><a class="on" href="#">Thème</a></nav>
+      <div class="themes">
+        <div class="theme-opt" data-opt="anniversaire"><div class="mini" style="background:#F2E4C9"><i style="background:#FFFBF2"></i><b style="background:#D8432B"></b></div>
+          <div><h4>Anniversaire</h4><p>Papier kraft, ruban vermillon</p><span class="on"></span></div></div>
+        <div class="theme-opt" data-opt="noel"><div class="mini" style="background:#10291F"><i style="background:#F6EEDD"></i><b style="background:#C21F3A"></b></div>
+          <div><h4>Noël</h4><p>Sapin de nuit, 250 flocons</p><span class="on"></span></div></div>
+      </div>
+      <button class="btn btn-primary btn-block" style="margin-top:20px;padding:14px">Appliquer à toute la famille</button>
+    </main>${tabbar('super')}`,
+};
+
+function renderAll() {
+  document.querySelectorAll('.app[data-screen]').forEach(el => { el.innerHTML = screens[el.dataset.screen](); });
+  syncThemeBits();
+}
+function syncThemeBits() {
+  const t = document.documentElement.dataset.theme;
+  document.querySelectorAll('.wm-title').forEach(e => e.textContent = t === 'noel' ? 'Liste de Noël' : "Liste d'anniversaire");
+  document.querySelectorAll('.theme-opt').forEach(o => { const on = o.dataset.opt === t; o.classList.toggle('sel', on); o.querySelector('.on').textContent = on ? '● Actif' : ''; });
+}
+
+/* ---------- Réservation ---------- */
+function openSheet(device, g) {
+  const layer = device.querySelector('.layer');
+  layer.innerHTML = `<div class="backdrop" data-close></div>
+    <div class="sheet"><div class="grab"></div>
+      <h3 class="display">Tu t'en occupes ?</h3>
+      <div class="sheet-row"><div class="tag-img ${g.tint}"><span class="word">${g.w}</span></div>
+        <div><div class="tag-name" style="font-size:18px">${g.name}</div>${g.price ? `<div class="mono price" style="margin-top:4px">${g.price}</div>` : ''}</div></div>
+      <span class="hand">Léa n'en saura rien.</span>
+      <div class="sheet-actions"><button class="btn btn-primary" data-confirm="${g.id}">Oui, je l'emballe</button><button class="btn btn-ghost" data-close>Annuler</button></div>
+    </div>`;
+  layer.classList.add('open');
+}
+function closeSheet(device) { const l = device.querySelector('.layer'); if (l) { l.classList.remove('open'); l.innerHTML = ''; } }
+function setState(id, state, animate) {
+  gifts.find(g => g.id === id).state = state;
+  document.querySelectorAll('.app[data-screen="list"]').forEach(app => {
+    const old = app.querySelector(`.tag[data-id="${id}"]`);
+    const tmp = document.createElement('div'); tmp.innerHTML = tagHTML(gifts.find(g => g.id === id)).trim();
+    const fresh = tmp.firstChild; if (animate) fresh.classList.add('tying');
+    old.replaceWith(fresh);
+    const free = gifts.filter(g => g.state === 'free').length, mine = gifts.filter(g => g.state === 'mine').length;
+    app.querySelector('.c-free').textContent = free; app.querySelector('.c-mine').textContent = mine;
+  });
+}
+document.addEventListener('click', (e) => {
+  const take = e.target.closest('[data-take]'), confirm = e.target.closest('[data-confirm]'), untie = e.target.closest('[data-untie]'), close = e.target.closest('[data-close]');
+  if (take) { const device = take.closest('.device'); openSheet(device, gifts.find(g => g.id === +take.dataset.take)); }
+  if (close) closeSheet(close.closest('.device'));
+  if (confirm) { closeSheet(confirm.closest('.device')); setState(+confirm.dataset.confirm, 'mine', true); }
+  if (untie) {
+    const id = +untie.dataset.untie;
+    document.querySelectorAll(`.tag[data-id="${id}"]`).forEach(t => t.classList.add('untying'));
+    setTimeout(() => setState(id, 'free', false), 340);
+  }
+  if (e.target.closest('a[href="#"]')) e.preventDefault();
+});
+
+/* ---------- Thème ---------- */
+document.querySelectorAll('[data-set-theme]').forEach(b => b.addEventListener('click', () => {
+  document.documentElement.dataset.theme = b.dataset.setTheme;
+  document.querySelectorAll('[data-set-theme]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  syncThemeBits(); playUnwrap();
+}));
+
+/* ---------- Déballage ---------- */
+const unwrap = document.getElementById('unwrap');
+let unwrapTimer;
+function playUnwrap() {
+  clearTimeout(unwrapTimer);
+  unwrap.classList.remove('gone', 'play'); void unwrap.offsetWidth;
+  unwrapTimer = setTimeout(() => openUnwrap(), 700);
+}
+function openUnwrap() {
+  clearTimeout(unwrapTimer);
+  unwrap.classList.add('play');
+  unwrapTimer = setTimeout(() => unwrap.classList.add('gone'), 1100);
+}
+unwrap.addEventListener('click', openUnwrap);
+document.getElementById('replay').addEventListener('click', playUnwrap);
+
+/* ---------- Neige : 250 flocons par écran, deux couches ---------- */
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+function sprite(r, soft) {
+  const c = document.createElement('canvas'), s = Math.ceil(r * 2 + 4) * DPR; c.width = c.height = s;
+  const x = c.getContext('2d'), g = x.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(soft ? .35 : .6, 'rgba(255,255,255,.9)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0, 0, s, s); return c;
+}
+const SPR = { back: [1, 1.6, 2.2, 3].map(r => sprite(r, false)), front: [4, 5.5, 7].map(r => sprite(r, true)) };
+class Snow {
+  constructor(device) {
+    this.d = device; this.back = device.querySelector('.snow.back'); this.front = device.querySelector('.snow.front');
+    this.visible = false; this.resize(); this.flakes = [];
+    for (let i = 0; i < 250; i++) this.flakes.push(this.make(i >= 230, true));
+    new ResizeObserver(() => this.resize()).observe(device);
+    new IntersectionObserver(([en]) => { this.visible = en.isIntersecting; }).observe(device);
+  }
+  resize() {
+    const r = this.back.getBoundingClientRect(); this.w = r.width; this.h = r.height;
+    [this.back, this.front].forEach(c => { c.width = this.w * DPR; c.height = this.h * DPR; });
+  }
+  make(front, anywhere) {
+    const set = front ? SPR.front : SPR.back, k = Math.floor(Math.random() * set.length);
+    return { front, img: set[k], x: Math.random() * this.w, y: anywhere ? Math.random() * this.h : -12,
+      vy: front ? 1.1 + Math.random() * .9 : .25 + k * .18 + Math.random() * .35, amp: 0.3 + Math.random() * .8,
+      ph: Math.random() * 6.28, a: front ? .85 : .55 + Math.random() * .45 };
+  }
+  tick(t) {
+    if (!this.visible || document.documentElement.dataset.theme !== 'noel') return;
+    if (this.back.clientWidth !== this.w || this.back.clientHeight !== this.h) {
+      const was = this.w; this.resize();
+      if (!was) this.flakes.forEach(p => { p.x = Math.random() * this.w; p.y = Math.random() * this.h; });
+    }
+    const b = this.back.getContext('2d'), f = this.front.getContext('2d');
+    b.setTransform(DPR, 0, 0, DPR, 0, 0); f.setTransform(DPR, 0, 0, DPR, 0, 0);
+    b.clearRect(0, 0, this.w, this.h); f.clearRect(0, 0, this.w, this.h);
+    for (const p of this.flakes) {
+      p.y += p.vy; p.x += Math.sin(t / 1400 + p.ph) * p.amp * .5;
+      if (p.y > this.h + 10) Object.assign(p, this.make(p.front, false));
+      if (p.x < -10) p.x = this.w + 5; if (p.x > this.w + 10) p.x = -5;
+      const ctx = p.front ? f : b, s = p.img.width / DPR;
+      ctx.globalAlpha = p.a; ctx.drawImage(p.img, p.x - s / 2, p.y - s / 2, s, s);
+    }
+  }
+}
+
+renderAll();
+const snows = [...document.querySelectorAll('[data-snow]')].map(d => new Snow(d));
+(function loop(t) { snows.forEach(s => s.tick(t)); requestAnimationFrame(loop); })(0);
+playUnwrap();
+</script>
+</body>
+</html>
