@@ -4,7 +4,9 @@ services:
       context: ./server
       network: host
     depends_on:
-      - db
+      db:
+        # L'API lance les migrations au démarrage : attendre que PostgreSQL accepte les connexions
+        condition: service_healthy
     container_name: kdo-api
     volumes:
       - ./kdoapp/public/kdos:/shared/kdos
@@ -46,6 +48,11 @@ services:
     image: postgres:17
     container_name: kdo-db
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     environment:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
