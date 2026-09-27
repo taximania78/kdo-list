@@ -67,6 +67,51 @@ describe('UsersPanel', () => {
     });
     await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
   });
+
+  it('toggles two different users concurrently, each button disabled independently', async () => {
+    const twoToggleable = [
+      { id: 2, name: 'Léa', isAdmin: false, isMegaAdmin: false },
+      { id: 3, name: 'Théo', isAdmin: false, isMegaAdmin: false },
+    ];
+    let resolveA: (value: unknown) => void = () => {};
+    let resolveB: (value: unknown) => void = () => {};
+    mocked.patch
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveA = resolve;
+          })
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveB = resolve;
+          })
+      );
+
+    render(<UsersPanel users={twoToggleable} meId={1} onChanged={jest.fn()} />);
+    const [buttonA, buttonB] = screen.getAllByRole('button', { name: 'Rendre admin' });
+
+    await userEvent.click(buttonA);
+    await userEvent.click(buttonB);
+
+    expect(mocked.patch).toHaveBeenCalledTimes(2);
+    expect(mocked.patch).toHaveBeenNthCalledWith(1, expect.stringMatching(/\/api\/users\/2\/role$/), { isAdmin: true });
+    expect(mocked.patch).toHaveBeenNthCalledWith(2, expect.stringMatching(/\/api\/users\/3\/role$/), { isAdmin: true });
+    expect(buttonA).toBeDisabled();
+    expect(buttonB).toBeDisabled();
+
+    await act(async () => {
+      resolveA({ status: 200, data: {} });
+    });
+    await waitFor(() => expect(buttonA).not.toBeDisabled());
+    expect(buttonB).toBeDisabled();
+
+    await act(async () => {
+      resolveB({ status: 200, data: {} });
+    });
+    await waitFor(() => expect(buttonB).not.toBeDisabled());
+  });
 });
 
 describe('ListsPanel', () => {

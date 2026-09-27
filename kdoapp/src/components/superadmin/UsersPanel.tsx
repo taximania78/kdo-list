@@ -21,22 +21,26 @@ function roleLabel(user: AppUser): string {
 export function UsersPanel({ users, meId, onChanged }: UsersPanelProps) {
   const [toDelete, setToDelete] = useState<AppUser | null>(null);
   const [roleError, setRoleError] = useState<string | null>(null);
-  const [roleUpdating, setRoleUpdating] = useState<number | null>(null);
-  const roleBusy = useRef(false); // garde contre le double appui, avant même le re-rendu
+  const [roleUpdating, setRoleUpdating] = useState<Set<number>>(new Set());
+  const roleBusy = useRef<Set<number>>(new Set()); // garde par personne contre le double appui, avant même le re-rendu
 
   const toggleRole = async (user: AppUser) => {
-    if (roleBusy.current) return;
-    roleBusy.current = true;
+    if (roleBusy.current.has(user.id)) return;
+    roleBusy.current.add(user.id);
     setRoleError(null);
-    setRoleUpdating(user.id);
+    setRoleUpdating((prev) => new Set(prev).add(user.id));
     try {
       await api.patch(`${ApiAdress}/api/users/${user.id}/role`, { isAdmin: !user.isAdmin });
       onChanged();
     } catch (error) {
       setRoleError(apiErrorMessage(error, "Le rôle n'a pas pu être modifié."));
     } finally {
-      roleBusy.current = false;
-      setRoleUpdating(null);
+      roleBusy.current.delete(user.id);
+      setRoleUpdating((prev) => {
+        const next = new Set(prev);
+        next.delete(user.id);
+        return next;
+      });
     }
   };
 
@@ -65,7 +69,7 @@ export function UsersPanel({ users, meId, onChanged }: UsersPanelProps) {
                 <button
                   type="button"
                   onClick={() => toggleRole(user)}
-                  disabled={roleUpdating === user.id}
+                  disabled={roleUpdating.has(user.id)}
                   className={`${actionClass} disabled:pointer-events-none disabled:opacity-50`}
                 >
                   {user.isAdmin ? 'Retirer admin' : 'Rendre admin'}
