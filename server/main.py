@@ -508,47 +508,62 @@ async def modify_item_api(update_data: IdeaUpdate, db: AsyncSession = Depends(ge
     return {"success": False, "message": "Aucune modification effectuée"}
 
 
+def _can_see_idea(idea: Idea, user: CurrentUser) -> bool:
+    """On ne réserve que ce qu'on voit : liste active et, pour un admin, ni ses propres idées ni la liste commune."""
+    gift_list = idea.gift_list
+    if gift_list is not None and not gift_list.enabled:
+        return False
+    if user.is_admin and (idea.userId == user.id or (gift_list is not None and gift_list.is_common)):
+        return False
+    return True
+
+
+async def _get_idea_with_list(db: AsyncSession, kdo_pk: int) -> Idea:
+    result = await db.execute(select(Idea).options(joinedload(Idea.gift_list)).where(Idea.id == kdo_pk))
+    idea = result.scalars().first()
+    if not idea:
+        raise HTTPException(status_code=404, detail="Idée non trouvée")
+    return idea
+
+
 @app.post("/api/take-api/{kdo_pk}")
 async def take_api(kdo_pk: int, current_user: CurrentUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
-    # Vérifier si l'objet existe
-    result = await db.execute(select(Idea).where(Idea.id == kdo_pk))
-    idea = result.scalars().first()
-    
-    if not idea:
-        raise HTTPException(status_code=404, detail="Idée non trouvée")
+    idea = await _get_idea_with_list(db, kdo_pk)
+    if not _can_see_idea(idea, current_user):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Non autorisé")
 
-    if idea.availability == True:
-        stmt = (
+    # Mise à jour conditionnelle : si deux personnes réservent en même temps, une seule gagne
+    result = await db.execute(
         update(Idea)
-        .where(Idea.id == kdo_pk)
+        .where(Idea.id == kdo_pk, Idea.availability == True)
         .values(takenById=current_user.id, availability=False)
-        )
-        await db.execute(stmt)
-        await db.commit()
-        return {"success": True, "message": "Idée prise avec succès"}
-    else:
+    )
+    await db.commit()
+    if result.rowcount == 0:
         raise HTTPException(status_code=400, detail="Idée déjà prise")
+    return {"success": True, "message": "Idée prise avec succès"}
 
-@app.post("/api/untake-api/{kdo_pk}", dependencies=[Depends(get_current_user)])
-async def untake_api(kdo_pk: int, db: AsyncSession = Depends(get_db)):
-    # Vérifier si l'objet existe
-    result = await db.execute(select(Idea).where(Idea.id == kdo_pk))
-    idea = result.scalars().first()
-    
-    if not idea:
-        raise HTTPException(status_code=404, detail="Idée non trouvée")
-
-    if idea.availability == False:
-        stmt = (
-        update(Idea)
-        .where(Idea.id == kdo_pk)
-        .values(takenById=None, availability=True)
-        )
-        await db.execute(stmt)
-        await db.commit()
-        return {"success": True, "message": "Idée libérée avec succès"}
-    else:
+@app.post("/api/untake-api/{kdo_pk}")
+async def untake_api(kdo_pk: int, current_user: CurrentUser = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    idea = await _get_idea_with_list(db, kdo_pk)
+    if idea.availability:
         raise HTTPException(status_code=400, detail="Idée déjà libérée")
+
+    # Celui qui a réservé peut libérer ; un admin aussi, sur une idée qu'il voit
+    is_taker = idea.takenById == current_user.id
+    if not is_taker and not (current_user.is_admin and _can_see_idea(idea, current_user)):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Non autorisé")
+
+    # Ne libère que si la réservation n'a pas changé entre-temps
+    result = await db.execute(
+        update(Idea)
+        .where(Idea.id == kdo_pk, Idea.availability == False, Idea.takenById == idea.takenById)
+        .values(takenById=None, availability=True)
+    )
+    await db.commit()
+    if result.rowcount == 0:
+        raise HTTPException(status_code=400, detail="Idée déjà libérée")
+    return {"success": True, "message": "Idée libérée avec succès"}
 
 @app.api_route("/api/users/", methods=["GET"], dependencies=[Depends(require_megaadmin)])
 async def get_username_api(request: Request, db: AsyncSession = Depends(get_db)):
