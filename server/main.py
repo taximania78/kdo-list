@@ -20,7 +20,7 @@ from database import get_db
 from auth import (
     create_access_token,
     create_refresh_token,
-    decode_jwt,
+    decode_jwt_of_type,
     hash_password,
     verify_password,
     verify_and_update_password,
@@ -324,55 +324,49 @@ async def login_api(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncS
 
 @app.post("/api/refresh/")
 async def refresh_token(data: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
-    # Vérifier si le token fourni est valide
     refresh_token = data.refresh_token
-    payload = decode_jwt(refresh_token)
-    
-    if not payload:
-        # Si le token est invalide ou expiré, on tente de le supprimer de la DB
-        result = await db.execute(select(RefreshToken).filter(RefreshToken.refresh_token == refresh_token))
-        expired_token = result.scalars().first()
-        if expired_token:
-            await db.delete(expired_token)
-            await db.commit()
+    payload = decode_jwt_of_type(refresh_token, "refresh")
+    try:
+        user_id = int(payload.get("sub")) if payload else None
+    except (TypeError, ValueError):
+        user_id = None
+
+    if user_id is None:
+        # Jeton invalide, expiré, de mauvais type (ex. ancien jeton sans claim type) ou mal formé :
+        # on le supprime de la DB s'il y est.
+        await db.execute(delete(RefreshToken).where(RefreshToken.refresh_token == refresh_token))
+        await db.commit()
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, 
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh Token invalide ou expiré"
         )
-    
+
     # Vérifier que le token existe bien en DB pour s'assurer qu'il n'a pas été révoqué.
     result = await db.execute(select(RefreshToken).filter(RefreshToken.refresh_token == refresh_token))
-    valid_token = result.scalars().first()
-    if not valid_token:
+    if not result.scalars().first():
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh Token non reconnu")
-    
-    result = await db.execute(select(User).filter(User.id == int(payload.get("sub"))))
+
+    result = await db.execute(select(User).filter(User.id == user_id))
     user = result.scalars().first()
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur non trouvé")
 
-    # Générer un nouveau access token avec les claims du refresh token
     new_access_token = create_access_token({
-        "sub": payload.get("sub"),
+        "sub": str(user.id),
         "username": user.name,
         "isAdmin": user.isAdmin,
         "isMegaAdmin": user.isMegaAdmin
     })
+    new_refresh_token_raw, expire = create_refresh_token({"sub": str(user.id)})
 
-    new_refresh_token_raw, expire = create_refresh_token({"sub": str(payload.get("sub"))})
-
-    new_refresh_token = RefreshToken(
-        user_id=int(payload.get("sub")),
-        refresh_token=new_refresh_token_raw,
-        expires_at=expire
-    )
-
-    # Supprimer les tokens expirés avant d'exécuter la requête et l'ancien refresh token
-    db.add(new_refresh_token)
-    await db.execute(delete(RefreshToken).where(or_(RefreshToken.refresh_token == refresh_token,RefreshToken.expires_at < datetime.now(timezone.utc))))
+    # Supprimer l'ancien refresh token et les expirés AVANT d'insérer le nouveau :
+    # émis dans la même seconde, le nouveau peut être identique à l'ancien (contrainte unique).
+    await db.execute(delete(RefreshToken).where(or_(RefreshToken.refresh_token == refresh_token, RefreshToken.expires_at < datetime.now(timezone.utc))))
+    db.add(RefreshToken(user_id=user.id, refresh_token=new_refresh_token_raw, expires_at=expire))
     await db.commit()
-    
-    return {"access_token": new_access_token, "refresh_token": new_refresh_token_raw, "token_type": "bearer", "isAdmin": payload.get("isAdmin"), "username": payload.get("username"), "isMegaAdmin": payload.get("isMegaAdmin")}
+
+    return {"access_token": new_access_token, "refresh_token": new_refresh_token_raw, "token_type": "bearer", "isAdmin": user.isAdmin, "username": user.name, "isMegaAdmin": user.isMegaAdmin}
+
 
 @app.get("/api/test_token/")
 def test_token():
