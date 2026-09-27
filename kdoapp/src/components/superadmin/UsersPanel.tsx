@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { apiErrorMessage } from '@/lib/apiError';
@@ -21,14 +21,22 @@ function roleLabel(user: AppUser): string {
 export function UsersPanel({ users, meId, onChanged }: UsersPanelProps) {
   const [toDelete, setToDelete] = useState<AppUser | null>(null);
   const [roleError, setRoleError] = useState<string | null>(null);
+  const [roleUpdating, setRoleUpdating] = useState<number | null>(null);
+  const roleBusy = useRef(false); // garde contre le double appui, avant même le re-rendu
 
   const toggleRole = async (user: AppUser) => {
+    if (roleBusy.current) return;
+    roleBusy.current = true;
     setRoleError(null);
+    setRoleUpdating(user.id);
     try {
       await api.patch(`${ApiAdress}/api/users/${user.id}/role`, { isAdmin: !user.isAdmin });
       onChanged();
     } catch (error) {
       setRoleError(apiErrorMessage(error, "Le rôle n'a pas pu être modifié."));
+    } finally {
+      roleBusy.current = false;
+      setRoleUpdating(null);
     }
   };
 
@@ -54,7 +62,12 @@ export function UsersPanel({ users, meId, onChanged }: UsersPanelProps) {
             </div>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold">
               {!user.isMegaAdmin && user.id !== meId && (
-                <button type="button" onClick={() => toggleRole(user)} className={actionClass}>
+                <button
+                  type="button"
+                  onClick={() => toggleRole(user)}
+                  disabled={roleUpdating === user.id}
+                  className={`${actionClass} disabled:pointer-events-none disabled:opacity-50`}
+                >
                   {user.isAdmin ? 'Retirer admin' : 'Rendre admin'}
                 </button>
               )}

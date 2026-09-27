@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import api from '@/lib/api';
 import { apiErrorMessage } from '@/lib/apiError';
 import type { ApiList } from '@/lib/lists';
@@ -33,7 +33,7 @@ export function ListsPanel({ users }: { users: AppUser[] }) {
   const [newOwner, setNewOwner] = useState('');
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
-  const [toggling, setToggling] = useState<string | null>(null);
+  const [togglingSlugs, setTogglingSlugs] = useState<Set<string>>(new Set());
   const [toggleError, setToggleError] = useState<string | null>(null);
   const [toEdit, setToEdit] = useState<ApiList | null>(null);
   const [editLabel, setEditLabel] = useState('');
@@ -42,13 +42,16 @@ export function ListsPanel({ users }: { users: AppUser[] }) {
   const [editError, setEditError] = useState<string | null>(null);
   const [toDelete, setToDelete] = useState<ApiList | null>(null);
 
+  const fetchSeq = useRef(0); // ignore une réponse arrivée après une plus récente (course entre deux toggles)
+
   const fetchLists = useCallback(async () => {
+    const seq = ++fetchSeq.current;
     try {
       const response = await api.get(`${ApiAdress}/api/lists/all/`);
-      setLists(response.data);
+      if (seq === fetchSeq.current) setLists(response.data);
     } catch (error) {
       console.error('Failed to fetch gift lists:', error);
-      setLists([]);
+      if (seq === fetchSeq.current) setLists([]);
     }
   }, []);
 
@@ -72,7 +75,7 @@ export function ListsPanel({ users }: { users: AppUser[] }) {
   };
 
   const handleToggle = async (slug: string) => {
-    setToggling(slug);
+    setTogglingSlugs((prev) => new Set(prev).add(slug));
     setToggleError(null);
     try {
       await api.patch(`${ApiAdress}/api/lists/${slug}/toggle`);
@@ -80,7 +83,11 @@ export function ListsPanel({ users }: { users: AppUser[] }) {
     } catch (error) {
       setToggleError(apiErrorMessage(error, "La visibilité n'a pas pu être modifiée."));
     } finally {
-      setToggling(null);
+      setTogglingSlugs((prev) => {
+        const next = new Set(prev);
+        next.delete(slug);
+        return next;
+      });
     }
   };
 
@@ -162,7 +169,7 @@ export function ListsPanel({ users }: { users: AppUser[] }) {
                   role="switch"
                   aria-checked={list.enabled}
                   aria-label={`Liste ${list.label} visible`}
-                  disabled={toggling === list.slug}
+                  disabled={togglingSlugs.has(list.slug)}
                   onClick={() => handleToggle(list.slug)}
                   className="group relative h-7 w-12 shrink-0 rounded-full bg-line transition-colors aria-checked:bg-mine disabled:opacity-50"
                 >
@@ -185,7 +192,9 @@ export function ListsPanel({ users }: { users: AppUser[] }) {
       <Sheet
         open={toEdit !== null}
         onOpenChange={(open) => {
-          if (!open) setToEdit(null);
+          // Ignore toute fermeture tant qu'un enregistrement est en cours : évite de perdre
+          // l'erreur et d'ouvrir un autre panneau avant que la requête en cours ne se termine.
+          if (!open && !saving) setToEdit(null);
         }}
         title="Modifier la liste"
       >
@@ -215,7 +224,7 @@ export function ListsPanel({ users }: { users: AppUser[] }) {
             <Button type="submit" pending={saving} disabled={!editLabel.trim()} className="md:order-2">
               Enregistrer
             </Button>
-            <Button variant="ghost" onClick={() => setToEdit(null)}>
+            <Button variant="ghost" onClick={() => setToEdit(null)} disabled={saving}>
               Annuler
             </Button>
           </div>

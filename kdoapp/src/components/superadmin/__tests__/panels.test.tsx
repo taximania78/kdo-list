@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ListsPanel } from '@/components/superadmin/ListsPanel';
 import { UsersPanel } from '@/components/superadmin/UsersPanel';
@@ -44,6 +44,29 @@ describe('UsersPanel', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Rendre admin' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Action interdite');
   });
+
+  it('disables the role button and sends a single request on a double click', async () => {
+    let resolvePatch: (value: unknown) => void = () => {};
+    mocked.patch.mockReturnValue(
+      new Promise((resolve) => {
+        resolvePatch = resolve;
+      })
+    );
+    const onChanged = jest.fn();
+    render(<UsersPanel users={users} meId={1} onChanged={onChanged} />);
+    const user = userEvent.setup();
+
+    const button = screen.getByRole('button', { name: 'Rendre admin' });
+    await user.dblClick(button);
+
+    expect(mocked.patch).toHaveBeenCalledTimes(1);
+    expect(button).toBeDisabled();
+
+    await act(async () => {
+      resolvePatch({ status: 200, data: {} });
+    });
+    await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
+  });
 });
 
 describe('ListsPanel', () => {
@@ -70,5 +93,81 @@ describe('ListsPanel', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Créer la liste' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Ce nom existe déjà');
+  });
+
+  it('ignores a close request while saving, and shows the error once the save fails', async () => {
+    let rejectPatch: (error: unknown) => void = () => {};
+    mocked.patch.mockReturnValue(
+      new Promise((_resolve, reject) => {
+        rejectPatch = reject;
+      })
+    );
+    render(<ListsPanel users={users} />);
+    await screen.findByText('Léa', { selector: 'p' });
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'Modifier' }));
+    await user.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    expect(mocked.patch).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Annuler' })).toBeDisabled();
+
+    await user.keyboard('{Escape}');
+    expect(screen.getByRole('heading', { name: 'Modifier la liste' })).toBeInTheDocument();
+
+    await act(async () => {
+      rejectPatch({ response: { data: { detail: 'Échec réseau' } } });
+    });
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Échec réseau');
+    expect(screen.getByRole('heading', { name: 'Modifier la liste' })).toBeInTheDocument();
+  });
+
+  it('keeps each toggle disabled independently while its own request is in flight', async () => {
+    mocked.get.mockResolvedValue({
+      status: 200,
+      data: [
+        { slug: 'lea', label: 'Léa', owner_id: 2, owner_name: 'Léa', is_common: false, enabled: true },
+        { slug: 'theo', label: 'Théo', owner_id: 3, owner_name: 'Théo', is_common: false, enabled: true },
+      ],
+    });
+    let resolveA: (value: unknown) => void = () => {};
+    let resolveB: (value: unknown) => void = () => {};
+    mocked.patch
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveA = resolve;
+          })
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveB = resolve;
+          })
+      );
+
+    render(<ListsPanel users={users} />);
+    await screen.findByText('Léa', { selector: 'p' });
+
+    const switchA = screen.getByRole('switch', { name: 'Liste Léa visible' });
+    const switchB = screen.getByRole('switch', { name: 'Liste Théo visible' });
+
+    await userEvent.click(switchA);
+    await userEvent.click(switchB);
+
+    expect(switchA).toBeDisabled();
+    expect(switchB).toBeDisabled();
+
+    await act(async () => {
+      resolveA({ status: 200, data: {} });
+    });
+    await waitFor(() => expect(switchA).not.toBeDisabled());
+    expect(switchB).toBeDisabled();
+
+    await act(async () => {
+      resolveB({ status: 200, data: {} });
+    });
+    await waitFor(() => expect(switchB).not.toBeDisabled());
   });
 });
