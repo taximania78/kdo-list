@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { advanceFlake, createFlakes, type Flake } from '@/lib/snow';
+import { advanceFlake, createFlakes, frameDelta, rescaleFlakes, type Flake } from '@/lib/snow';
 
 const MAX_DPR = 2;
 
@@ -38,9 +38,14 @@ export default function Snowfall() {
     const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
     let width = 0;
     let height = 0;
+    let flakes: Flake[] = [];
     const resize = () => {
+      const oldWidth = width;
+      const oldHeight = height;
       width = window.innerWidth;
       height = window.innerHeight;
+      // Les flocons gardent leur place relative au lieu de repartir tous ensemble.
+      rescaleFlakes(flakes, oldWidth, oldHeight, width, height);
       for (const canvas of [back, front]) {
         canvas.width = width * dpr;
         canvas.height = height * dpr;
@@ -50,7 +55,7 @@ export default function Snowfall() {
     };
     resize();
 
-    const flakes = createFlakes(width, height);
+    flakes = createFlakes(width, height);
     const sprites = new Map<string, HTMLCanvasElement>();
     const spriteFor = (flake: Flake) => {
       const diameter = Math.round(flake.radius * 2);
@@ -64,11 +69,14 @@ export default function Snowfall() {
     };
 
     let frame = 0;
+    let last: number | null = null; // null : première image (ou retour d'un onglet caché)
     const draw = (time: number) => {
+      const dt = last === null ? 1 : frameDelta(time, last);
+      last = time;
       backCtx.clearRect(0, 0, width, height);
       frontCtx.clearRect(0, 0, width, height);
       for (const flake of flakes) {
-        advanceFlake(flake, time, width, height);
+        advanceFlake(flake, time, width, height, dt);
         const ctx = flake.front ? frontCtx : backCtx;
         const sprite = spriteFor(flake);
         const size = sprite.width / dpr;
@@ -80,6 +88,7 @@ export default function Snowfall() {
 
     const onVisibility = () => {
       cancelAnimationFrame(frame);
+      last = null; // pas de rattrapage du temps passé en pause
       if (!document.hidden) frame = requestAnimationFrame(draw);
     };
 
@@ -105,7 +114,7 @@ export default function Snowfall() {
         ref={frontRef}
         aria-hidden
         data-testid="snow-front"
-        className="pointer-events-none fixed inset-0 z-30 h-full w-full"
+        className="pointer-events-none fixed inset-0 z-45 h-full w-full"
       />
     </>
   );

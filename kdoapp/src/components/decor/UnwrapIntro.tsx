@@ -9,12 +9,16 @@ const OPENING_MS = 1100;
 
 type Phase = 'hidden' | 'closed' | 'opening';
 
-/** Une fois par session ; jamais si le stockage est indisponible ou dans un navigateur automatisé (e2e). */
+/**
+ * Une fois par session ; jamais si le stockage est indisponible, dans un navigateur
+ * automatisé (e2e) ou quand l'appareil demande moins d'animations.
+ */
 export function shouldPlayUnwrap(
   storage: Pick<Storage, 'getItem' | 'setItem'> | null,
-  automated: boolean
+  automated: boolean,
+  reducedMotion = false
 ): boolean {
-  if (!storage || automated) return false;
+  if (!storage || automated || reducedMotion) return false;
   try {
     if (storage.getItem(STORAGE_KEY)) return false;
     storage.setItem(STORAGE_KEY, '1');
@@ -22,6 +26,10 @@ export function shouldPlayUnwrap(
   } catch {
     return false;
   }
+}
+
+function prefersReducedMotion(): boolean {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 }
 
 function sessionStorageOrNull(): Storage | null {
@@ -36,7 +44,7 @@ export default function UnwrapIntro() {
   const [phase, setPhase] = useState<Phase>('hidden');
 
   useEffect(() => {
-    if (!shouldPlayUnwrap(sessionStorageOrNull(), navigator.webdriver === true)) return;
+    if (!shouldPlayUnwrap(sessionStorageOrNull(), navigator.webdriver === true, prefersReducedMotion())) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPhase('closed');
   }, []);
@@ -58,7 +66,7 @@ export default function UnwrapIntro() {
       data-testid="unwrap"
       aria-hidden
       className={`unwrap ${phase === 'opening' ? 'is-opening' : ''}`}
-      onClick={() => setPhase('opening')}
+      onClick={() => setPhase('hidden')} // un toucher passe directement à la fin
     >
       <div className="unwrap-flap unwrap-flap-l" />
       <div className="unwrap-flap unwrap-flap-r" />

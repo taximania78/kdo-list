@@ -25,6 +25,10 @@ describe('shouldPlayUnwrap', () => {
     expect(shouldPlayUnwrap(failing, false)).toBe(false);
     expect(shouldPlayUnwrap(memoryStorage(), true)).toBe(false);
   });
+
+  it('never plays when the device asks for reduced motion', () => {
+    expect(shouldPlayUnwrap(memoryStorage(), false, true)).toBe(false);
+  });
 });
 
 describe('UnwrapIntro', () => {
@@ -46,10 +50,24 @@ describe('UnwrapIntro', () => {
     expect(screen.queryByTestId('unwrap')).toBeNull();
   });
 
-  it('opens right away on tap', () => {
+  it('skips straight to the end on tap', () => {
     render(<UnwrapIntro />);
     fireEvent.click(screen.getByTestId('unwrap'));
-    expect(screen.getByTestId('unwrap')).toHaveClass('is-opening');
+    expect(screen.queryByTestId('unwrap')).toBeNull();
+  });
+
+  it('does not play when reduced motion is requested', () => {
+    const original = window.matchMedia;
+    window.matchMedia = jest.fn().mockImplementation((query: string) => ({
+      matches: query === '(prefers-reduced-motion: reduce)',
+      media: query,
+    }));
+    try {
+      render(<UnwrapIntro />);
+      expect(screen.queryByTestId('unwrap')).toBeNull();
+    } finally {
+      window.matchMedia = original;
+    }
   });
 
   it('does not play again in the same session', () => {
