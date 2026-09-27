@@ -10,7 +10,7 @@ from fastapi import FastAPI, Depends, HTTPException, status, Request, Query
 from fastapi.responses import FileResponse, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import delete, or_, update
+from sqlalchemy import delete, func, or_, update
 from sqlalchemy.orm import joinedload, aliased
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -760,11 +760,13 @@ async def fetch_image(
 @app.get("/api/export-csv/", dependencies=[Depends(require_admin)])
 async def export_ideas_csv(db: AsyncSession = Depends(get_db)):
     user_owner = aliased(User)
+    # « Pour qui » : le propriétaire s'il a un compte, sinon le nom de la liste (liste commune, enfant sans compte…)
     query = select(
         Idea.name,
         Idea.url,
-        user_owner.name.label("user")
-    ).join(user_owner, Idea.userId == user_owner.id)
+        func.coalesce(user_owner.name, GiftList.label).label("user")
+    ).outerjoin(user_owner, Idea.userId == user_owner.id) \
+    .outerjoin(GiftList, Idea.list_id == GiftList.id)
 
     result = await db.execute(query)
     rows = result.mappings().all()
@@ -774,7 +776,7 @@ async def export_ideas_csv(db: AsyncSession = Depends(get_db)):
     writer.writerow(["Nom de l'idée", "URL", "Pour qui"])
 
     for row in rows:
-        writer.writerow([row["name"], row["url"] or "", row["user"]])
+        writer.writerow([row["name"], row["url"] or "", row["user"] or ""])
 
     csv_content = output.getvalue()
     output.close()

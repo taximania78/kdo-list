@@ -97,3 +97,28 @@ async def test_fetch_image_nested_traversal(client: AsyncClient):
     response = await client.get("/api/kdos/sub/..%2f..%2fserver%2fmain.py")
     assert response.status_code == 400
     assert response.json()["detail"] == "Chemin invalide"
+
+
+@pytest.mark.asyncio
+async def test_export_csv_includes_ideas_without_account(client: AsyncClient, admin_token: str, setup_test_utils):
+    """Liste commune et liste d'une personne sans compte : « Pour qui » = nom de la liste."""
+    from database import get_db
+    async_gen = app.dependency_overrides[get_db]()
+    session = await anext(async_gen)
+    common = GiftList(slug="commune", label="Liste commune", owner_id=None, is_common=True, enabled=True)
+    leo = GiftList(slug="leo", label="Liste de Léo", owner_id=None, is_common=False, enabled=True)
+    session.add_all([common, leo])
+    await session.flush()
+    session.add_all([
+        Idea(name="Idée commune", price=5.0, url="", image="", imageDisplay="unknown.jpg", comment="", userId=None, list_id=common.id),
+        Idea(name="Idée Léo", price=5.0, url="", image="", imageDisplay="unknown.jpg", comment="", userId=None, list_id=leo.id),
+    ])
+    await session.commit()
+    await async_gen.aclose()
+
+    response = await client.get("/api/export-csv/", headers={"Authorization": f"Bearer {admin_token}"})
+
+    assert response.status_code == 200
+    assert "Idée commune,,Liste commune" in response.text
+    assert "Idée Léo,,Liste de Léo" in response.text
+    assert "Idea 1,http://test1.com,user" in response.text
