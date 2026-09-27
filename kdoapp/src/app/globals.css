@@ -1,301 +1,187 @@
 @import 'tailwindcss';
 
+/* Point de bascule unique (DESIGN.md › Layout) : md = 720px */
+@theme {
+  --breakpoint-md: 45rem;
+}
+
+/* Jetons exposés à Tailwind : bg-paper, text-ink, bg-primary, font-display… */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-on-bg: var(--on-bg);
+  --color-on-bg-muted: var(--on-bg-muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-deep: var(--primary-deep);
+  --color-on-primary: var(--on-primary);
+  --color-foil: var(--foil);
+  --color-mine: var(--mine);
+  --color-line: var(--line);
+  --color-error: var(--error);
+  --color-hand: var(--hand);
+  --color-wordmark: var(--wordmark);
+  --font-sans: var(--font-figtree), ui-sans-serif, sans-serif;
+  --font-display: var(--font-bricolage), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-dm-mono), ui-monospace, monospace;
+  --font-hand: var(--font-caveat), cursive;
 }
 
-/* Theme variables */
 @layer base {
+  /* Thème Anniversaire (par défaut) — valeurs de DESIGN.md */
   :root {
-    --background: #F7EDE2;
-    --foreground: #2D3436;
-
-    /* Couleurs primaires - Corail #F28482 */
-    --primary: #F28482;
-    --primary-hover: #E07270;
-    --primary-light: #F5CAC3;
-    --on-primary: #ffffff;
-
-    /* Couleurs secondaires - Vert sauge #84A59D */
-    --secondary: #84A59D;
-    --secondary-hover: #6B8B83;
-    --secondary-light: #B8CCC7;
-
-    /* Surfaces et fonds */
-    --surface: #ffffff;
-    --surface-hover: #F7EDE2;
-    --surface-muted: #F5CAC3;
-
-    /* Texte - tons gris chaleureux */
-    --text-primary: #2D3436;
-    --text-secondary: #636E72;
-    --text-muted: #636c70;
-
-    /* Bordures - tons beige */
-    --border: #E8DED5;
-    --border-light: #F7EDE2;
-
-    /* Ombres */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-primary: 0 10px 15px -3px rgba(242, 132, 130, 0.3);
-
-    /* États */
-    --danger: #E74C3C;
-    --danger-hover: #C0392B;
-    --success: #84A59D;
-
-    /* Inputs - fond crème */
-    --input-bg: #F7EDE2;
-    --input-border: #E8DED5;
-    --input-focus: #F28482;
-
-    /* Focus rings - corail */
-    --ring: #F28482;
-    --ring-opacity: 0.3;
-
-    /* Liens - vert sauge */
-    --link: #84A59D;
-    --link-hover: #6B8B83;
-
-    /* Erreurs de formulaire */
-    --error: #E74C3C;
-    --error-bg: #FDEAEA;
-
-    /* Table header */
-    --table-header: #F7EDE2;
-
-    /* Dialog overlay */
-    --dialog-bg: #ffffff;
-
-    /* Navbar */
-    --nav-bg: rgb(255 255 255 / 0.7);
-    --nav-text: #636E72;
-    --nav-text-hover: #F28482;
-    --nav-border: #F7EDE2;
-
-    /* Footer */
-    --footer-bg: #ffffff;
-    --footer-text: #636E72;
-    --footer-text-muted: #B2BEC3;
-
-    /* Logo */
-    --logo-from: #F28482;
-    --logo-to: #F5CAC3;
+    --bg: #F2E4C9;
+    --paper: #FFFBF2;
+    --paper-2: #F6ECD8;
+    --ink: #2B2019;
+    --ink-muted: #7A6752;
+    --on-bg: #2B2019;
+    --on-bg-muted: #7A6752;
+    --primary: #D8432B;
+    --primary-hover: #B8351F;
+    --primary-deep: #9E2C19;
+    --on-primary: #FFF8EE;
+    --foil: #E9A93A;
+    --mine: #2F6B4E;
+    --line: #E4D4B3;
+    --error: #B8351F;
+    /* Dérivés (même élément <html> que la classe de thème : les var() suivent le thème) */
+    --hand: var(--on-bg-muted);
+    --wordmark: var(--primary);
+    --paper-shadow: drop-shadow(0 1px 0 rgb(60 40 20 / 0.1))
+      drop-shadow(0 10px 14px rgb(90 60 25 / 0.16));
+    --grain-opacity: 0.1;
+    --grain-blend: multiply;
+    --wrap-paper: var(--primary);
+    --wrap-dot: #FFE3B8;
   }
 
-  .theme-christmas {
-    /* Couleurs primaires */
-    --primary: var(--color-red-700);
-    --primary-hover: var(--color-red-800);
-    --primary-light: var(--color-red-100);
-    --on-primary: var(--color-white);
+  /* Thème Noël : la classe est posée sur <html> par le layout */
+  :root.theme-christmas {
+    --bg: #10291F;
+    --paper: #F6EEDD;
+    --paper-2: #EADFC7;
+    --ink: #221D16;
+    --ink-muted: #6E6352;
+    --on-bg: #F6EEDD;
+    --on-bg-muted: #9DB3A6;
+    --primary: #C21F3A;
+    --primary-hover: #A0162E;
+    --primary-deep: #7E0F22;
+    --on-primary: #FFF6EA;
+    --foil: #D4A548;
+    --mine: #1F6B45;
+    --line: #D8C9A8;
+    --hand: var(--foil);
+    --wordmark: var(--foil);
+    --paper-shadow: drop-shadow(0 1px 0 rgb(0 0 0 / 0.25))
+      drop-shadow(0 12px 16px rgb(0 0 0 / 0.35));
+    --grain-opacity: 0.07;
+    --grain-blend: overlay;
+    --wrap-paper: #0B1F17;
+    --wrap-dot: var(--foil);
+  }
 
-    /* Couleurs secondaires */
-    --secondary: var(--color-green-700);
-    --secondary-hover: var(--color-green-800);
-    --secondary-light: var(--color-green-100);
+  html {
+    background: var(--bg);
+  }
 
-    /* Surfaces et fonds */
-    --surface: rgb(255 255 255 / 0.1);
-    --surface-hover: rgb(255 255 255 / 0.2);
-    --surface-muted: rgb(255 255 255 / 0.05);
+  body {
+    background: var(--bg);
+    color: var(--on-bg);
+    font-family: var(--font-figtree), ui-sans-serif, sans-serif;
+  }
 
-    /* Texte */
-    --text-primary: var(--color-white);
-    --text-secondary: rgb(255 255 255 / 0.9);
-    --text-muted: rgb(255 255 255 / 0.6);
-
-    /* Bordures */
-    --border: rgb(255 255 255 / 0.2);
-    --border-light: rgb(255 255 255 / 0.1);
-
-    /* Ombres */
-    --shadow-sm: 0 1px 2px 0 rgb(255 255 255 / 0.1);
-    --shadow-primary: 0 10px 15px -3px rgb(255 255 255 / 0.2);
-
-    /* États */
-    --danger: var(--color-red-500);
-    --danger-hover: var(--color-red-600);
-    --success: var(--color-green-600);
-
-    /* Inputs */
-    --input-bg: rgb(255 255 255 / 0.2);
-    --input-border: rgb(255 255 255 / 0.3);
-    --input-focus: rgb(255 255 255 / 0.5);
-
-    /* Focus rings */
-    --ring: rgb(255 255 255 / 0.5);
-    --ring-opacity: 0.5;
-
-    /* Liens */
-    --link: var(--color-green-600);
-    --link-hover: var(--color-green-700);
-
-    /* Erreurs de formulaire (même style, fond adapté au thème sombre) */
-    --error: var(--color-red-400);
-    --error-bg: rgb(255 255 255 / 0.1);
-
-    /* Table header */
-    --table-header: rgb(127 29 29 / 0.3);
-
-    /* Dialog overlay */
-    --dialog-bg: rgb(127 29 29 / 0.9);
-
-    /* Navbar - fond clair contrasté */
-    --nav-bg: rgb(255 255 255 / 0.9);
-    --nav-text: #991B1B;
-    --nav-text-hover: #166534;
-    --nav-border: #DC2626;
-
-    /* Footer - fond blanc solide */
-    --footer-bg: #ffffff;
-    --footer-text: #991B1B;
-    --footer-text-muted: #636E72;
-
-    /* Logo - dégradé rouge → vert festif */
-    --logo-from: #DC2626;
-    --logo-to: #16A34A;
+  /* Grain de papier, sous le contenu */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    mix-blend-mode: var(--grain-blend);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .15 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 }
 
-/* Page gradient utility */
-.page-gradient {
-  background: linear-gradient(
-    to bottom right,
-    #F7EDE2,
-    #FDFBF9,
-    #F5CAC3
-  );
-}
-
-.theme-christmas .page-gradient {
-  background: linear-gradient(
-    to bottom right,
-    var(--color-red-700),
-    var(--color-green-800),
-    var(--color-red-900)
-  );
-}
-
-/* Surface card utility (glassmorphism for Christmas) */
-.surface-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-}
-
-.theme-christmas .surface-card {
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
-/* Dialog surface utility */
-.dialog-surface {
-  background: var(--dialog-bg);
-  border: 1px solid var(--border);
-}
-
-.theme-christmas .dialog-surface {
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
-/* Dark mode désactivé pour garder le thème cohérent */
-/* @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-} */
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-/* Custom Animations */
-@keyframes snowfall {
-  0% {
-    transform: translateY(-10px) translateX(0);
-  }
-  100% {
-    transform: translateY(100vh) translateX(100px);
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@utility shadow-paper {
+  filter: var(--paper-shadow);
 }
 
 @keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  10%,
-  30%,
-  50%,
-  70%,
-  90% {
-    transform: translateX(-10px);
-  }
-  20%,
-  40%,
-  60%,
-  80% {
-    transform: translateX(10px);
-  }
-}
-
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-@keyframes glow {
-  0%,
-  100% {
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
-  }
-}
-
-.animate-snowfall {
-  animation: snowfall linear infinite;
-}
-
-.animate-fadeInUp {
-  animation: fadeInUp 0.8s ease-out forwards;
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
 }
 
 .animate-shake {
-  animation: shake 0.5s ease-in-out;
+  animation: shake 0.4s ease-in-out;
 }
 
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient 15s ease infinite;
+/* ─────────── ALIAS HÉRITÉS : début (supprimés à la tâche 12) ─────────── */
+@layer base {
+  :root {
+    --background: var(--bg);
+    --foreground: var(--on-bg);
+    --primary-light: var(--paper-2);
+    --secondary: var(--mine);
+    --secondary-hover: var(--mine);
+    --secondary-light: var(--paper-2);
+    --surface: var(--paper);
+    --surface-hover: var(--paper-2);
+    --surface-muted: var(--paper-2);
+    --text-primary: var(--ink);
+    --text-secondary: var(--ink);
+    --text-muted: var(--ink-muted);
+    --border: var(--line);
+    --border-light: var(--line);
+    --shadow-sm: none;
+    --shadow-primary: none;
+    --danger: var(--primary);
+    --danger-hover: var(--primary-hover);
+    --success: var(--mine);
+    --input-bg: var(--paper);
+    --input-border: var(--line);
+    --input-focus: var(--primary);
+    --ring: var(--primary);
+    --link: var(--primary);
+    --link-hover: var(--primary-hover);
+    --error-bg: var(--paper-2);
+    --table-header: var(--paper-2);
+    --dialog-bg: var(--paper);
+    --nav-bg: var(--bg);
+    --nav-text: var(--on-bg-muted);
+    --nav-text-hover: var(--on-bg);
+    --nav-border: var(--line);
+    --footer-bg: var(--paper);
+    --footer-text: var(--ink);
+    --footer-text-muted: var(--ink-muted);
+    --logo-from: var(--primary);
+    --logo-to: var(--foil);
+  }
 }
 
-.animate-glow {
-  animation: glow 2s ease-in-out infinite;
+.surface-card,
+.dialog-surface {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
 }
+
+@keyframes snowfall {
+  0% { transform: translateY(-10px) translateX(0); }
+  100% { transform: translateY(100vh) translateX(100px); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-snowfall { animation: snowfall linear infinite; }
+.animate-fadeInUp { animation: fadeInUp 0.8s ease-out forwards; }
+/* ─────────── ALIAS HÉRITÉS : fin ─────────── */

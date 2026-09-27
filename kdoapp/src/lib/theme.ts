@@ -3,7 +3,7 @@ export type ThemeName = (typeof THEME_NAMES)[number];
 
 export type ThemeConfig = {
   label: string;
-  bodyClass: string;
+  themeClass: string;
   appTitle: string;
   titleEmoji: string;
   showSnowflakes: boolean;
@@ -14,14 +14,14 @@ export const DEFAULT_THEME: ThemeName = 'default';
 export const THEMES: Record<ThemeName, ThemeConfig> = {
   default: {
     label: 'Anniversaire',
-    bodyClass: '',
+    themeClass: '',
     appTitle: "Liste d'anniversaire",
     titleEmoji: '',
     showSnowflakes: false,
   },
   christmas: {
     label: 'Noël',
-    bodyClass: 'theme-christmas',
+    themeClass: 'theme-christmas',
     appTitle: 'Liste de Noël',
     titleEmoji: '🎄',
     showSnowflakes: true,
