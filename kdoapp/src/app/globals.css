@@ -352,6 +352,11 @@
 @keyframes tie-stamp { from { opacity: 0; transform: scale(1.8); } }
 @keyframes tie-note { from { opacity: 0; transform: translateY(6px); } }
 
+/* « Dénouer » : l'emballage disparaît en 350ms, avant la recharge */
+.is-untying .gift-wrap { animation: gift-untie 0.35s ease-in both; }
+
+@keyframes gift-untie { to { opacity: 0; transform: scale(0.96); } }
+
 /* ── Bande de liste : ruban vertical (doré pour la liste commune) ── */
 .band-ribbon {
   position: absolute;

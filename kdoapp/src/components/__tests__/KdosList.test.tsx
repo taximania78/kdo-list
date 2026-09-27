@@ -126,9 +126,12 @@ describe('KdosList', () => {
   });
 
   it('says so when the list cannot be loaded', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
     get.mockRejectedValue(new Error('Network Error'));
     render(<KdosList listSlug="paul" />);
     expect(await screen.findByRole('alert')).toHaveTextContent("La liste n'a pas pu être chargée.");
+    expect(consoleError).toHaveBeenCalledWith('Failed to fetch kdos:', expect.any(Error));
+    consoleError.mockRestore();
   });
 
   it('gives the tying animation its full 1.4s only once the reload actually shows the wrapped card', async () => {
@@ -221,5 +224,75 @@ describe('KdosList', () => {
     });
     expect(screen.getByRole('heading', { name: 'Pull' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Vélo' })).toBeNull();
+  });
+
+  it('plays the untie animation (350 ms) before reloading, once the release succeeded', async () => {
+    jest.useFakeTimers();
+    try {
+      get
+        .mockResolvedValueOnce({ status: 200, data: [{ ...baseKdo, availability: false, takenBy: 'marie' }] })
+        .mockResolvedValueOnce({ status: 200, data: [baseKdo] });
+      post.mockResolvedValue({ status: 200, data: { success: true } });
+      render(<KdosList listSlug="paul" />);
+      fireEvent.click(await screen.findByRole('button', { name: 'Dénouer le ruban' }));
+      fireEvent.click(screen.getByRole('button', { name: /Oui, dénouer/ }));
+      await act(async () => {}); // le POST se résout
+
+      const tag = screen.getByLabelText('Vélo');
+      expect(tag).toHaveClass('is-untying');
+      expect(tag).toHaveAttribute('data-state', 'mine'); // le ruban est encore là pendant qu'il se dénoue
+      expect(get).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        jest.advanceTimersByTime(349);
+      });
+      expect(get).toHaveBeenCalledTimes(1); // pas de recharge avant la fin de l'animation
+
+      await act(async () => {
+        jest.advanceTimersByTime(1);
+      });
+      expect(get).toHaveBeenCalledTimes(2);
+      expect(tag).toHaveAttribute('data-state', 'free');
+      expect(tag).not.toHaveClass('is-untying');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('keeps the released gift visible by switching back to "Tout" when "Les miens" was active', async () => {
+    jest.useFakeTimers();
+    try {
+      get
+        .mockResolvedValueOnce({ status: 200, data: [{ ...baseKdo, availability: false, takenBy: 'marie' }] })
+        .mockResolvedValueOnce({ status: 200, data: [baseKdo] });
+      post.mockResolvedValue({ status: 200, data: { success: true } });
+      render(<KdosList listSlug="paul" />);
+      fireEvent.click(await screen.findByRole('button', { name: /Les miens/ }));
+      fireEvent.click(screen.getByRole('button', { name: 'Dénouer le ruban' }));
+      fireEvent.click(screen.getByRole('button', { name: /Oui, dénouer/ }));
+      await act(async () => {});
+
+      expect(screen.getByLabelText('Vélo')).toHaveClass('is-untying');
+      await act(async () => {
+        jest.advanceTimersByTime(350);
+      });
+      expect(get).toHaveBeenCalledTimes(2);
+      expect(screen.getByRole('heading', { name: 'Vélo' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Tout/ })).toHaveAttribute('aria-pressed', 'true');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("names the list owner when there is no idea yet", async () => {
+    listOf();
+    render(<KdosList listSlug="lea" listLabel="Léa" />);
+    expect(await screen.findByText("Aucune idée pour Léa pour l'instant.")).toBeInTheDocument();
+  });
+
+  it('falls back to a generic sentence when the owner is unknown', async () => {
+    listOf();
+    render(<KdosList listSlug="lea" />);
+    expect(await screen.findByText("Aucune idée pour l'instant.")).toBeInTheDocument();
   });
 });

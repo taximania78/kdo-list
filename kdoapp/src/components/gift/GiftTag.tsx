@@ -11,16 +11,26 @@ type GiftTagProps = {
   state: GiftState;
   canRelease: boolean;
   tying?: boolean;
+  untying?: boolean;
   onTake: () => void;
   onRelease: () => void;
 };
 
-export function GiftTag({ kdo, state, canRelease, tying = false, onTake, onRelease }: GiftTagProps) {
+export function GiftTag({
+  kdo,
+  state,
+  canRelease,
+  tying = false,
+  untying = false,
+  onTake,
+  onRelease,
+}: GiftTagProps) {
   const classes = [
     'gift-tag',
     state !== 'free' && 'is-wrapped',
     state === 'mine' && 'is-mine',
     tying && 'is-tying',
+    untying && 'is-untying',
   ]
     .filter(Boolean)
     .join(' ');
@@ -78,7 +88,7 @@ export function GiftTag({ kdo, state, canRelease, tying = false, onTake, onRelea
   );
 }
 
-function GiftAction({ kdo, state, canRelease, onTake, onRelease }: Omit<GiftTagProps, 'tying'>) {
+function GiftAction({ kdo, state, canRelease, onTake, onRelease }: Omit<GiftTagProps, 'tying' | 'untying'>) {
   if (state === 'free') {
     return (
       <Button block onClick={onTake} className="py-2 text-sm">

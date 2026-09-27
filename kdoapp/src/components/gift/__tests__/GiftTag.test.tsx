@@ -55,6 +55,16 @@ describe('GiftTag', () => {
     expect(onRelease).toHaveBeenCalledTimes(1);
   });
 
+  it('marks the wrap as untying while the ribbon comes off', () => {
+    const mine = { ...velo, availability: false, takenBy: 'marie' };
+    const { rerender } = render(
+      <GiftTag kdo={mine} state="mine" canRelease={false} onTake={noop} onRelease={noop} />
+    );
+    expect(screen.getByLabelText('Vélo de route')).not.toHaveClass('is-untying');
+    rerender(<GiftTag kdo={mine} state="mine" canRelease={false} untying onTake={noop} onRelease={noop} />);
+    expect(screen.getByLabelText('Vélo de route')).toHaveClass('is-untying');
+  });
+
   it("shows who wrapped someone else's reservation, without action", () => {
     const taken = { ...velo, availability: false, takenBy: 'Paul' };
     render(<GiftTag kdo={taken} state="taken" canRelease={false} onTake={noop} onRelease={noop} />);

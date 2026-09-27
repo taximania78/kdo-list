@@ -73,7 +73,7 @@ export default function ListDetailPage() {
       <h1 className="-ml-1 mb-5 mt-0.5 font-display text-[clamp(72px,22vw,190px)] font-extrabold leading-[0.85] tracking-[-0.035em] break-words md:text-[clamp(110px,14vw,210px)]">
         {list.label}
       </h1>
-      <KdosList listSlug={list.slug} />
+      <KdosList listSlug={list.slug} listLabel={list.label} />
     </PageShell>
   );
 }

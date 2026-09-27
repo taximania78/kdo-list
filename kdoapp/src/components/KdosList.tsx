@@ -13,6 +13,7 @@ import { PaperState } from '@/components/ui/PaperState';
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 const TIE_DURATION_MS = 1400;
+const UNTIE_DURATION_MS = 350; // DESIGN.md › Motion : « Dénouer » joue une disparition courte
 
 function kdosUrl(listSlug: string): string {
   return `${ApiAdress}/api/kdos/?format=json&list=${encodeURIComponent(listSlug)}`;
@@ -67,7 +68,7 @@ function sheetCopy({ kind, kdo }: Pending, username: string | null): { title: st
   };
 }
 
-export default function KdosList({ listSlug }: { listSlug: string }) {
+export default function KdosList({ listSlug, listLabel }: { listSlug: string; listLabel?: string }) {
   const [me] = useState(() => getUserInfo());
   const username = me?.username ?? null;
   const [kdos, setKdos] = useState<Kdo[] | null>(null);
@@ -75,6 +76,7 @@ export default function KdosList({ listSlug }: { listSlug: string }) {
   const [filter, setFilter] = useState<GiftFilter>('all');
   const [pending, setPending] = useState<Pending | null>(null);
   const [tyingId, setTyingId] = useState<number | null>(null);
+  const [untyingId, setUntyingId] = useState<number | null>(null);
 
   const fetchKdos = useCallback(async () => {
     try {
@@ -113,6 +115,20 @@ export default function KdosList({ listSlug }: { listSlug: string }) {
     return () => clearTimeout(timer);
   }, [tyingId]);
 
+  // Le ruban se dénoue d'abord (350 ms), puis la recharge montre l'idée redevenue libre.
+  useEffect(() => {
+    if (untyingId === null) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      await fetchKdos();
+      if (!cancelled) setUntyingId(null);
+    }, UNTIE_DURATION_MS);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [untyingId, fetchKdos]);
+
   const confirmPending = async () => {
     if (!pending) return;
     const endpoint = pending.kind === 'take' ? 'take-api' : 'untake-api';
@@ -122,18 +138,28 @@ export default function KdosList({ listSlug }: { listSlug: string }) {
       await fetchKdos(); // l'état a pu changer entre-temps : on montre le vrai
       throw error; // ConfirmSheet affiche le message et reste ouvert
     }
-    await fetchKdos(); // recharge d'abord : le nœud ne démarre que sur la carte déjà réservée
-    if (pending.kind === 'take') {
-      setTyingId(pending.kdo.id);
-      if (filter === 'free') setFilter('all'); // sinon l'idée fraîchement emballée disparaît aussitôt
+    if (pending.kind === 'release') {
+      // Le panneau se ferme tout de suite ; la recharge attend la fin de l'animation.
+      setUntyingId(pending.kdo.id);
+      if (filter === 'mine') setFilter('all'); // sinon l'idée disparaît en plein dénouement
+      return;
     }
+    await fetchKdos(); // recharge d'abord : le nœud ne démarre que sur la carte déjà réservée
+    setTyingId(pending.kdo.id);
+    if (filter === 'free') setFilter('all'); // sinon l'idée fraîchement emballée disparaît aussitôt
   };
 
   if (!kdos && loadError) {
     return <PaperState kind="error">La liste n&apos;a pas pu être chargée. Recharge la page.</PaperState>;
   }
   if (!kdos) return <PaperState kind="loading">Chargement des idées…</PaperState>;
-  if (kdos.length === 0) return <PaperState kind="empty">Aucune idée pour l&apos;instant.</PaperState>;
+  if (kdos.length === 0) {
+    return (
+      <PaperState kind="empty">
+        {listLabel ? `Aucune idée pour ${listLabel} pour l'instant.` : "Aucune idée pour l'instant."}
+      </PaperState>
+    );
+  }
 
   const counts: Record<GiftFilter, number> = {
     all: kdos.length,
@@ -166,6 +192,7 @@ export default function KdosList({ listSlug }: { listSlug: string }) {
                 state={state}
                 canRelease={state === 'taken' && me?.isAdmin === true}
                 tying={tyingId === kdo.id}
+                untying={untyingId === kdo.id}
                 onTake={() => setPending({ kind: 'take', kdo })}
                 onRelease={() => setPending({ kind: 'release', kdo })}
               />
