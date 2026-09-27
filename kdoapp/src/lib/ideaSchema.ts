@@ -9,7 +9,7 @@ export const ideaSchema = z.object({
   url: optionalUrl,
   comment: z.string().nullable().optional(),
   image: z
-    .union([z.string().url({ message: "L'URL de l'image n'est pas valide." }), z.literal('')])
+    .union([z.url({ error: "L'URL de l'image n'est pas valide." }), z.literal('')])
     .nullable()
     .optional(),
 });

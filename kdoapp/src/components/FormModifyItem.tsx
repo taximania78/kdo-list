@@ -59,6 +59,13 @@ export default function FormModifyItem({ kdo, id, onFormSubmit, listOptions }: F
     setOpen(true);
   };
 
+  // Ignore toute fermeture (Échap, clic sur l'overlay, Annuler) pendant
+  // l'enregistrement : une erreur doit s'afficher dans le panneau encore ouvert.
+  const handleOpenChange = (next: boolean) => {
+    if (!next && isSubmitting) return;
+    setOpen(next);
+  };
+
   const onSubmit = async (values: IdeaOutput) => {
     setError(null);
     const selectedList = listOptions.find((l) => l.value === values.list_slug);
@@ -80,7 +87,7 @@ export default function FormModifyItem({ kdo, id, onFormSubmit, listOptions }: F
       <button type="button" onClick={openSheet} className="text-sm font-bold text-primary underline-offset-4 hover:underline">
         Modifier
       </button>
-      <Sheet open={open} onOpenChange={setOpen} title={`Modifier : ${kdo.name}`} wide>
+      <Sheet open={open} onOpenChange={handleOpenChange} title={`Modifier : ${kdo.name}`} wide>
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-5 grid gap-4">
           <IdeaFields register={register} errors={errors} listOptions={listOptions} tone="paper" />
           {error && (
@@ -92,7 +99,7 @@ export default function FormModifyItem({ kdo, id, onFormSubmit, listOptions }: F
             <Button type="submit" pending={isSubmitting} className="md:order-2">
               Enregistrer
             </Button>
-            <Button variant="ghost" onClick={() => setOpen(false)}>
+            <Button variant="ghost" onClick={() => handleOpenChange(false)} disabled={isSubmitting}>
               Annuler
             </Button>
           </div>

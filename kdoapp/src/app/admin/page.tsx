@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Download, Plus } from 'lucide-react';
@@ -35,12 +35,19 @@ export default function Admin() {
     else if (user && !user.isAdmin) router.push('/list');
   }, [isAuthenticated, user, isLoading, router]);
 
+  // Requête la plus récente : une réponse pour une autre liste est ignorée
+  // (chip cliqué deux fois vite, ou en changeant d'avis avant la réponse).
+  const latestSlug = useRef('');
+
   const fetchIdeas = useCallback(async (slug: string) => {
+    latestSlug.current = slug;
     try {
       const response = await api.get(`${ApiAdress}/api/kdos-admin/?format=json&list=${encodeURIComponent(slug)}`);
+      if (latestSlug.current !== slug) return;
       setIdeas(response.data);
       setLoadError(false);
     } catch (error) {
+      if (latestSlug.current !== slug) return;
       console.error('Failed to fetch kdos:', error);
       setLoadError(true);
     }
@@ -68,6 +75,7 @@ export default function Admin() {
   const selectList = (slug: string) => {
     setSelected(slug);
     setIdeas(null);
+    setLoadError(false);
     fetchIdeas(slug);
   };
 
@@ -122,8 +130,8 @@ export default function Admin() {
 
       {loadError && <PaperState kind="error">Les idées n&apos;ont pas pu être chargées.</PaperState>}
       {!loadError && !ideas && <PaperState kind="loading">Chargement des idées…</PaperState>}
-      {ideas?.length === 0 && <PaperState kind="empty">Aucune idée dans cette liste.</PaperState>}
-      {ideas && ideas.length > 0 && (
+      {!loadError && ideas?.length === 0 && <PaperState kind="empty">Aucune idée dans cette liste.</PaperState>}
+      {!loadError && ideas && ideas.length > 0 && (
         <ul className="mt-4 rounded-lg bg-paper text-ink shadow-paper">
           {ideas.map((idea) => (
             <li
