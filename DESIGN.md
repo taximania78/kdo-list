@@ -123,7 +123,8 @@ components:
 - `paper-2` : surface secondaire sur papier (encart dans le panneau de réservation, dos d'étiquette, survol de ligne).
 - `primary` : l'unique action principale d'un écran (« Je prends ! », « Se connecter », « Ajouter une idée ») et le ruban d'emballage. `primary-deep` sert aux liserés du ruban et au nœud.
 - `mine` : « c'est toi qui l'offres » (tampon, note manuscrite).
-- Le thème s'applique par la classe du `<body>` (`.theme-christmas`, conservée) qui redéfinit les variables. **Aucun composant ne teste le thème pour choisir une couleur.**
+- Le thème s'applique par la classe `.theme-christmas` posée sur `<html>` par le layout serveur ; `:root.theme-christmas` redéfinit les variables. Jetons dérivés : `--hand` (touches manuscrites : `on-bg-muted`, or à Noël) et `--wordmark` (icône du nom de l'app : `primary`, or à Noël). **Aucun composant ne teste le thème pour choisir une couleur.**
+- Les messages d'erreur sont posés sur une pastille `paper` : `error` reste lisible sur les deux fonds.
 
 ## Typography
 
@@ -158,6 +159,7 @@ Toutes chargées une seule fois dans `app/layout.tsx` via `next/font/google` (va
 - Étiquettes : 8px et coins coupés de 16–18px en biseau (`clip-path`) du côté du trou.
 - Boutons et champs : 6px. Tampons : 3px. Filtres : pilule. Panneau du bas : 16px en haut.
 - Le trou de l'étiquette est un cercle de 11px de la couleur du fond de page.
+- Une image imbriquée dans une étiquette de 8px utilise un rayon imbriqué de 5px.
 
 ## Components
 
@@ -166,7 +168,7 @@ Toutes chargées une seule fois dans `app/layout.tsx` via `next/font/google` (va
 - **Étiquette d'idée :** image (ou nom de l'idée en gros sur fond teinté s'il n'y a pas d'image), nom, prix mono, « Voir le produit ↗ » en `primary`, commentaire en `ink-muted`, action en bas. Prix et lien absents : rien n'est affiché à leur place.
 - **États d'une étiquette :** libre (bouton « Je prends ! ») ; à moi (emballée, tampon « À toi · chut ! » en `mine`, note Caveat, bouton secondaire « Dénouer le ruban ») ; prise par quelqu'un (emballée, tampon « Déjà emballé » en `ink-muted`, texte mono « Quelqu'un s'en occupe » ; un admin voit « Libérer »).
 - **Réservation :** panneau qui monte du bas sur mobile, fenêtre centrée de 440px sur ordinateur. Titre « Tu t'en occupes ? », encart avec l'idée, note Caveat, « Oui, je l'emballe » + « Annuler ». En cas d'erreur, un message reste dans le panneau (plus d'erreur silencieuse). La confirmation de suppression utilise ce même composant (plus de `window.confirm`).
-- **Bande de liste :** feuille `paper`, prénom en display, compteur mono, ruban vertical `primary` (ou `foil` pour la liste commune), flèche.
+- **Bande de liste :** feuille `paper`, prénom en display, ligne mono « Voir les idées », ruban vertical `primary` (ou `foil` pour la liste commune), flèche. Pas de compteur : l'API ne le fournit pas, et le nombre d'idées déjà prises gâcherait la surprise sur sa propre liste.
 - **Champs :** libellé visible au-dessus (14px, 600), fond `paper`, bordure `line`, focus = contour 2,5px `primary`. Erreur sous le champ en `error`.
 - **Chargement / vide / erreur :** un seul composant par état, sur papier, avec une phrase précise (« Aucune idée pour Léa pour l'instant »).
 - **Décors Noël :** neige posée (vague blanche) sur le bord haut des bandes et des étiquettes.
@@ -199,3 +201,7 @@ Toutes chargées une seule fois dans `app/layout.tsx` via `next/font/google` (va
 | 2026-09-27 | Risques retenus : ruban qui se noue, neige devant/derrière, ouverture déballage | Choix du propriétaire ; étiquettes penchées écartées |
 | 2026-09-27 | Accessibilité (contraste WCAG) non contraignante | App perso ; lisibilité conservée |
 | 2026-09-27 | Polices : Bricolage Grotesque, Figtree, DM Mono, Caveat | Vérifiées dans next/font ; Fraunces écartée (surutilisée) |
+| 2026-09-27 | Classe de thème sur `<html>` ; jetons dérivés `--hand`, `--wordmark` | Les variables dérivées suivent le thème sans duplication |
+| 2026-09-27 | Bande de liste sans compteur (« Voir les idées ») | Pas de compteur dans l'API ; ne pas révéler les réservations sur sa propre liste |
+| 2026-09-27 | « Emballé par {prénom} » conservé pour les réservations des autres | Comportement actuel de l'app gardé |
+| 2026-09-27 | Image imbriquée dans une étiquette 8px : rayon imbriqué 5px | Cohérence visuelle du rayon intérieur avec le rayon extérieur de l'étiquette |
