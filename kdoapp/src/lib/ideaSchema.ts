@@ -5,7 +5,7 @@ import { optionalPrice, optionalUrl } from '@/lib/optionalFields';
 export const ideaSchema = z.object({
   name: z.string().trim().min(2, { message: 'Le nom doit contenir au moins 2 caractères.' }),
   price: optionalPrice,
-  list_slug: z.string().min(1, { message: 'Choisis une liste.' }),
+  list_slug: z.string().min(1, { message: 'Sélectionnez une liste' }),
   url: optionalUrl,
   comment: z.string().nullable().optional(),
   image: z

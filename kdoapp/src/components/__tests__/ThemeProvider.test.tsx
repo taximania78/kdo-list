@@ -2,14 +2,14 @@ import { render, screen } from '@testing-library/react';
 import { ThemeProvider, useTheme } from '@/components/ThemeProvider';
 
 function Probe() {
-  const { name, isChristmas, config } = useTheme();
-  return <p>{`${name}|${isChristmas}|${config.appTitle}`}</p>;
+  const theme = useTheme();
+  return <p>{`${Object.keys(theme).join(',')}|${theme.name}|${theme.config.appTitle}`}</p>;
 }
 
 describe('useTheme', () => {
   it('returns the default theme outside a provider', () => {
     render(<Probe />);
-    expect(screen.getByText("default|false|Liste d'anniversaire")).toBeInTheDocument();
+    expect(screen.getByText("name,config|default|Liste d'anniversaire")).toBeInTheDocument();
   });
 
   it('returns the provided theme', () => {
@@ -18,6 +18,6 @@ describe('useTheme', () => {
         <Probe />
       </ThemeProvider>,
     );
-    expect(screen.getByText('christmas|true|Liste de Noël')).toBeInTheDocument();
+    expect(screen.getByText('name,config|christmas|Liste de Noël')).toBeInTheDocument();
   });
 });
