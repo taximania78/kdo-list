@@ -3,7 +3,7 @@ import pytest_asyncio
 from httpx import AsyncClient
 from main import app
 from models import User, GiftList, Idea
-from auth import hash_password
+from auth import create_access_token, hash_password
 
 @pytest_asyncio.fixture
 async def setup_test_ideas(client: AsyncClient, admin_token: str, user_token: str):
@@ -168,8 +168,11 @@ async def test_take_item_already_taken(client: AsyncClient, user_token: str, set
     assert response.json()["detail"] == "Idée déjà prise"
 
 @pytest.mark.asyncio
-async def test_untake_item(client: AsyncClient, user_token: str, setup_test_ideas):
-    headers = {"Authorization": f"Bearer {user_token}"}
+async def test_untake_item(client: AsyncClient, setup_test_ideas):
+    # Seul celui qui a réservé (user2) peut libérer : voir test_reservations.py
+    user2 = setup_test_ideas["user2"]
+    token = create_access_token({"sub": str(user2.id), "username": user2.name, "isAdmin": False, "isMegaAdmin": False})
+    headers = {"Authorization": f"Bearer {token}"}
     idea_id = setup_test_ideas["idea_taken"].id
     
     response = await client.post(f"/api/untake-api/{idea_id}", headers=headers)

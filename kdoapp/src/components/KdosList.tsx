@@ -35,6 +35,7 @@ type KdosListProps = {
 const KdosList = ({ listSlug, user }: KdosListProps) => {
   const [kdosList, setKdosList] = useState<Kdo[] | null>(null);
   const [userLogged, setUserLogged] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const fetchKdos = async () => {
     let apiUrl = `${ApiAdress}/api/kdos/?format=json`;
@@ -60,6 +61,7 @@ const KdosList = ({ listSlug, user }: KdosListProps) => {
     const userInfo = getUserInfo();
     if (userInfo) {
       setUserLogged(userInfo.username);
+      setIsAdmin(userInfo.isAdmin === true);
     }
   };
 
@@ -194,6 +196,7 @@ const KdosList = ({ listSlug, user }: KdosListProps) => {
               takenBy={kdo.takenBy}
               availability={kdo.availability}
               userLogged={userLogged ?? ''}
+              canReleaseOthers={isAdmin}
               onValidation={fetchKdos}
             />
           </div>
