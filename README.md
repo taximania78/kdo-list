@@ -46,7 +46,7 @@ Variables principales :
 | `DATABASE_USER` / `DATABASE_PASSWORD` | Identifiants PostgreSQL |
 | `DATABASE_NAME` / `DATABASE_HOST` / `DATABASE_PORT` | Connexion base |
 | `NEXT_PUBLIC_API_URL` | URL de l'API exposée au frontend |
-| `INTERNAL_API_URL` | URL de l'API vue par le serveur Next.js (défaut : `NEXT_PUBLIC_API_URL`, `http://fastapi:8000` en Docker) |
+| `INTERNAL_API_URL` | URL de l'API vue par le serveur Next.js (défaut : `NEXT_PUBLIC_API_URL`, `http://kdo-api:8000` en Docker) |
 
 > ⚠️ Générez une `SECRET_KEY` forte, par exemple : `openssl rand -hex 32`.
 

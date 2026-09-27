@@ -113,3 +113,17 @@ async def test_migration_is_idempotent_and_inserts_nothing():
         rows = (await conn.execute(text("SELECT key, value FROM app_settings"))).all()
     await engine.dispose()
     assert rows == []
+
+
+@pytest.mark.asyncio
+async def test_get_theme_logs_database_error(client: AsyncClient, caplog):
+    # Un repli silencieux masquerait une panne de base : il doit laisser une trace
+    gen, session = await _session()
+    await session.execute(text("DROP TABLE app_settings"))
+    await session.commit()
+    await gen.aclose()
+
+    with caplog.at_level("WARNING"):
+        response = await client.get("/api/settings/theme")
+    assert response.json() == {"theme": "default"}
+    assert any("thème" in r.getMessage() for r in caplog.records if r.levelname == "WARNING")

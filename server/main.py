@@ -1,5 +1,6 @@
 import csv
 import io
+import logging
 import os.path
 import re
 import unicodedata
@@ -54,6 +55,8 @@ app.add_middleware(
     allow_methods=["*"],  # Autoriser toutes les méthodes (GET, POST, PUT, DELETE, etc.)
     allow_headers=["*"],  # Autoriser tous les headers
 )
+
+logger = logging.getLogger(__name__)
 
 # Utilisé pour récupérer le token dans les headers (Bearer <token>)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/login")
@@ -799,7 +802,8 @@ async def get_theme_api(db: AsyncSession = Depends(get_db)):
     try:
         setting = await db.get(AppSetting, THEME_KEY)
     except SQLAlchemyError:
-        # Table absente (migration pas encore lancée) : on ne casse pas le rendu
+        # Table absente (migration pas encore lancée) ou base indisponible : on ne casse pas le rendu
+        logger.warning("Lecture du thème impossible, repli sur '%s'", DEFAULT_THEME, exc_info=True)
         await db.rollback()
         return {"theme": DEFAULT_THEME}
     if setting is None or setting.value not in THEME_NAMES:
