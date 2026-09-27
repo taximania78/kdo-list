@@ -16,9 +16,9 @@ import {
 type Kdo = {
   id: number;
   name: string;
-  price: number;
+  price: number | null;
   user: string;
-  url: string;
+  url: string | null;
   comment: string;
   imageDisplay: string;
   availability: boolean;
@@ -145,13 +145,15 @@ const KdosList = ({ listSlug, user }: KdosListProps) => {
                 )}
               </div>
 
-              {/* Price */}
-              <div className="flex items-center gap-2">
-                <Euro className="w-5 h-5 flex-shrink-0 text-[var(--text-muted)]" />
-                <span className="text-sm">
-                  <span className="font-semibold">{kdo.price}€</span>
-                </span>
-              </div>
+              {/* Price (facultatif) */}
+              {kdo.price != null && (
+                <div className="flex items-center gap-2">
+                  <Euro className="w-5 h-5 flex-shrink-0 text-[var(--text-muted)]" />
+                  <span className="text-sm">
+                    <span className="font-semibold">{kdo.price}€</span>
+                  </span>
+                </div>
+              )}
 
               {/* User */}
               <div className="flex items-center gap-2">
@@ -162,17 +164,19 @@ const KdosList = ({ listSlug, user }: KdosListProps) => {
                 </span>
               </div>
 
-              {/* Link */}
-              <div className="flex items-start gap-2">
-                <ExternalLink className="w-5 h-5 flex-shrink-0 text-[var(--text-muted)] mt-0.5" />
-                <Link
-                  href={kdo.url}
-                  target="_blank"
-                  className="text-sm underline hover:no-underline transition-colors duration-200 text-[var(--link)] hover:text-[var(--link-hover)]"
-                >
-                  Voir le produit
-                </Link>
-              </div>
+              {/* Link (facultatif) */}
+              {kdo.url && (
+                <div className="flex items-start gap-2">
+                  <ExternalLink className="w-5 h-5 flex-shrink-0 text-[var(--text-muted)] mt-0.5" />
+                  <Link
+                    href={kdo.url}
+                    target="_blank"
+                    className="text-sm underline hover:no-underline transition-colors duration-200 text-[var(--link)] hover:text-[var(--link-hover)]"
+                  >
+                    Voir le produit
+                  </Link>
+                </div>
+              )}
 
               {/* Comment */}
               {kdo.comment && (
