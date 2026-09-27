@@ -15,14 +15,15 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
+import { optionalPrice, optionalUrl } from '@/lib/optionalFields';
 
 type ListOption = { value: string; label: string; user: string | null };
 
 const formSchema = z.object({
   name: z.string().min(2),
-  price: z.number().positive(),
+  price: optionalPrice,
   list_slug: z.string().min(1, { message: 'Sélectionnez une liste' }),
-  url: z.string().url({ message: 'Invalid url' }),
+  url: optionalUrl,
   comment: z.string().optional(),
   image: z.union([z.string().url(), z.literal('')]).optional(),
   availability: z.boolean().default(true).optional(),
@@ -32,7 +33,8 @@ const formSchema = z.object({
 function AddItem() {
   const { isChristmas } = useTheme();
   const router = useRouter();
-  const form = useForm<z.infer<typeof formSchema>>({
+  // Entrée ≠ sortie : prix et URL vides sont convertis en null par le schéma
+  const form = useForm<z.input<typeof formSchema>, unknown, z.output<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   });
   const [listOptions, setListOptions] = useState<ListOption[]>([]);
@@ -158,7 +160,7 @@ function AddItem() {
                 htmlFor="price"
                 className={`block font-medium mb-2 ${isChristmas ? 'text-white' : 'text-[var(--text-secondary)]'}`}
               >
-                Prix
+                Prix (facultatif)
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -243,7 +245,7 @@ function AddItem() {
             {/* URL input */}
             <div className="relative">
               <label htmlFor="url" className={`block font-medium mb-2 ${isChristmas ? 'text-white' : 'text-[var(--text-secondary)]'}`}>
-                URL
+                URL (facultatif)
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

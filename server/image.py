@@ -9,6 +9,18 @@ from config import MODE
 MAX_IMAGE_BYTES = 10 * 1024 * 1024  # 10 Mo
 REQUEST_TIMEOUT = 5  # secondes
 
+# Dossier des images des idées (partagé avec le frontend)
+KDOS_DIR = "/shared/kdos" if MODE == "production" else "../kdoapp/public/kdos"
+
+
+def _kdos_path(filename: str):
+    """Chemin du fichier dans KDOS_DIR, ou None s'il en sortirait (défense en profondeur)."""
+    base = os.path.realpath(KDOS_DIR)
+    path = os.path.realpath(os.path.join(base, filename))
+    if not path.startswith(base + os.sep):
+        return None
+    return path
+
 
 def _is_blocked_ip(ip_str: str) -> bool:
     """True si l'IP est privée, loopback, link-local ou réservée (anti-SSRF)."""
@@ -57,10 +69,10 @@ def get_image(url, name):
         print('URL rejetée (SSRF)')
         return 'unknown.jpg'
 
-    if MODE == "production":
-        file_path = "/shared/kdos/" + name
-    else:
-        file_path = "../kdoapp/public/kdos" + name
+    file_path = _kdos_path(name)
+    if file_path is None:
+        print('nom de fichier rejeté')
+        return 'unknown.jpg'
 
     try:
         res = requests.get(url, stream=True, timeout=REQUEST_TIMEOUT, allow_redirects=False)
@@ -88,9 +100,6 @@ def get_image(url, name):
 
 
 def remove_image(pk):
-    if MODE == "production":
-        path = "/shared/kdos/" + str(pk) + ".jpg"
-    else:
-        path = "../kdoapp/public/kdos" + str(pk) + ".jpg"
-    if os.path.exists(path):
+    path = _kdos_path(f"{pk}.jpg")
+    if path is not None and os.path.exists(path):
         os.remove(path)

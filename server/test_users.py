@@ -1,6 +1,5 @@
 import pytest
 import pytest_asyncio
-import asyncio
 from httpx import AsyncClient
 from main import app
 from models import User
@@ -137,10 +136,6 @@ async def test_modify_password_first_connection(client: AsyncClient, setup_test_
     response = await client.post("/api/modify-password/", json=payload, headers=headers)
     assert response.status_code == 200
 
-    # On utilise un sleep de 1 seconde pour éviter une erreur d'intégrité de SQLite avec le cache de millisecondes des strings du JWT (au login suivant).
-    # Vu qu'on ne doit pas modifier la BDD, on donne 1 seconde pour que la péremption du refresh token encodé soit différente !
-    await asyncio.sleep(1)
-
     # Vérifie que la connexion marche avec le nv password et que firstConnection est passé à False
     login_res2 = await client.post("/api/login/", data={"username": "user", "password": "New@Password1"})
     assert login_res2.status_code == 200
@@ -164,8 +159,6 @@ async def test_modify_password_standard(client: AsyncClient, setup_test_users):
     res_mod = await client.post("/api/modify-password/", json=payload, headers=headers)
     assert res_mod.status_code == 200
 
-    await asyncio.sleep(1)
-
     login_res2 = await client.post("/api/login/", data={"username": "user", "password": "Standard@Pass1"})
     assert login_res2.status_code == 200
 
@@ -184,8 +177,6 @@ async def test_admin_reset_password(client: AsyncClient, admin_token: str, setup
     response = await client.patch(f"/api/modify-password-admin/{user_id}", json=payload, headers=headers)
     assert response.status_code == 200
     assert response.json()["message"] == "Mot de passe mis à jour avec succès"
-
-    await asyncio.sleep(1)
 
     login_res = await client.post("/api/login/", data={"username": "user", "password": "AdminReset@12"})
     assert login_res.status_code == 200
@@ -244,8 +235,6 @@ async def test_update_role_promote(client: AsyncClient, admin_token: str, setup_
     user_id = setup_test_users["user"].id
     res = await client.patch(f"/api/users/{user_id}/role", json={"isAdmin": True}, headers=headers)
     assert res.status_code == 200
-    import asyncio
-    await asyncio.sleep(1)
     login = await client.post("/api/login/", data={"username": "user", "password": "NormalUser@123"})
     assert login.json()["isAdmin"] is True
 
@@ -260,3 +249,14 @@ async def test_update_role_non_mega_forbidden(client: AsyncClient, admin_non_meg
     headers = {"Authorization": f"Bearer {admin_non_mega_token}"}
     res = await client.patch(f"/api/users/{setup_test_users['user'].id}/role", json={"isAdmin": True}, headers=headers)
     assert res.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_two_logins_in_the_same_second(client: AsyncClient, setup_test_users):
+    """Double clic sur « Se connecter » : les deux connexions réussissent (plus de collision de refresh token)."""
+    credentials = {"username": "user", "password": "NormalUser@123"}
+    first = await client.post("/api/login/", data=credentials)
+    second = await client.post("/api/login/", data=credentials)
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert first.json()["refresh_token"] != second.json()["refresh_token"]

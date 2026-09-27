@@ -3,7 +3,7 @@ import pytest_asyncio
 from httpx import AsyncClient
 from main import app
 from models import User, GiftList, Idea
-from auth import hash_password
+from auth import create_access_token, hash_password
 
 @pytest_asyncio.fixture
 async def setup_test_ideas(client: AsyncClient, admin_token: str, user_token: str):
@@ -97,7 +97,7 @@ async def test_add_item_as_user(client: AsyncClient, user_token: str, setup_test
         "list_slug": "user"
     }
     response = await client.post("/api/add-item/", json=payload, headers=headers)
-    assert response.status_code == 401
+    assert response.status_code == 403
 
 @pytest.mark.asyncio
 async def test_get_kdos_all(client: AsyncClient, user_token: str, setup_test_ideas):
@@ -138,7 +138,7 @@ async def test_modify_item_as_user(client: AsyncClient, user_token: str, setup_t
         "name": "Modified Idea User",
     }
     response = await client.put("/api/modify-item/", json=payload, headers=headers)
-    assert response.status_code == 401
+    assert response.status_code == 403
 
 @pytest.mark.asyncio
 async def test_delete_item_as_admin(client: AsyncClient, admin_token: str, setup_test_ideas):
@@ -168,10 +168,47 @@ async def test_take_item_already_taken(client: AsyncClient, user_token: str, set
     assert response.json()["detail"] == "Idée déjà prise"
 
 @pytest.mark.asyncio
-async def test_untake_item(client: AsyncClient, user_token: str, setup_test_ideas):
-    headers = {"Authorization": f"Bearer {user_token}"}
+async def test_untake_item(client: AsyncClient, setup_test_ideas):
+    # Seul celui qui a réservé (user2) peut libérer : voir test_reservations.py
+    user2 = setup_test_ideas["user2"]
+    token = create_access_token({"sub": str(user2.id), "username": user2.name, "isAdmin": False, "isMegaAdmin": False})
+    headers = {"Authorization": f"Bearer {token}"}
     idea_id = setup_test_ideas["idea_taken"].id
     
     response = await client.post(f"/api/untake-api/{idea_id}", headers=headers)
     assert response.status_code == 200
     assert response.json()["success"] is True
+
+
+@pytest.mark.asyncio
+async def test_delete_item_as_user_forbidden(client: AsyncClient, user_token: str, setup_test_ideas):
+    headers = {"Authorization": f"Bearer {user_token}"}
+    idea_id = setup_test_ideas["idea_user"].id
+    response = await client.delete(f"/api/delete-item/{idea_id}/", headers=headers)
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_add_item_without_optional_fields(client: AsyncClient, admin_token: str, setup_test_ideas):
+    """Commentaire, URL et image sont facultatifs (auparavant : 500 sur une base créée depuis les modèles)."""
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    response = await client.post("/api/add-item/", json={"name": "Vélo", "price": 10.0, "list_slug": "user"}, headers=headers)
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_modify_item_can_clear_price_and_url(client: AsyncClient, admin_token: str, setup_test_ideas):
+    """Vider le prix et l'URL dans le formulaire de modification les efface en base."""
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    idea_id = setup_test_ideas["idea_user"].id
+    response = await client.put("/api/modify-item/", json={"id": idea_id, "price": None, "url": None}, headers=headers)
+    assert response.status_code == 200
+
+    from database import get_db
+    from sqlalchemy.future import select
+    async_gen = app.dependency_overrides[get_db]()
+    session = await anext(async_gen)
+    idea = (await session.execute(select(Idea).where(Idea.id == idea_id))).scalars().first()
+    await async_gen.aclose()
+    assert idea.price is None
+    assert idea.url is None

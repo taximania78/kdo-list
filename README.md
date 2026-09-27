@@ -50,14 +50,18 @@ Variables principales :
 
 > ⚠️ Générez une `SECRET_KEY` forte, par exemple : `openssl rand -hex 32`.
 
-### Lancer avec Docker
+### Déployer avec Docker
+
+Docker Compose sert au **déploiement** : dans `.env.local`, mettez `NODE_ENV=production`
+et une `SECRET_KEY` forte (l'API refuse de démarrer sinon).
+
+`docker-compose.yml` n'expose aucun port : l'accès passe par un reverse-proxy, décrit
+dans un `docker-compose.override.yml` (non versionné). Partez de l'exemple Traefik fourni :
 
 ```bash
-docker compose up --build
+cp docker-compose.override.example.yml docker-compose.override.yml   # puis adaptez-le
+docker compose --env-file .env.local up --build -d
 ```
-
-- Frontend : http://localhost:3001
-- API : http://localhost:8000
 
 ### Thème
 
@@ -65,24 +69,41 @@ Le thème (`Anniversaire` ou `Noël`) se choisit dans **Admin → Super admin �
 Il est enregistré en base et s'applique à tous les utilisateurs au chargement suivant,
 sans rebuild ni redémarrage.
 
-### Mise à jour / migrations
+### Base de données et migrations
 
-Après une mise à jour, lancer une fois les scripts de migration nécessaires
-(ils sont idempotents et ne modifient pas les données existantes) :
+Le schéma est géré par **Alembic** (`server/migrations/`). Au démarrage, le conteneur
+API applique automatiquement les migrations manquantes (`alembic upgrade head`) : une
+mise à jour se résume à `docker compose --env-file .env.local up --build -d`.
+
+**Installation neuve** : les tables sont créées au premier démarrage. Créez ensuite le
+premier super administrateur (`SUPERADMIN_NAME` / `SUPERADMIN_PASSWORD` dans `.env.local`) :
 
 ```bash
-docker compose exec fastapi python migrate_app_settings.py   # table des réglages (thème)
+docker compose exec fastapi python create_superadmin.py
 ```
 
-Tant que la migration n'est pas lancée, l'application s'affiche avec le thème par défaut.
+**Ajouter une migration** (après avoir modifié `server/models.py`) :
+
+```bash
+cd server
+alembic revision --autogenerate -m "description du changement"
+```
+
+Relisez le fichier généré dans `server/migrations/versions/` avant de le commiter.
+`test_migrations.py` échoue si les modèles et les migrations divergent.
 
 ### Développement local
+
+Il faut une base PostgreSQL accessible (`DATABASE_*` dans `.env.local`, par ex.
+`DATABASE_HOST=localhost`). Hors production, l'API charge automatiquement le
+`.env.local` de la racine du dépôt (une variable déjà définie dans le shell reste prioritaire).
 
 Backend :
 ```bash
 cd server
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
+alembic upgrade head
 uvicorn main:app --reload
 ```
 

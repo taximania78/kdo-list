@@ -15,6 +15,8 @@ type DialogTakeKdoProps = {
   availability: boolean;
   takenBy: string;
   userLogged: string;
+  // Un admin peut libérer la réservation de quelqu'un d'autre
+  canReleaseOthers?: boolean;
   onValidation?: () => void;
 };
 
@@ -25,10 +27,13 @@ const DialogKdo = ({
   availability,
   takenBy,
   userLogged,
+  canReleaseOthers = false,
   onValidation,
 }: DialogTakeKdoProps) => {
   const { isChristmas } = useTheme();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const isTaker = takenBy === userLogged;
+  const canRelease = isTaker || canReleaseOthers;
 
   const takeKdo = async () => {
     console.log(`Taking kdo: ${id}`);
@@ -72,7 +77,7 @@ const DialogKdo = ({
     if (availability) {
       return 'bg-[var(--secondary)] hover:bg-[var(--secondary-hover)] text-[var(--on-primary)] shadow-[var(--shadow-primary)]';
     }
-    if (takenBy !== userLogged) {
+    if (!canRelease) {
       return 'bg-[var(--surface-muted)] text-[var(--text-muted)] cursor-not-allowed';
     }
     return 'bg-[var(--danger)] hover:bg-[var(--danger-hover)] text-[var(--on-primary)] shadow-[var(--shadow-primary)]';
@@ -83,7 +88,7 @@ const DialogKdo = ({
       <AlertDialog.Trigger asChild>
         <button
           onClick={() => setIsDialogOpen(true)}
-          disabled={!availability && takenBy !== userLogged}
+          disabled={!availability && !canRelease}
           className={`w-full flex items-center justify-center gap-2 p-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 ${getButtonClasses()}`}
         >
           {availability ? (
@@ -91,10 +96,15 @@ const DialogKdo = ({
               <Gift className="w-5 h-5" />
               Je prends !
             </>
-          ) : takenBy === userLogged ? (
+          ) : isTaker ? (
             <>
               <X className="w-5 h-5" />
               Je ne souhaite plus prendre cette idée
+            </>
+          ) : canReleaseOthers ? (
+            <>
+              <X className="w-5 h-5" />
+              Libérer la réservation de {takenBy}
             </>
           ) : (
             <>
