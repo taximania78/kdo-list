@@ -415,3 +415,17 @@
 @keyframes tie-bow { from { transform: scale(0) rotate(-20deg); } }
 @keyframes tie-stamp { from { opacity: 0; transform: scale(1.8); } }
 @keyframes tie-note { from { opacity: 0; transform: translateY(6px); } }
+
+/* ── Bande de liste : ruban vertical (doré pour la liste commune) ── */
+.band-ribbon {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 64px;
+  width: 18px;
+  background: linear-gradient(90deg, var(--primary-deep) 0 2px, var(--primary) 2px calc(100% - 2px), var(--primary-deep) calc(100% - 2px));
+}
+
+.is-common .band-ribbon {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--foil) 70%, #000) 0 2px, var(--foil) 2px calc(100% - 2px), color-mix(in srgb, var(--foil) 70%, #000) calc(100% - 2px));
+}
