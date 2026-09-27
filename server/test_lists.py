@@ -96,7 +96,7 @@ async def test_get_all_lists_as_user(client: AsyncClient, user_token: str, setup
     headers = {"Authorization": f"Bearer {user_token}"}
     response = await client.get("/api/lists/all/", headers=headers)
     # Accessible uniquement par un admin
-    assert response.status_code == 401
+    assert response.status_code == 403
     assert "Non autorisé" in response.json()["detail"]
 
 @pytest.mark.asyncio

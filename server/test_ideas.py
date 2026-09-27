@@ -97,7 +97,7 @@ async def test_add_item_as_user(client: AsyncClient, user_token: str, setup_test
         "list_slug": "user"
     }
     response = await client.post("/api/add-item/", json=payload, headers=headers)
-    assert response.status_code == 401
+    assert response.status_code == 403
 
 @pytest.mark.asyncio
 async def test_get_kdos_all(client: AsyncClient, user_token: str, setup_test_ideas):
@@ -138,7 +138,7 @@ async def test_modify_item_as_user(client: AsyncClient, user_token: str, setup_t
         "name": "Modified Idea User",
     }
     response = await client.put("/api/modify-item/", json=payload, headers=headers)
-    assert response.status_code == 401
+    assert response.status_code == 403
 
 @pytest.mark.asyncio
 async def test_delete_item_as_admin(client: AsyncClient, admin_token: str, setup_test_ideas):
@@ -175,3 +175,11 @@ async def test_untake_item(client: AsyncClient, user_token: str, setup_test_idea
     response = await client.post(f"/api/untake-api/{idea_id}", headers=headers)
     assert response.status_code == 200
     assert response.json()["success"] is True
+
+
+@pytest.mark.asyncio
+async def test_delete_item_as_user_forbidden(client: AsyncClient, user_token: str, setup_test_ideas):
+    headers = {"Authorization": f"Bearer {user_token}"}
+    idea_id = setup_test_ideas["idea_user"].id
+    response = await client.delete(f"/api/delete-item/{idea_id}/", headers=headers)
+    assert response.status_code == 403

@@ -25,7 +25,7 @@ from auth import (
     verify_password,
     verify_and_update_password,
 )
-from deps import CurrentUser, get_current_user, oauth2_scheme, require_admin, require_megaadmin
+from deps import CurrentUser, get_current_user, require_admin, require_megaadmin
 from image import get_image, remove_image
 from config import MODE, URL_CONNECTION
 
@@ -105,16 +105,9 @@ async def get_lists(current_user: CurrentUser = Depends(get_current_user), db: A
 
     return visible_lists
 
-@app.get("/api/lists/all/")
-async def get_all_lists(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    """Retourne toutes les listes (superadmin only)."""
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    
-    if not payload.get("isAdmin"):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
-    
+@app.get("/api/lists/all/", dependencies=[Depends(require_admin)])
+async def get_all_lists(db: AsyncSession = Depends(get_db)):
+    """Retourne toutes les listes (admins)."""
     result = await db.execute(select(GiftList).options(joinedload(GiftList.owner)))
     all_lists = result.scalars().all()
     return [_serialize_list(gl) for gl in all_lists]
@@ -249,47 +242,41 @@ async def get_kdo_list(user: str = "all", list: str = None, current_user: Curren
 
     return rows
 
-@app.get("/api/kdos-admin/")
-async def get_kdo_list_admin(user: str = "all", list: str = None, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    
-    if payload.get("isAdmin"):
-        user_owner = aliased(User)
-        query = select(
-            Idea.id,
-            Idea.name,
-            Idea.comment,
-            Idea.price,
-            Idea.url,
-            Idea.image,
-            Idea.imageDisplay,
-            Idea.userId,
-            user_owner.name.label("user"),
-        ).outerjoin(user_owner, Idea.userId == user_owner.id)
+@app.get("/api/kdos-admin/", dependencies=[Depends(require_admin)])
+async def get_kdo_list_admin(user: str = "all", list: str = None, db: AsyncSession = Depends(get_db)):
+    user_owner = aliased(User)
+    query = select(
+        Idea.id,
+        Idea.name,
+        Idea.comment,
+        Idea.price,
+        Idea.url,
+        Idea.image,
+        Idea.imageDisplay,
+        Idea.userId,
+        user_owner.name.label("user"),
+    ).outerjoin(user_owner, Idea.userId == user_owner.id)
 
-        # Support pour le nouveau paramètre list (slu de la liste)
-        if list:
-            result_list = await db.execute(select(GiftList).where(GiftList.slug == list))
-            gift_list = result_list.scalars().first()
-            if not gift_list:
-                raise HTTPException(status_code=404, detail="Liste non trouvée")
-            query = query.filter(Idea.list_id == gift_list.id)
-        elif user != "all":
-            # Rétrocompatibilité
-            result = await db.execute(select(User).where(User.name == user))
-            user_instance = result.scalars().first()
-            if not user_instance:
-                raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    # Support pour le nouveau paramètre list (slug de la liste)
+    if list:
+        result_list = await db.execute(select(GiftList).where(GiftList.slug == list))
+        gift_list = result_list.scalars().first()
+        if not gift_list:
+            raise HTTPException(status_code=404, detail="Liste non trouvée")
+        query = query.filter(Idea.list_id == gift_list.id)
+    elif user != "all":
+        # Rétrocompatibilité
+        result = await db.execute(select(User).where(User.name == user))
+        user_instance = result.scalars().first()
+        if not user_instance:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
 
-            query = query.filter(Idea.userId == user_instance.id)
+        query = query.filter(Idea.userId == user_instance.id)
 
-        result = await db.execute(query)
-        rows = result.mappings().all()
-        return rows
-    else:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
+    result = await db.execute(query)
+    rows = result.mappings().all()
+    return rows
+
 
 @app.post("/api/login/")
 async def login_api(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
@@ -391,15 +378,8 @@ async def refresh_token(data: RefreshTokenRequest, db: AsyncSession = Depends(ge
 def test_token():
     return {"Hello": "World"}
 
-@app.post("/api/add-item/")
-async def add_item_api(idea_data: IdeaCreate, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    
-    if not payload.get("isAdmin"):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
-    
+@app.post("/api/add-item/", dependencies=[Depends(require_admin)])
+async def add_item_api(idea_data: IdeaCreate, db: AsyncSession = Depends(get_db)):
     # Résoudre l'utilisateur si fourni
     user_id = None
     if idea_data.user:
@@ -460,40 +440,28 @@ async def add_item_api(idea_data: IdeaCreate, token: str = Depends(oauth2_scheme
     return {"success": True, "message": "Idée ajoutée avec succès", "id": new_idea.id}
 
 
-@app.delete("/api/delete-item/{kdo_pk}/")
-async def delete_item_api(kdo_pk: int, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    
-    if payload.get("isAdmin"):
-        # Vérifier si l'idée existe avant de la supprimer
-        result = await db.execute(select(Idea).where(Idea.id == kdo_pk))
-        idea = result.scalars().first()
+@app.delete("/api/delete-item/{kdo_pk}/", dependencies=[Depends(require_admin)])
+async def delete_item_api(kdo_pk: int, db: AsyncSession = Depends(get_db)):
+    # Vérifier si l'idée existe avant de la supprimer
+    result = await db.execute(select(Idea).where(Idea.id == kdo_pk))
+    idea = result.scalars().first()
 
-        if not idea:
-            raise HTTPException(status_code=404, detail="Idée non trouvée")
+    if not idea:
+        raise HTTPException(status_code=404, detail="Idée non trouvée")
 
-        # Supprimer l'idée
-        stmt = delete(Idea).where(Idea.id == kdo_pk)
-        await db.execute(stmt)
-        await db.commit()
+    # Supprimer l'idée
+    stmt = delete(Idea).where(Idea.id == kdo_pk)
+    await db.execute(stmt)
+    await db.commit()
 
-        # Supprimer l'image associée
-        remove_image(kdo_pk)
+    # Supprimer l'image associée
+    remove_image(kdo_pk)
 
-        return {"success": True, "message": "Idée supprimée avec succès"}
-    else:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
+    return {"success": True, "message": "Idée supprimée avec succès"}
 
-@app.put("/api/modify-item/")
-async def modify_item_api(update_data: IdeaUpdate, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-    if not payload.get("isAdmin"):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
-    
+
+@app.put("/api/modify-item/", dependencies=[Depends(require_admin)])
+async def modify_item_api(update_data: IdeaUpdate, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Idea).where(Idea.id == update_data.id))
     idea = result.scalars().first()
 
@@ -783,15 +751,8 @@ async def fetch_image(
         filename=image_path.name,
     )
 
-@app.get("/api/export-csv/")
-async def export_ideas_csv(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    payload = decode_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide ou expiré")
-
-    if not payload.get("isAdmin"):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Non autorisé")
-
+@app.get("/api/export-csv/", dependencies=[Depends(require_admin)])
+async def export_ideas_csv(db: AsyncSession = Depends(get_db)):
     user_owner = aliased(User)
     query = select(
         Idea.name,

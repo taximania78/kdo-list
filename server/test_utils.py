@@ -64,7 +64,7 @@ async def test_export_csv_as_admin(client: AsyncClient, admin_token: str, setup_
 async def test_export_csv_as_user(client: AsyncClient, user_token: str, setup_test_utils):
     headers = {"Authorization": f"Bearer {user_token}"}
     response = await client.get("/api/export-csv/", headers=headers)
-    assert response.status_code == 401
+    assert response.status_code == 403
     assert "Non autorisé" in response.json()["detail"]
 
 @pytest.mark.asyncio

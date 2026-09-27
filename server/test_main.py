@@ -90,3 +90,16 @@ async def test_invalid_sub_on_real_endpoint(client: AsyncClient):
     token = jwt.encode({"sub": "abc", "type": "access", "exp": exp}, SECRET_KEY, algorithm=ALGORITHM)
     response = await client.get("/api/lists/", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_get_kdo_list_admin_as_user_forbidden(client: AsyncClient, user_token: str):
+    response = await client.get("/api/kdos-admin/", headers={"Authorization": f"Bearer {user_token}"})
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_get_all_lists_as_non_mega_admin_allowed(client: AsyncClient, admin_non_mega_token: str):
+    """Un admin simple gère toutes les listes : lists/all lui reste ouvert."""
+    response = await client.get("/api/lists/all/", headers={"Authorization": f"Bearer {admin_non_mega_token}"})
+    assert response.status_code == 200
