@@ -59,3 +59,30 @@ def test_is_safe_image_url_fails_closed_on_unicode_error(monkeypatch):
 
     monkeypatch.setattr("image.socket.getaddrinfo", fake_getaddrinfo)
     assert _is_safe_image_url("http://xn--bad/x.jpg") is False
+
+
+class _FakeImageResponse:
+    status_code = 200
+    headers = {"Content-Type": "image/jpeg"}
+
+    def iter_content(self, chunk_size):
+        yield b"fake-jpeg"
+
+
+def test_get_image_writes_inside_kdos_dir(monkeypatch, tmp_path):
+    """Le fichier doit être écrit DANS le dossier des images (pas à côté : 'kdos1.jpg')."""
+    monkeypatch.setattr(image, "KDOS_DIR", str(tmp_path))
+    monkeypatch.setattr(image, "_is_safe_image_url", lambda url: True)
+    monkeypatch.setattr("image.requests.get", lambda *a, **k: _FakeImageResponse())
+
+    assert get_image("https://93.184.216.34/x.jpg", "1.jpg") == "1.jpg"
+    assert (tmp_path / "1.jpg").read_bytes() == b"fake-jpeg"
+
+
+def test_remove_image_deletes_inside_kdos_dir(monkeypatch, tmp_path):
+    monkeypatch.setattr(image, "KDOS_DIR", str(tmp_path))
+    (tmp_path / "5.jpg").write_bytes(b"x")
+
+    image.remove_image(5)
+
+    assert not (tmp_path / "5.jpg").exists()

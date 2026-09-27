@@ -9,6 +9,9 @@ from config import MODE
 MAX_IMAGE_BYTES = 10 * 1024 * 1024  # 10 Mo
 REQUEST_TIMEOUT = 5  # secondes
 
+# Dossier des images des idées (partagé avec le frontend)
+KDOS_DIR = "/shared/kdos" if MODE == "production" else "../kdoapp/public/kdos"
+
 
 def _is_blocked_ip(ip_str: str) -> bool:
     """True si l'IP est privée, loopback, link-local ou réservée (anti-SSRF)."""
@@ -57,10 +60,7 @@ def get_image(url, name):
         print('URL rejetée (SSRF)')
         return 'unknown.jpg'
 
-    if MODE == "production":
-        file_path = "/shared/kdos/" + name
-    else:
-        file_path = "../kdoapp/public/kdos" + name
+    file_path = os.path.join(KDOS_DIR, name)
 
     try:
         res = requests.get(url, stream=True, timeout=REQUEST_TIMEOUT, allow_redirects=False)
@@ -88,9 +88,6 @@ def get_image(url, name):
 
 
 def remove_image(pk):
-    if MODE == "production":
-        path = "/shared/kdos/" + str(pk) + ".jpg"
-    else:
-        path = "../kdoapp/public/kdos" + str(pk) + ".jpg"
+    path = os.path.join(KDOS_DIR, f"{pk}.jpg")
     if os.path.exists(path):
         os.remove(path)

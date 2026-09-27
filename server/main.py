@@ -26,7 +26,7 @@ from auth import (
     verify_and_update_password,
 )
 from deps import CurrentUser, get_current_user, require_admin, require_megaadmin
-from image import get_image, remove_image
+from image import KDOS_DIR, get_image, remove_image
 from config import MODE, URL_CONNECTION
 
 from fastapi import FastAPI
@@ -740,10 +740,7 @@ async def fetch_image(
     if ".." in filename or filename.startswith("/"):
         raise HTTPException(400, "Chemin invalide")
 
-    if MODE == "production":
-        base_dir = "/shared/kdos"
-    else:
-        base_dir = "../kdoapp/public/kdos"
+    base_dir = KDOS_DIR
     # Défense en profondeur : realpath résout aussi les symlinks,
     # le chemin final doit rester sous base_dir
     real_base = os.path.realpath(base_dir)
