@@ -69,16 +69,28 @@ Le thème (`Anniversaire` ou `Noël`) se choisit dans **Admin → Super admin �
 Il est enregistré en base et s'applique à tous les utilisateurs au chargement suivant,
 sans rebuild ni redémarrage.
 
-### Mise à jour / migrations
+### Base de données et migrations
 
-Après une mise à jour, lancer une fois les scripts de migration nécessaires
-(ils sont idempotents et ne modifient pas les données existantes) :
+Le schéma est géré par **Alembic** (`server/migrations/`). Au démarrage, le conteneur
+API applique automatiquement les migrations manquantes (`alembic upgrade head`) : une
+mise à jour se résume à `docker compose --env-file .env.local up --build -d`.
+
+**Installation neuve** : les tables sont créées au premier démarrage. Créez ensuite le
+premier super administrateur (`SUPERADMIN_NAME` / `SUPERADMIN_PASSWORD` dans `.env.local`) :
 
 ```bash
-docker compose exec fastapi python migrate_app_settings.py   # table des réglages (thème)
+docker compose exec fastapi python create_superadmin.py
 ```
 
-Tant que la migration n'est pas lancée, l'application s'affiche avec le thème par défaut.
+**Ajouter une migration** (après avoir modifié `server/models.py`) :
+
+```bash
+cd server
+alembic revision --autogenerate -m "description du changement"
+```
+
+Relisez le fichier généré dans `server/migrations/versions/` avant de le commiter.
+`test_migrations.py` échoue si les modèles et les migrations divergent.
 
 ### Développement local
 
@@ -91,6 +103,7 @@ Backend :
 cd server
 python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
+alembic upgrade head
 uvicorn main:app --reload
 ```
 

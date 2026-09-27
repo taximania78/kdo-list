@@ -1,12 +1,10 @@
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.future import select
 from main import app
 from database import get_db
 from models import AppSetting
-from migrate_app_settings import create_app_settings_table
 
 
 async def _session():
@@ -93,7 +91,7 @@ async def test_get_theme_ignores_unknown_stored_value(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_get_theme_defaults_when_table_missing(client: AsyncClient):
-    # Simule une prod où migrate_app_settings.py n'a pas encore été lancé
+    # Table absente (base indisponible ou incomplète) : l'API se replie sur le thème par défaut
     gen, session = await _session()
     await session.execute(text("DROP TABLE app_settings"))
     await session.commit()
@@ -102,17 +100,6 @@ async def test_get_theme_defaults_when_table_missing(client: AsyncClient):
     response = await client.get("/api/settings/theme")
     assert response.status_code == 200
     assert response.json() == {"theme": "default"}
-
-
-@pytest.mark.asyncio
-async def test_migration_is_idempotent_and_inserts_nothing():
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
-    async with engine.begin() as conn:
-        await create_app_settings_table(conn)
-        await create_app_settings_table(conn)  # 2e exécution : aucune erreur
-        rows = (await conn.execute(text("SELECT key, value FROM app_settings"))).all()
-    await engine.dispose()
-    assert rows == []
 
 
 @pytest.mark.asyncio
