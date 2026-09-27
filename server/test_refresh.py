@@ -1,4 +1,3 @@
-import asyncio
 from datetime import datetime, timedelta, timezone
 
 import jwt
@@ -58,8 +57,6 @@ async def test_refresh_immediately_after_login(client: AsyncClient, normal_user)
 async def test_refresh_rotates_token(client: AsyncClient, normal_user):
     """Après un refresh réussi, l'ancien refresh token n'est plus accepté."""
     old = (await _login(client))["refresh_token"]
-    # Le nouveau jeton doit différer de l'ancien (exp à la seconde près).
-    await asyncio.sleep(1)
     res = await client.post("/api/refresh/", json={"refresh_token": old})
     assert res.status_code == 200
     replay = await client.post("/api/refresh/", json={"refresh_token": old})
