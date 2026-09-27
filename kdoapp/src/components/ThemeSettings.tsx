@@ -84,11 +84,6 @@ export default function ThemeSettings() {
                 {theme.titleEmoji ? `${theme.titleEmoji} ` : ''}
                 {theme.label}
               </span>
-              <span className="flex gap-2" aria-hidden="true">
-                {theme.swatches.map((color) => (
-                  <span key={color} className="w-8 h-8 rounded-full border border-[var(--border)]" style={{ background: color }} />
-                ))}
-              </span>
               {themeName === activeTheme && (
                 <span className="flex items-center gap-1 text-sm text-[var(--success)]">
                   <CheckCircle2 className="w-4 h-4" />

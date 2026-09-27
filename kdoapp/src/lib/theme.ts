@@ -7,7 +7,6 @@ export type ThemeConfig = {
   appTitle: string;
   titleEmoji: string;
   showSnowflakes: boolean;
-  swatches: string[]; // aperçu dans l'admin (primaire, secondaire, fond)
 };
 
 export const DEFAULT_THEME: ThemeName = 'default';
@@ -19,7 +18,6 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
     appTitle: "Liste d'anniversaire",
     titleEmoji: '',
     showSnowflakes: false,
-    swatches: ['#F28482', '#84A59D', '#F7EDE2'],
   },
   christmas: {
     label: 'Noël',
@@ -27,7 +25,6 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
     appTitle: 'Liste de Noël',
     titleEmoji: '🎄',
     showSnowflakes: true,
-    swatches: ['#B91C1C', '#15803D', '#166534'],
   },
 };
 
