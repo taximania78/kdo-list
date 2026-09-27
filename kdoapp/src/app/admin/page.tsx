@@ -20,9 +20,9 @@ const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 type Kdo = {
   id: number;
   name: string;
-  price: number;
+  price: number | null;
   user: string;
-  url: string;
+  url: string | null;
   comment?: string | null;
   image?: string | null;
   imageDisplay?: string | null;

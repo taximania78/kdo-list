@@ -194,3 +194,21 @@ async def test_add_item_without_optional_fields(client: AsyncClient, admin_token
     headers = {"Authorization": f"Bearer {admin_token}"}
     response = await client.post("/api/add-item/", json={"name": "Vélo", "price": 10.0, "list_slug": "user"}, headers=headers)
     assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_modify_item_can_clear_price_and_url(client: AsyncClient, admin_token: str, setup_test_ideas):
+    """Vider le prix et l'URL dans le formulaire de modification les efface en base."""
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    idea_id = setup_test_ideas["idea_user"].id
+    response = await client.put("/api/modify-item/", json={"id": idea_id, "price": None, "url": None}, headers=headers)
+    assert response.status_code == 200
+
+    from database import get_db
+    from sqlalchemy.future import select
+    async_gen = app.dependency_overrides[get_db]()
+    session = await anext(async_gen)
+    idea = (await session.execute(select(Idea).where(Idea.id == idea_id))).scalars().first()
+    await async_gen.aclose()
+    assert idea.price is None
+    assert idea.url is None
