@@ -24,7 +24,7 @@ export function Field({ label, htmlFor, error, hint, tone = 'bg', children }: Fi
       {children}
       {hint}
       {error && (
-        <p role="alert" className="w-fit rounded-sm bg-paper px-2 py-1 text-sm font-semibold text-error">
+        <p role="alert" className="w-fit rounded-[3px] bg-paper px-2 py-1 text-sm font-semibold text-error">
           {error}
         </p>
       )}

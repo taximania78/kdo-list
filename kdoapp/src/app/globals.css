@@ -55,6 +55,7 @@
       drop-shadow(0 10px 14px rgb(90 60 25 / 0.16));
     --grain-opacity: 0.1;
     --grain-blend: multiply;
+    --grain-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .15 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     --wrap-paper: var(--primary);
     --wrap-dot: #FFE3B8;
   }
@@ -104,7 +105,31 @@
     pointer-events: none;
     opacity: var(--grain-opacity);
     mix-blend-mode: var(--grain-blend);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .15 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-image: var(--grain-noise);
+  }
+
+  /* Anneau de focus clavier commun (boutons, filtres, liens, onglets, interrupteur) ;
+     les champs gardent leur propre contour (controlClass). */
+  :focus-visible {
+    outline: 2.5px solid var(--primary);
+    outline-offset: 2px;
+  }
+}
+
+/* Grain propre à une surface opaque posée au-dessus du grain global (ex. en-tête collant).
+   L'élément doit déjà être positionné (sticky, relative…) ; le grain reste sous son contenu. */
+@utility grain {
+  isolation: isolate;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    mix-blend-mode: var(--grain-blend);
+    background-image: var(--grain-noise);
   }
 }
 
@@ -202,15 +227,21 @@
 .unwrap-rib-h { left: 0; right: 0; top: 50%; height: 34px; translate: 0 -50%; }
 .unwrap-bow { position: absolute; left: 50%; top: 50%; width: 180px; height: 130px; translate: -50% -60%; }
 
+/* Pastille de papier : reste lisible par-dessus le ruban vertical */
 .unwrap-hint {
   position: absolute;
+  z-index: 1;
   inset-inline: 0;
   bottom: 36px;
-  text-align: center;
+  width: fit-content;
+  margin-inline: auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
   font: 500 13px var(--font-dm-mono), monospace;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--wrap-dot);
 }
 
 .unwrap.is-opening .unwrap-bow { animation: unwrap-bow 0.32s ease-in both; }

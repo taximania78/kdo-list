@@ -29,9 +29,11 @@ export default async function RootLayout({
   const themeConfig = THEMES[theme];
 
   // Couches : grain (body::before, z-0) → neige arrière (z-0) → contenu (z-10)
-  // → neige avant (z-30) → en-tête et onglets (z-40) → panneaux (z-50) → ouverture (z-100).
+  // → en-tête (avec son propre grain) et onglets (z-40) → neige avant (z-45)
+  // → panneaux (z-50) → ouverture (z-100).
+  const htmlClass = [fontVariables, themeConfig.themeClass].filter(Boolean).join(' ');
   return (
-    <html lang="fr-FR" className={`${fontVariables} ${themeConfig.themeClass}`}>
+    <html lang="fr-FR" className={htmlClass}>
       <body className="flex min-h-dvh flex-col antialiased">
         <ThemeProvider theme={theme}>
           {themeConfig.showSnowflakes && <Snowfall />}

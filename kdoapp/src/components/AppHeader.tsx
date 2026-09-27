@@ -18,7 +18,7 @@ export function AppHeader() {
   const items = navItems(isAuthenticated ? user : null);
 
   return (
-    <header className="sticky top-0 z-40 bg-bg">
+    <header className="grain sticky top-0 z-40 bg-bg">
       <div className="mx-auto flex h-15 max-w-[1280px] items-center justify-between px-5 md:h-18 md:px-10">
         <Link
           href={isAuthenticated ? '/list' : '/'}
