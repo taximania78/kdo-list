@@ -9,14 +9,14 @@ from pwdlib.hashers.bcrypt import BcryptHasher
 def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "type": "access"})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 # Générer un Refresh Token
 def create_refresh_token(data: dict):
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "type": "refresh"})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM), expire
 
 # Décoder un JWT
@@ -28,7 +28,15 @@ def decode_jwt(token: str):
         return None  # Token expiré
     except jwt.InvalidTokenError:
         return None  # Token invalide
-    
+
+# Décoder un JWT en exigeant son type ("access" ou "refresh")
+def decode_jwt_of_type(token: str, expected_type: str):
+    payload = decode_jwt(token)
+    if payload is None or payload.get("type") != expected_type:
+        return None
+    return payload
+
+
 pwd_context = PasswordHash((Argon2Hasher(), BcryptHasher()))
 
 def hash_password(password: str) -> str:
