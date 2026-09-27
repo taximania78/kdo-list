@@ -3,7 +3,7 @@ import asyncio
 from logging.config import fileConfig
 
 from sqlalchemy import pool
-from sqlalchemy.engine import Connection
+from sqlalchemy.engine import URL, Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from alembic import context
@@ -20,7 +20,7 @@ if config.config_file_name is not None and config.attributes.get("configure_logg
 target_metadata = Base.metadata
 
 
-def _database_url() -> str:
+def _database_url() -> str | URL:
     return config.get_main_option("sqlalchemy.url") or DATABASE_URL
 
 

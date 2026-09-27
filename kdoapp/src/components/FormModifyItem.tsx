@@ -9,6 +9,7 @@ import * as Accordion from '@radix-ui/react-accordion';
 import { z } from 'zod';
 import api from '@/lib/api';
 import { useTheme } from '@/components/ThemeProvider';
+import { optionalPrice, optionalUrl } from '@/lib/optionalFields';
 import {
   ChevronDown,
   Tag,
@@ -27,9 +28,9 @@ type ListOption = { value: string; label: string; user: string | null };
 const formSchema = z.object({
   id: z.number(),
   name: z.string().min(2),
-  price: z.number().positive(),
+  price: optionalPrice,
   list_slug: z.string().min(1),
-  url: z.string().url({ message: 'Invalid url' }),
+  url: optionalUrl,
   comment: z.string().optional().nullable(),
   image: z
     .union([z.string().url(), z.literal('')])
@@ -43,9 +44,9 @@ interface FormModifyItemProps {
   kdo: {
     id: number;
     name: string;
-    price: number;
+    price: number | null;
     user: string;
-    url?: string;
+    url?: string | null;
     comment?: string | null;
     image?: string | null;
   };
@@ -69,7 +70,8 @@ export default function FormModifyItem({
     return opt ? opt.value : 'commune';
   }, [kdo.user, listOptions]);
 
-  const { register, handleSubmit, setValue } = useForm<FormData>({
+  // Entrée ≠ sortie : prix et URL vides sont convertis en null par le schéma
+  const { register, handleSubmit, setValue } = useForm<z.input<typeof formSchema>, unknown, FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: kdo.id,
@@ -199,7 +201,7 @@ export default function FormModifyItem({
                     className="block font-medium mb-2 text-[var(--text-secondary)]"
                     htmlFor="price"
                   >
-                    Prix
+                    Prix (facultatif)
                   </label>
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none mt-8">
                     <DollarSign className="h-5 w-5 text-[var(--text-muted)]" />
@@ -212,7 +214,7 @@ export default function FormModifyItem({
                     id="price"
                     name="price"
                     placeholder="Entrer le prix"
-                    defaultValue={kdo.price}
+                    defaultValue={kdo.price ?? undefined}
                   />
                 </div>
 
@@ -242,7 +244,7 @@ export default function FormModifyItem({
                     className="block font-medium mb-2 text-[var(--text-secondary)]"
                     htmlFor="url"
                   >
-                    URL
+                    URL (facultatif)
                   </label>
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none mt-8">
                     <LinkIcon className="h-5 w-5 text-[var(--text-muted)]" />
