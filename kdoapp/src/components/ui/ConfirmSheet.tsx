@@ -29,6 +29,10 @@ export function ConfirmSheet({
   const busy = useRef(false); // garde contre le double appui, avant même le re-rendu
 
   const handleOpenChange = (next: boolean) => {
+    // Ignore toute demande de fermeture (Échap, clic sur l'overlay, Annuler)
+    // tant qu'une confirmation est en cours : évite qu'une erreur arrive
+    // après coup sur un panneau déjà fermé et y laisse un état périmé.
+    if (!next && busy.current) return;
     if (!next) setError(null);
     onOpenChange(next);
   };

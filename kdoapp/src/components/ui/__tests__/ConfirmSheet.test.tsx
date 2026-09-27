@@ -56,4 +56,38 @@ describe('ConfirmSheet', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Annuler' }));
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
+
+  it('ignores Escape while a confirm is pending, then closes once it resolves', async () => {
+    let resolve: () => void = () => {};
+    const onConfirm = jest.fn(() => new Promise<void>((r) => { resolve = r; }));
+    const { onOpenChange } = setup(onConfirm);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: /Oui, je l'emballe/ }));
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+
+    await user.keyboard('{Escape}');
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+
+    await act(async () => resolve());
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it('still shows the error and stays open after a pending confirm rejects, even if Escape was pressed while pending', async () => {
+    let reject: (error: unknown) => void = () => {};
+    const onConfirm = jest.fn(() => new Promise<void>((_resolve, r) => { reject = r; }));
+    const { onOpenChange } = setup(onConfirm);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: /Oui, je l'emballe/ }));
+    await user.keyboard('{Escape}');
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+
+    await act(async () => reject({
+      response: { data: { detail: "Cette idée vient d'être réservée." } },
+    }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("Cette idée vient d'être réservée.");
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
 });
