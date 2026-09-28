@@ -172,7 +172,7 @@ Toutes chargées une seule fois dans `app/layout.tsx` via `next/font/google` (va
 - **Champs :** libellé visible au-dessus (14px, 600), fond `paper`, bordure `line`, focus = contour 2,5px `primary`. Erreur sous le champ en `error`. Menu déroulant sans flèche native : chevron `ink-muted` à droite, décoratif.
 - **Anneau de focus :** contour 2,5px `primary` décalé de 2px ; onglets, liens de navigation, liens retour et actions texte ont des coins de 6px pour que l'anneau soit arrondi. Le soulignement de l'onglet ou du lien actif est une barre `primary` (`::after`), pas une ombre intérieure, pour rester droit.
 - **Chargement / vide / erreur :** un seul composant par état, sur papier, avec une phrase précise (« Aucune idée pour Léa pour l'instant »).
-- **Décors Noël :** neige posée (vague blanche) sur le bord haut des bandes et des étiquettes.
+- **Décors Noël :** neige posée sur le bord haut des bandes et des étiquettes : tuile de 80px répétée (jamais étirée), bosses arrondies de hauteurs variées, extrémités qui s'amincissent, 15px de haut, ombre légère.
 
 ## Do's and Don'ts
 
@@ -212,3 +212,4 @@ Toutes chargées une seule fois dans `app/layout.tsx` via `next/font/google` (va
 | 2026-09-28 | Vocabulaire : « prendre » / « disponible » au lieu d'« emballer » ; « Libérer la réservation » gardé pour l'admin ; commentaire rappelé dans le panneau de prise | Plus clair pour la famille |
 | 2026-09-28 | Titre de connexion : « Des idées, juste au cas où. » | Les listes servent à donner des idées, pas une liste d'achats |
 | 2026-09-28 | Confirmation secondaire (`ghost`) pour « Je ne prends plus » et « Libérer la réservation » ; les suppressions gardent `primary` | Le rouge reste réservé à l'action principale ; annuler une prise n'est pas une action à mettre en avant |
+| 2026-09-28 | Neige posée en tuile de 80px répétée, bosses arrondies, bords adoucis | Le dessin étiré sur toute la largeur aplatissait les bosses en créneaux |

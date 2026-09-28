@@ -176,7 +176,11 @@
   top: -8px;
   height: 15px;
   pointer-events: none;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 16' preserveAspectRatio='none'%3E%3Cpath d='M0 9 Q6 2 14 6 T30 5 T46 8 T62 3 T80 7 T96 4 T114 8 T130 3 T148 7 T166 4 T184 8 T200 5 V16 H0Z' fill='%23FFFFFF'/%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat;
+  /* Tuile de 80px répétée (jamais étirée en largeur) : trois bosses arrondies de hauteurs
+     variées qui se rejoignent en creux doux, raccord sans couture. */
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 16' preserveAspectRatio='none'%3E%3Cpath d='M0 10 C2 6 8 1.5 15 1.5 C22 1.5 27 6.5 30 9 C33 6.5 37 4 41.5 4 C46 4 49.5 7.5 52 10 C55 6.5 60 2.5 66 2.5 C72 2.5 77 6 80 10 V16 H0Z' fill='%23FFFFFF'/%3E%3C/svg%3E") 0 0 / 80px 100% repeat-x;
+  /* Bords doux : la neige s'amincit aux deux extrémités au lieu d'être coupée net. */
+  mask-image: linear-gradient(90deg, transparent, #000 7px, #000 calc(100% - 7px), transparent);
   filter: drop-shadow(0 2px 1px rgb(20 50 60 / 0.22));
 }
 
