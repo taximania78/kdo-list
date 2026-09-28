@@ -2,16 +2,16 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Palette, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import api from '@/lib/api';
 import { useTheme } from '@/components/ThemeProvider';
 import { THEME_NAMES, THEMES, type ThemeName } from '@/lib/theme';
+import { Button } from '@/components/ui/Button';
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 export default function ThemeSettings() {
   const router = useRouter();
-  const { name: activeTheme, isChristmas } = useTheme();
+  const { name: activeTheme } = useTheme();
   const [selected, setSelected] = useState<ThemeName>(activeTheme);
   const [isSaving, setIsSaving] = useState(false);
   const [status, setStatus] = useState<'success' | 'error' | null>(null);
@@ -33,30 +33,15 @@ export default function ThemeSettings() {
   };
 
   return (
-    <div
-      className="
-        rounded-2xl
-        shadow-xl
-        border
-        overflow-hidden
-        animate-fadeInUp
-        surface-card
-        border-[var(--border)]
-        mt-6
-      "
-      style={{ animationDelay: '0.3s' }}
-    >
-      <div className="p-6 sm:p-8 border-b border-[var(--border)]">
-        <div className="flex items-center gap-3">
-          <Palette className={`w-6 h-6 ${isChristmas ? 'text-white' : 'text-[var(--primary)]'}`} />
-          <h2 className={`text-xl font-bold ${isChristmas ? 'text-white' : 'text-[var(--text-primary)]'}`}>
-            Apparence
-          </h2>
-        </div>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">Thème de l&apos;application (visible par tous)</p>
+    <section aria-labelledby="theme-title" className="grid gap-4">
+      <div>
+        <h2 id="theme-title" className="font-display text-2xl font-bold tracking-[-0.02em]">
+          Apparence
+        </h2>
+        <p className="text-sm text-on-bg-muted">Le thème s&apos;applique à toute la famille.</p>
       </div>
 
-      <fieldset className="p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <fieldset className="grid gap-3.5 md:grid-cols-2">
         <legend className="sr-only">Thème</legend>
         {THEME_NAMES.map((themeName) => {
           const theme = THEMES[themeName];
@@ -64,59 +49,49 @@ export default function ThemeSettings() {
           return (
             <label
               key={themeName}
-              className={`
-                flex flex-col gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors
-                ${isSelected ? 'border-[var(--primary)]' : 'border-[var(--border)] hover:bg-[var(--surface-hover)]'}
-              `}
+              className={`grid cursor-pointer grid-cols-[96px_1fr] items-center gap-3.5 rounded-lg bg-paper p-3 text-ink ring-inset ${isSelected ? 'ring-[2.5px] ring-primary' : ''}`}
             >
-              <span className="flex items-center gap-2 font-medium text-[var(--text-primary)]">
-                <input
-                  type="radio"
-                  name="theme"
-                  value={themeName}
-                  checked={isSelected}
-                  onChange={() => {
-                    setSelected(themeName);
-                    setStatus(null);
-                  }}
-                  className="accent-[var(--primary)]"
-                />
-                {theme.titleEmoji ? `${theme.titleEmoji} ` : ''}
-                {theme.label}
+              <span aria-hidden className="relative block h-18 overflow-hidden rounded-md" style={{ background: theme.preview.bg }}>
+                <span className="absolute left-3.5 top-4 h-10 w-11 rounded-sm" style={{ background: theme.preview.paper }} />
+                <span className="absolute left-8 top-4 h-10 w-[7px]" style={{ background: theme.preview.ribbon }} />
               </span>
-              {themeName === activeTheme && (
-                <span className="flex items-center gap-1 text-sm text-[var(--success)]">
-                  <CheckCircle2 className="w-4 h-4" />
-                  Actif
+              <span className="grid gap-0.5">
+                <span className="flex items-center gap-2 font-display text-xl font-bold tracking-[-0.02em]">
+                  <input
+                    type="radio"
+                    name="theme"
+                    value={themeName}
+                    checked={isSelected}
+                    onChange={() => {
+                      setSelected(themeName);
+                      setStatus(null);
+                    }}
+                    className="accent-primary"
+                  />
+                  {theme.label}
                 </span>
-              )}
+                <span className="text-[13px] text-ink-muted">{theme.description}</span>
+                {themeName === activeTheme && (
+                  <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-mine">Actif</span>
+                )}
+              </span>
             </label>
           );
         })}
       </fieldset>
 
-      <div className="px-6 pb-6 sm:px-8 sm:pb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="text-sm" role="status">
-          {status === 'success' && (
-            <span className="flex items-center gap-1 text-[var(--success)]">
-              <CheckCircle2 className="w-4 h-4" /> Thème mis à jour
-            </span>
-          )}
-          {status === 'error' && (
-            <span className="flex items-center gap-1 text-[var(--error)]">
-              <XCircle className="w-4 h-4" /> Erreur : le thème n&apos;a pas pu être enregistré.
-            </span>
-          )}
-        </div>
-        <button
-          onClick={handleApply}
-          disabled={isSaving || selected === activeTheme}
-          className="flex items-center justify-center gap-2 py-2 px-6 rounded-lg text-white font-semibold bg-[var(--primary)] hover:bg-[var(--primary-hover)] disabled:opacity-50"
-        >
-          {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-          Appliquer
-        </button>
+      <div role="status" className="text-sm font-semibold">
+        {status === 'success' && <span className="w-fit rounded-md bg-paper px-3 py-2 text-mine">Thème mis à jour</span>}
+        {status === 'error' && (
+          <span className="w-fit rounded-md bg-paper px-3 py-2 text-error">
+            Erreur : le thème n&apos;a pas pu être enregistré.
+          </span>
+        )}
       </div>
-    </div>
+
+      <Button onClick={handleApply} pending={isSaving} disabled={selected === activeTheme} block className="md:w-fit">
+        Appliquer à toute la famille
+      </Button>
+    </section>
   );
 }

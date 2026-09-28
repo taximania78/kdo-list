@@ -212,3 +212,71 @@ async def test_modify_item_can_clear_price_and_url(client: AsyncClient, admin_to
     await async_gen.aclose()
     assert idea.price is None
     assert idea.url is None
+
+
+@pytest_asyncio.fixture
+async def setup_ordering_ideas(client: AsyncClient):
+    """Idées insérées volontairement dans le désordre, avec un doublon insensible à la
+    casse (« Vélo » / « vélo ») pour vérifier que l'id départage les égalités."""
+    from database import get_db
+    async_gen = app.dependency_overrides[get_db]()
+    session = await anext(async_gen)
+
+    admin_user = User(name="admin", password=hash_password("Admin@123"), isAdmin=True, isMegaAdmin=True, firstConnection=False)
+    normal_user = User(name="user", password=hash_password("NormalUser@123"), isAdmin=False, isMegaAdmin=False, firstConnection=False)
+    session.add_all([admin_user, normal_user])
+    await session.flush()
+
+    list_user = GiftList(slug="user", label="User's List", owner_id=normal_user.id, enabled=True)
+    session.add(list_user)
+    await session.flush()
+
+    def idea(name):
+        return Idea(
+            name=name, price=10.0, url="", image="", imageDisplay="unknown.jpg", comment="",
+            userId=normal_user.id, list_id=list_user.id, availability=True,
+        )
+
+    velo = idea("Vélo")
+    casque = idea("Casque")
+    appareil = idea("appareil photo")
+    casque_bis = idea("casque bis")
+    velo_minuscule = idea("vélo")
+    session.add_all([velo, casque, appareil, casque_bis, velo_minuscule])
+    await session.commit()
+    for i in (velo, casque, appareil, casque_bis, velo_minuscule):
+        await session.refresh(i)
+
+    await async_gen.aclose()
+    return {"casque": casque}
+
+
+@pytest.mark.asyncio
+async def test_get_kdos_sorted_alphabetically(client: AsyncClient, user_token: str, setup_ordering_ideas):
+    """Ordre alphabétique insensible à la casse, id en cas d'égalité ; stable après une
+    réservation au milieu de la liste (auparavant, PostgreSQL pouvait renvoyer la ligne
+    modifiée en fin de résultat faute d'ORDER BY)."""
+    headers = {"Authorization": f"Bearer {user_token}"}
+    expected_order = ["appareil photo", "Casque", "casque bis", "Vélo", "vélo"]
+
+    response = await client.get("/api/kdos/?list=user", headers=headers)
+    assert response.status_code == 200
+    assert [row["name"] for row in response.json()] == expected_order
+
+    casque_id = setup_ordering_ideas["casque"].id
+    take_response = await client.post(f"/api/take-api/{casque_id}", headers=headers)
+    assert take_response.status_code == 200
+
+    response_after = await client.get("/api/kdos/?list=user", headers=headers)
+    assert response_after.status_code == 200
+    assert [row["name"] for row in response_after.json()] == expected_order
+
+
+@pytest.mark.asyncio
+async def test_get_kdos_admin_sorted_alphabetically(client: AsyncClient, admin_token: str, setup_ordering_ideas):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    expected_order = ["appareil photo", "Casque", "casque bis", "Vélo", "vélo"]
+
+    response = await client.get("/api/kdos-admin/?list=user", headers=headers)
+    assert response.status_code == 200
+    assert [row["name"] for row in response.json()] == expected_order

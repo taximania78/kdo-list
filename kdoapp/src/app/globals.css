@@ -1,301 +1,424 @@
 @import 'tailwindcss';
 
+/* Point de bascule unique (DESIGN.md › Layout) : md = 720px */
+@theme {
+  --breakpoint-md: 45rem;
+}
+
+/* Jetons exposés à Tailwind : bg-paper, text-ink, bg-primary, font-display… */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-on-bg: var(--on-bg);
+  --color-on-bg-muted: var(--on-bg-muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-deep: var(--primary-deep);
+  --color-on-primary: var(--on-primary);
+  --color-foil: var(--foil);
+  --color-mine: var(--mine);
+  --color-line: var(--line);
+  --color-error: var(--error);
+  --color-hand: var(--hand);
+  --color-wordmark: var(--wordmark);
+  --font-sans: var(--font-figtree), ui-sans-serif, sans-serif;
+  --font-display: var(--font-bricolage), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-dm-mono), ui-monospace, monospace;
+  --font-hand: var(--font-caveat), cursive;
 }
 
-/* Theme variables */
 @layer base {
+  /* Thème Anniversaire (par défaut) — valeurs de DESIGN.md */
   :root {
-    --background: #F7EDE2;
-    --foreground: #2D3436;
-
-    /* Couleurs primaires - Corail #F28482 */
-    --primary: #F28482;
-    --primary-hover: #E07270;
-    --primary-light: #F5CAC3;
-    --on-primary: #ffffff;
-
-    /* Couleurs secondaires - Vert sauge #84A59D */
-    --secondary: #84A59D;
-    --secondary-hover: #6B8B83;
-    --secondary-light: #B8CCC7;
-
-    /* Surfaces et fonds */
-    --surface: #ffffff;
-    --surface-hover: #F7EDE2;
-    --surface-muted: #F5CAC3;
-
-    /* Texte - tons gris chaleureux */
-    --text-primary: #2D3436;
-    --text-secondary: #636E72;
-    --text-muted: #636c70;
-
-    /* Bordures - tons beige */
-    --border: #E8DED5;
-    --border-light: #F7EDE2;
-
-    /* Ombres */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-primary: 0 10px 15px -3px rgba(242, 132, 130, 0.3);
-
-    /* États */
-    --danger: #E74C3C;
-    --danger-hover: #C0392B;
-    --success: #84A59D;
-
-    /* Inputs - fond crème */
-    --input-bg: #F7EDE2;
-    --input-border: #E8DED5;
-    --input-focus: #F28482;
-
-    /* Focus rings - corail */
-    --ring: #F28482;
-    --ring-opacity: 0.3;
-
-    /* Liens - vert sauge */
-    --link: #84A59D;
-    --link-hover: #6B8B83;
-
-    /* Erreurs de formulaire */
-    --error: #E74C3C;
-    --error-bg: #FDEAEA;
-
-    /* Table header */
-    --table-header: #F7EDE2;
-
-    /* Dialog overlay */
-    --dialog-bg: #ffffff;
-
-    /* Navbar */
-    --nav-bg: rgb(255 255 255 / 0.7);
-    --nav-text: #636E72;
-    --nav-text-hover: #F28482;
-    --nav-border: #F7EDE2;
-
-    /* Footer */
-    --footer-bg: #ffffff;
-    --footer-text: #636E72;
-    --footer-text-muted: #B2BEC3;
-
-    /* Logo */
-    --logo-from: #F28482;
-    --logo-to: #F5CAC3;
+    --bg: #F2E4C9;
+    --paper: #FFFBF2;
+    --paper-2: #F6ECD8;
+    --ink: #2B2019;
+    --ink-muted: #7A6752;
+    --on-bg: #2B2019;
+    --on-bg-muted: #7A6752;
+    --primary: #D8432B;
+    --primary-hover: #B8351F;
+    --primary-deep: #9E2C19;
+    --on-primary: #FFF8EE;
+    --foil: #E9A93A;
+    --mine: #2F6B4E;
+    --line: #E4D4B3;
+    --error: #B8351F;
+    /* Dérivés (même élément <html> que la classe de thème : les var() suivent le thème) */
+    --hand: #5A4634; /* brun soutenu : les touches manuscrites (Caveat, fines) restent lisibles sur le kraft */
+    --wordmark: var(--primary);
+    --paper-shadow: drop-shadow(0 1px 0 rgb(60 40 20 / 0.1))
+      drop-shadow(0 10px 14px rgb(90 60 25 / 0.16));
+    --grain-opacity: 0.1;
+    --grain-blend: multiply;
+    --grain-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .15 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    --wrap-paper: var(--primary);
+    --wrap-dot: #FFE3B8;
   }
 
-  .theme-christmas {
-    /* Couleurs primaires */
-    --primary: var(--color-red-700);
-    --primary-hover: var(--color-red-800);
-    --primary-light: var(--color-red-100);
-    --on-primary: var(--color-white);
+  /* Thème Noël : la classe est posée sur <html> par le layout */
+  :root.theme-christmas {
+    --bg: #10291F;
+    --paper: #F6EEDD;
+    --paper-2: #EADFC7;
+    --ink: #221D16;
+    --ink-muted: #6E6352;
+    --on-bg: #F6EEDD;
+    --on-bg-muted: #9DB3A6;
+    --primary: #C21F3A;
+    --primary-hover: #A0162E;
+    --primary-deep: #7E0F22;
+    --on-primary: #FFF6EA;
+    --foil: #D4A548;
+    --mine: #1F6B45;
+    --line: #D8C9A8;
+    --hand: var(--foil);
+    --wordmark: var(--foil);
+    --paper-shadow: drop-shadow(0 1px 0 rgb(0 0 0 / 0.25))
+      drop-shadow(0 12px 16px rgb(0 0 0 / 0.35));
+    --grain-opacity: 0.07;
+    --grain-blend: overlay;
+    --wrap-paper: #0B1F17;
+    --wrap-dot: var(--foil);
+  }
 
-    /* Couleurs secondaires */
-    --secondary: var(--color-green-700);
-    --secondary-hover: var(--color-green-800);
-    --secondary-light: var(--color-green-100);
+  html {
+    background: var(--bg);
+  }
 
-    /* Surfaces et fonds */
-    --surface: rgb(255 255 255 / 0.1);
-    --surface-hover: rgb(255 255 255 / 0.2);
-    --surface-muted: rgb(255 255 255 / 0.05);
+  body {
+    background: var(--bg);
+    color: var(--on-bg);
+    font-family: var(--font-figtree), ui-sans-serif, sans-serif;
+  }
 
-    /* Texte */
-    --text-primary: var(--color-white);
-    --text-secondary: rgb(255 255 255 / 0.9);
-    --text-muted: rgb(255 255 255 / 0.6);
+  /* Grain de papier, sous le contenu */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    mix-blend-mode: var(--grain-blend);
+    background-image: var(--grain-noise);
+  }
 
-    /* Bordures */
-    --border: rgb(255 255 255 / 0.2);
-    --border-light: rgb(255 255 255 / 0.1);
-
-    /* Ombres */
-    --shadow-sm: 0 1px 2px 0 rgb(255 255 255 / 0.1);
-    --shadow-primary: 0 10px 15px -3px rgb(255 255 255 / 0.2);
-
-    /* États */
-    --danger: var(--color-red-500);
-    --danger-hover: var(--color-red-600);
-    --success: var(--color-green-600);
-
-    /* Inputs */
-    --input-bg: rgb(255 255 255 / 0.2);
-    --input-border: rgb(255 255 255 / 0.3);
-    --input-focus: rgb(255 255 255 / 0.5);
-
-    /* Focus rings */
-    --ring: rgb(255 255 255 / 0.5);
-    --ring-opacity: 0.5;
-
-    /* Liens */
-    --link: var(--color-green-600);
-    --link-hover: var(--color-green-700);
-
-    /* Erreurs de formulaire (même style, fond adapté au thème sombre) */
-    --error: var(--color-red-400);
-    --error-bg: rgb(255 255 255 / 0.1);
-
-    /* Table header */
-    --table-header: rgb(127 29 29 / 0.3);
-
-    /* Dialog overlay */
-    --dialog-bg: rgb(127 29 29 / 0.9);
-
-    /* Navbar - fond clair contrasté */
-    --nav-bg: rgb(255 255 255 / 0.9);
-    --nav-text: #991B1B;
-    --nav-text-hover: #166534;
-    --nav-border: #DC2626;
-
-    /* Footer - fond blanc solide */
-    --footer-bg: #ffffff;
-    --footer-text: #991B1B;
-    --footer-text-muted: #636E72;
-
-    /* Logo - dégradé rouge → vert festif */
-    --logo-from: #DC2626;
-    --logo-to: #16A34A;
+  /* Anneau de focus clavier commun (boutons, filtres, liens, onglets, interrupteur) ;
+     les champs gardent leur propre contour (controlClass). */
+  :focus-visible {
+    outline: 2.5px solid var(--primary);
+    outline-offset: 2px;
   }
 }
 
-/* Page gradient utility */
-.page-gradient {
-  background: linear-gradient(
-    to bottom right,
-    #F7EDE2,
-    #FDFBF9,
-    #F5CAC3
-  );
+/* Zone à toucher de 44px de haut pour un lien ou un bouton texte d'une ligne, sans changer la
+   mise en page : le rembourrage vertical est compensé par une marge négative équivalente. */
+@utility tap-y {
+  padding-block: calc((44px - 1lh) / 2);
+  margin-block: calc((1lh - 44px) / 2);
 }
 
-.theme-christmas .page-gradient {
-  background: linear-gradient(
-    to bottom right,
-    var(--color-red-700),
-    var(--color-green-800),
-    var(--color-red-900)
-  );
-}
+/* Grain propre à une surface opaque posée au-dessus du grain global (ex. en-tête collant).
+   L'élément doit déjà être positionné (sticky, relative…) ; le grain reste sous son contenu. */
+@utility grain {
+  isolation: isolate;
 
-/* Surface card utility (glassmorphism for Christmas) */
-.surface-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-}
-
-.theme-christmas .surface-card {
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
-/* Dialog surface utility */
-.dialog-surface {
-  background: var(--dialog-bg);
-  border: 1px solid var(--border);
-}
-
-.theme-christmas .dialog-surface {
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
-/* Dark mode désactivé pour garder le thème cohérent */
-/* @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-} */
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-/* Custom Animations */
-@keyframes snowfall {
-  0% {
-    transform: translateY(-10px) translateX(0);
-  }
-  100% {
-    transform: translateY(100vh) translateX(100px);
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    mix-blend-mode: var(--grain-blend);
+    background-image: var(--grain-noise);
   }
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@utility shadow-paper {
+  filter: var(--paper-shadow);
 }
 
 @keyframes shake {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  10%,
-  30%,
-  50%,
-  70%,
-  90% {
-    transform: translateX(-10px);
-  }
-  20%,
-  40%,
-  60%,
-  80% {
-    transform: translateX(10px);
-  }
-}
-
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-@keyframes glow {
-  0%,
-  100% {
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
-  }
-}
-
-.animate-snowfall {
-  animation: snowfall linear infinite;
-}
-
-.animate-fadeInUp {
-  animation: fadeInUp 0.8s ease-out forwards;
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
 }
 
 .animate-shake {
-  animation: shake 0.5s ease-in-out;
+  animation: shake 0.4s ease-in-out;
 }
 
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient 15s ease infinite;
+/* ── Panneau / fenêtre ── */
+@keyframes sheet-fade { from { opacity: 0; } }
+@keyframes sheet-up { from { transform: translateY(100%); } }
+@keyframes sheet-dialog-in { from { opacity: 0; transform: translateY(8px); } }
+
+.sheet-overlay[data-state='open'] { animation: sheet-fade 0.2s ease-out; }
+.sheet-panel[data-state='open'] { animation: sheet-up 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+@media (min-width: 45rem) {
+  .sheet-panel[data-state='open'] { animation: sheet-dialog-in 0.24s cubic-bezier(0.2, 0.8, 0.2, 1); }
 }
 
-.animate-glow {
-  animation: glow 2s ease-in-out infinite;
+/* ── Neige posée (Noël) ── */
+.snowcap {
+  display: none;
+  position: absolute;
+  z-index: 3;
+  left: -3px;
+  right: -3px;
+  top: -8px;
+  height: 15px;
+  pointer-events: none;
+  /* Tuile de 80px répétée (jamais étirée en largeur) : trois bosses arrondies de hauteurs
+     variées qui se rejoignent en creux doux, raccord sans couture. */
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 16' preserveAspectRatio='none'%3E%3Cpath d='M0 10 C2 6 8 1.5 15 1.5 C22 1.5 27 6.5 30 9 C33 6.5 37 4 41.5 4 C46 4 49.5 7.5 52 10 C55 6.5 60 2.5 66 2.5 C72 2.5 77 6 80 10 V16 H0Z' fill='%23FFFFFF'/%3E%3C/svg%3E") 0 0 / 80px 100% repeat-x;
+  /* Bords doux : la neige s'amincit aux deux extrémités au lieu d'être coupée net. */
+  mask-image: linear-gradient(90deg, transparent, #000 7px, #000 calc(100% - 7px), transparent);
+  filter: drop-shadow(0 2px 1px rgb(20 50 60 / 0.22));
+}
+
+.theme-christmas .snowcap {
+  display: block;
+}
+
+/* ── Ouverture « déballage » ── */
+.unwrap {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  cursor: pointer;
+}
+
+.unwrap-flap {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 51%;
+  background-color: var(--wrap-paper);
+  background-image:
+    radial-gradient(var(--wrap-dot) 2.2px, transparent 2.6px),
+    radial-gradient(var(--wrap-dot) 2.2px, transparent 2.6px);
+  background-size: 34px 34px;
+  background-position: 0 0, 17px 17px;
+}
+
+.theme-christmas .unwrap-flap {
+  background-image:
+    radial-gradient(var(--wrap-dot) 1.4px, transparent 1.8px),
+    radial-gradient(color-mix(in srgb, var(--wrap-dot) 50%, transparent) 1px, transparent 1.4px);
+  background-size: 28px 28px;
+  background-position: 0 0, 14px 14px;
+}
+
+.unwrap-flap-l {
+  left: 0;
+  clip-path: polygon(0 0, 100% 0, 97% 6%, 100% 12%, 96% 19%, 100% 26%, 97% 33%, 100% 41%, 96% 48%, 100% 56%, 97% 63%, 100% 71%, 96% 78%, 100% 86%, 97% 93%, 100% 100%, 0 100%);
+}
+
+.unwrap-flap-r {
+  right: 0;
+  clip-path: polygon(3% 0, 100% 0, 100% 100%, 0 100%, 4% 93%, 0 86%, 3% 78%, 0 71%, 4% 63%, 0 56%, 3% 48%, 0 41%, 4% 33%, 0 26%, 3% 19%, 0 12%, 4% 6%);
+}
+
+.unwrap-rib-v,
+.unwrap-rib-h {
+  position: absolute;
+  background: var(--foil);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--foil) 60%, #000);
+}
+
+.unwrap-rib-v { top: 0; bottom: 0; left: 50%; width: 34px; translate: -50% 0; }
+.unwrap-rib-h { left: 0; right: 0; top: 50%; height: 34px; translate: 0 -50%; }
+.unwrap-bow { position: absolute; left: 50%; top: 50%; width: 180px; height: 130px; translate: -50% -60%; }
+
+/* Pastille de papier : reste lisible par-dessus le ruban vertical */
+.unwrap-hint {
+  position: absolute;
+  z-index: 1;
+  inset-inline: 0;
+  bottom: 36px;
+  width: fit-content;
+  margin-inline: auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 500 13px var(--font-dm-mono), monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.unwrap.is-opening .unwrap-bow { animation: unwrap-bow 0.32s ease-in both; }
+.unwrap.is-opening .unwrap-rib-v { animation: unwrap-rib-v 0.38s 0.12s cubic-bezier(0.6, 0, 0.4, 1) both; }
+.unwrap.is-opening .unwrap-rib-h { animation: unwrap-rib-h 0.38s 0.12s cubic-bezier(0.6, 0, 0.4, 1) both; }
+.unwrap.is-opening .unwrap-hint { animation: unwrap-fade 0.2s both; }
+.unwrap.is-opening .unwrap-flap-l { animation: unwrap-left 0.6s 0.42s cubic-bezier(0.7, 0, 0.2, 1) both; }
+.unwrap.is-opening .unwrap-flap-r { animation: unwrap-right 0.6s 0.42s cubic-bezier(0.7, 0, 0.2, 1) both; }
+
+@keyframes unwrap-bow { to { transform: scale(0.2) rotate(40deg); opacity: 0; } }
+@keyframes unwrap-rib-v { to { transform: translateY(-110%); } }
+@keyframes unwrap-rib-h { to { transform: translateX(110%); } }
+@keyframes unwrap-fade { to { opacity: 0; } }
+@keyframes unwrap-left { to { transform: translateX(-104%) rotate(-4deg); } }
+@keyframes unwrap-right { to { transform: translateX(104%) rotate(4deg); } }
+
+/* ── Étiquette cadeau (mobile : horizontale ; md : verticale) ── */
+.gift-tag {
+  position: relative;
+  filter: var(--paper-shadow);
+}
+
+.gift-paper {
+  position: relative;
+  display: grid;
+  grid-template-columns: 38% 1fr;
+  gap: 0 14px;
+  padding: 12px 34px 12px 12px;
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 8px 0 0 8px;
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
+}
+
+.gift-hole {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  translate: 0 -50%;
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ink) 18%, transparent);
+}
+
+.gift-string { display: none; }
+.gift-img { aspect-ratio: 1; align-self: start; }
+.gift-action { grid-column: 1 / -1; }
+.gift-tag .snowcap { left: 4px; right: 18px; }
+
+.gift-word {
+  font-family: var(--font-bricolage), sans-serif;
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: -0.04em;
+  color: color-mix(in srgb, var(--tint-ink) 75%, transparent);
+  rotate: -8deg;
+}
+
+.is-compact .gift-word { font-size: 12px; }
+
+.tint-1 { background: color-mix(in srgb, var(--primary) 16%, var(--paper)); --tint-ink: var(--primary-deep); }
+.tint-2 { background: color-mix(in srgb, var(--foil) 30%, var(--paper)); --tint-ink: color-mix(in srgb, var(--foil) 55%, var(--ink)); }
+.tint-3 { background: color-mix(in srgb, var(--mine) 16%, var(--paper)); --tint-ink: var(--mine); }
+
+/* Cadeau pris (à moi ou à quelqu'un d'autre) : la photo (ou le fond teinté + le mot, sans
+   photo) passe en noir et blanc ; portée à l'élément qui tient le fond/la photo uniquement,
+   jamais à `.gift-img` lui-même, pour ne pas filtrer `.gift-wrap` (le ruban) posé par-dessus.
+   La transition est sur la règle toujours présente (pas seulement `.is-wrapped`) pour jouer
+   dans les deux sens : au retrait de la classe (« je ne prends plus »), le retour en couleur
+   est aussi progressif que le passage en gris. */
+.gift-img-fill { transition: filter 0.5s ease; }
+.gift-img-fill.is-wrapped { filter: grayscale(1); }
+
+/* Emballage d'une idée réservée */
+.gift-wrap { position: absolute; inset: 0; pointer-events: none; }
+.rib-h, .rib-v { position: absolute; }
+
+.rib-h {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 14px;
+  translate: 0 -50%;
+  transform-origin: left center;
+  background: linear-gradient(180deg, var(--primary-deep) 0 2px, var(--primary) 2px calc(100% - 2px), var(--primary-deep) calc(100% - 2px));
+}
+
+.rib-v {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 14px;
+  translate: -50% 0;
+  transform-origin: center top;
+  background: linear-gradient(90deg, var(--primary-deep) 0 2px, var(--primary) 2px calc(100% - 2px), var(--primary-deep) calc(100% - 2px));
+}
+
+.gift-bow { position: absolute; left: 50%; top: 50%; width: 64px; height: 46px; translate: -50% -58%; }
+
+.gift-stamp {
+  position: absolute;
+  left: 6px;
+  bottom: 8px;
+  white-space: nowrap;
+  font: 500 9px/1 var(--font-dm-mono), monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 7px;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  color: var(--ink-muted);
+  rotate: -6deg;
+}
+
+.is-mine .gift-stamp { color: var(--mine); }
+
+@media (min-width: 45rem) {
+  .gift-paper {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 30px 14px 16px;
+    border-radius: 0 0 8px 8px;
+    clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%, 0 18px);
+  }
+  .gift-hole { right: auto; left: 50%; top: 11px; translate: -50% 0; }
+  .gift-string { display: block; position: absolute; z-index: 3; left: 50%; top: -26px; width: 30px; height: 44px; translate: -50% 0; pointer-events: none; }
+  .gift-img { aspect-ratio: 4 / 3; margin-bottom: 14px; }
+  .gift-word { font-size: 44px; }
+  .gift-tag .snowcap { left: 17px; right: 17px; }
+  .rib-h { height: 18px; }
+  .rib-v { width: 18px; }
+  .gift-bow { width: 84px; height: 60px; }
+  .gift-stamp { font-size: 12px; left: 10px; bottom: 10px; }
+}
+
+/* Le moment signature : le ruban se noue (≈1s) */
+.is-tying .rib-h { animation: tie-rib-h 0.34s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.is-tying .rib-v { animation: tie-rib-v 0.34s 0.16s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.is-tying .gift-bow { animation: tie-bow 0.5s 0.42s cubic-bezier(0.3, 1.6, 0.5, 1) both; }
+.is-tying .gift-stamp { animation: tie-stamp 0.32s 0.78s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
+.is-tying .gift-note { animation: tie-note 0.4s 0.95s ease-out both; }
+
+@keyframes tie-rib-h { from { transform: scaleX(0); } }
+@keyframes tie-rib-v { from { transform: scaleY(0); } }
+@keyframes tie-bow { from { transform: scale(0) rotate(-20deg); } }
+@keyframes tie-stamp { from { opacity: 0; transform: scale(1.8); } }
+@keyframes tie-note { from { opacity: 0; transform: translateY(6px); } }
+
+/* « Dénouer » : l'emballage disparaît en 350ms, avant la recharge */
+.is-untying .gift-wrap { animation: gift-untie 0.35s ease-in both; }
+
+@keyframes gift-untie { to { opacity: 0; transform: scale(0.96); } }
+
+/* ── Bande de liste : ruban vertical (doré pour la liste commune) ── */
+.band-ribbon {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 64px;
+  width: 18px;
+  background: linear-gradient(90deg, var(--primary-deep) 0 2px, var(--primary) 2px calc(100% - 2px), var(--primary-deep) calc(100% - 2px));
+}
+
+.is-common .band-ribbon {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--foil) 70%, #000) 0 2px, var(--foil) 2px calc(100% - 2px), color-mix(in srgb, var(--foil) 70%, #000) calc(100% - 2px));
 }

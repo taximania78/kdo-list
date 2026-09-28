@@ -9,5 +9,5 @@ export const optionalPrice = z.preprocess(
 // URL facultative : un champ vide est envoyé comme null (l'API refuse une URL "")
 export const optionalUrl = z.preprocess(
   (value) => (value === '' ? null : value),
-  z.string().url({ message: 'Invalid url' }).nullable().optional()
+  z.url({ error: "L'URL n'est pas valide." }).nullable().optional()
 );

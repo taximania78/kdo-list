@@ -122,3 +122,23 @@ async def test_export_csv_includes_ideas_without_account(client: AsyncClient, ad
     assert "Idée commune,,Liste commune" in response.text
     assert "Idée Léo,,Liste de Léo" in response.text
     assert "Idea 1,http://test1.com,user" in response.text
+
+
+@pytest.mark.asyncio
+async def test_export_csv_sorted_alphabetically(client: AsyncClient, admin_token: str, setup_test_utils):
+    """Ordre alphabétique (insensible à la casse) des idées dans l'export, comme dans les listes."""
+    from database import get_db
+    async_gen = app.dependency_overrides[get_db]()
+    session = await anext(async_gen)
+    session.add_all([
+        Idea(name="Vélo", price=5.0, url="", image="", imageDisplay="unknown.jpg", comment="", userId=setup_test_utils["user"].id, list_id=None),
+        Idea(name="appareil photo", price=5.0, url="", image="", imageDisplay="unknown.jpg", comment="", userId=setup_test_utils["user"].id, list_id=None),
+    ])
+    await session.commit()
+    await async_gen.aclose()
+
+    response = await client.get("/api/export-csv/", headers={"Authorization": f"Bearer {admin_token}"})
+    assert response.status_code == 200
+
+    names_in_order = [line.split(",")[0] for line in response.text.strip().splitlines()[1:]]
+    assert names_in_order.index("appareil photo") < names_in_order.index("Vélo")
