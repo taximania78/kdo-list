@@ -9,13 +9,11 @@ import api from '@/lib/api';
 import type { ApiList } from '@/lib/lists';
 import KdosList from '@/components/KdosList';
 import { buttonClass } from '@/components/ui/Button';
+import { BackLink } from '@/components/ui/BackLink';
 import { PageShell } from '@/components/ui/PageShell';
 import { PaperState } from '@/components/ui/PaperState';
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
-
-const backLinkClass =
-  'mb-3.5 inline-flex items-center gap-1.5 text-sm font-semibold text-on-bg-muted hover:text-on-bg';
 
 export default function ListDetailPage() {
   const router = useRouter();
@@ -65,10 +63,7 @@ export default function ListDetailPage() {
 
   return (
     <PageShell>
-      <Link href="/list" className={backLinkClass}>
-        <ArrowLeft className="size-4" aria-hidden />
-        Toutes les listes
-      </Link>
+      <BackLink href="/list">Toutes les listes</BackLink>
       <p className="text-[17px] text-on-bg-muted">{list.is_common ? 'Pour tout le monde' : 'Les envies de'}</p>
       <h1 className="-ml-1 mb-5 mt-0.5 font-display text-[clamp(72px,22vw,190px)] font-extrabold leading-[0.85] tracking-[-0.035em] break-words md:text-[clamp(110px,14vw,210px)]">
         {list.label}

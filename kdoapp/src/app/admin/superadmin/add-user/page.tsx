@@ -1,12 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import api from '@/lib/api';
 import { apiErrorMessage } from '@/lib/apiError';
@@ -14,6 +12,7 @@ import { strongPassword } from '@/lib/passwordRules';
 import { PasswordRules } from '@/components/PasswordRules';
 import { Button } from '@/components/ui/Button';
 import { Field, Input } from '@/components/ui/Field';
+import { BackLink } from '@/components/ui/BackLink';
 import { PageShell } from '@/components/ui/PageShell';
 import { PageTitle } from '@/components/ui/PageTitle';
 
@@ -57,10 +56,7 @@ export default function AddUser() {
 
   return (
     <PageShell narrow>
-      <Link href="/admin/superadmin" className="mb-3.5 inline-flex items-center gap-1.5 text-sm font-semibold text-on-bg-muted hover:text-on-bg">
-        <ArrowLeft className="size-4" aria-hidden />
-        Super admin
-      </Link>
+      <BackLink href="/admin/superadmin">Super admin</BackLink>
       <PageTitle className="mb-7">Nouvelle personne</PageTitle>
       <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
         <Field label="Nom d'utilisateur" htmlFor="username" error={errors.username?.message}>
@@ -74,7 +70,7 @@ export default function AddUser() {
         >
           <Input {...form.register('userPassword')} id="userPassword" type="password" autoComplete="new-password" />
         </Field>
-        <label className="flex items-center gap-2.5 font-semibold text-on-bg">
+        <label className="tap-y flex items-center gap-2.5 font-semibold text-on-bg">
           <input type="checkbox" {...form.register('isAdmin')} className="size-4 accent-primary" />
           Peut gérer les idées (admin)
         </label>

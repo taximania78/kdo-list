@@ -7,6 +7,7 @@ import { Chip } from '@/components/ui/Chip';
 import { PaperState } from '@/components/ui/PaperState';
 import { PageTitle } from '@/components/ui/PageTitle';
 import { PageShell } from '@/components/ui/PageShell';
+import { BackLink } from '@/components/ui/BackLink';
 
 describe('Button', () => {
   it('is a plain button by default and fires onClick', async () => {
@@ -145,6 +146,28 @@ describe('Chip', () => {
     expect(chip).toHaveTextContent('5');
     await userEvent.click(chip);
     expect(onClick).toHaveBeenCalledTimes(1);
+  });
+});
+
+// Zones à toucher ≥ 44px (jsdom ne calcule pas la mise en page : on vérifie les classes
+// qui la garantissent ; la mesure réelle se fait dans le navigateur à 390px).
+describe('touch targets', () => {
+  it('gives every button a 44px minimum height', () => {
+    render(<Button>Je prends !</Button>);
+    expect(screen.getByRole('button')).toHaveClass('min-h-11');
+    expect(buttonClass('ghost')).toContain('min-h-11');
+  });
+
+  it('gives the chip a 44px tall hit area, compensated so the pill keeps its place', () => {
+    render(<Chip pressed={false} onClick={jest.fn()}>Libres</Chip>);
+    expect(screen.getByRole('button', { name: /Libres/ })).toHaveClass('min-h-11', '-my-1.5');
+  });
+
+  it('gives the back link a 44px tall hit area', () => {
+    render(<BackLink href="/admin">Retour aux idées</BackLink>);
+    const link = screen.getByRole('link', { name: 'Retour aux idées' });
+    expect(link).toHaveAttribute('href', '/admin');
+    expect(link).toHaveClass('tap-y');
   });
 });
 

@@ -24,6 +24,11 @@ describe('DeleteIdeaButton', () => {
     expect(del).toHaveBeenCalledWith(expect.stringMatching(/\/api\/delete-item\/5\/$/));
   });
 
+  it('gives its text trigger a 44px tall hit area', () => {
+    render(<DeleteIdeaButton id={5} name="Vélo" onDeleted={jest.fn()} />);
+    expect(screen.getByRole('button', { name: 'Supprimer' })).toHaveClass('tap-y');
+  });
+
   it('does nothing without confirmation', async () => {
     render(<DeleteIdeaButton id={5} name="Vélo" onDeleted={jest.fn()} />);
     await userEvent.click(screen.getByRole('button', { name: 'Supprimer' }));

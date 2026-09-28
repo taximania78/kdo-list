@@ -1,12 +1,10 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import api from '@/lib/api';
 import { strongPassword } from '@/lib/passwordRules';
@@ -14,6 +12,7 @@ import { PasswordRules } from '@/components/PasswordRules';
 import { Button } from '@/components/ui/Button';
 import { ConfirmSheet } from '@/components/ui/ConfirmSheet';
 import { Field, Input } from '@/components/ui/Field';
+import { BackLink } from '@/components/ui/BackLink';
 import { PageShell } from '@/components/ui/PageShell';
 import { PageTitle } from '@/components/ui/PageTitle';
 
@@ -39,10 +38,7 @@ export default function ResetPassword({ params }: { params: Promise<{ id: string
 
   return (
     <PageShell narrow>
-      <Link href="/admin/superadmin" className="mb-3.5 inline-flex items-center gap-1.5 text-sm font-semibold text-on-bg-muted hover:text-on-bg">
-        <ArrowLeft className="size-4" aria-hidden />
-        Super admin
-      </Link>
+      <BackLink href="/admin/superadmin">Super admin</BackLink>
       <PageTitle className="mb-2">Nouveau mot de passe</PageTitle>
       <p className="mb-7 text-on-bg-muted">
         Pour <strong className="text-on-bg">{name}</strong>

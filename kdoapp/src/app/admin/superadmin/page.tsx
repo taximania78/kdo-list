@@ -66,7 +66,7 @@ export default function Superadmin() {
             <Tabs.Trigger
               key={tab.value}
               value={tab.value}
-              className="py-2.5 text-[15px] font-bold text-on-bg-muted data-[state=active]:text-on-bg data-[state=active]:shadow-[inset_0_-2.5px_0_var(--primary)]"
+              className="min-h-11 py-2.5 text-[15px] font-bold text-on-bg-muted data-[state=active]:text-on-bg data-[state=active]:shadow-[inset_0_-2.5px_0_var(--primary)]"
             >
               {tab.label}
             </Tabs.Trigger>

@@ -22,7 +22,7 @@ export function AppHeader() {
       <div className="mx-auto flex h-15 max-w-[1280px] items-center justify-between px-5 md:h-18 md:px-10">
         <Link
           href={isAuthenticated ? '/list' : '/'}
-          className="flex items-center gap-2.5 font-display text-[19px] font-bold tracking-[-0.02em] text-on-bg"
+          className="flex min-h-11 items-center gap-2.5 font-display text-[19px] font-bold tracking-[-0.02em] text-on-bg"
         >
           <Gift className="size-6 text-wordmark" aria-hidden />
           {config.appTitle}

@@ -12,7 +12,7 @@ const VARIANTS: Record<Variant, string> = {
 
 export function buttonClass(variant: Variant = 'primary', block = false): string {
   return [
-    'inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-[15px] font-bold transition-colors active:translate-y-px disabled:pointer-events-none disabled:opacity-50',
+    'inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-[15px] font-bold transition-colors active:translate-y-px disabled:pointer-events-none disabled:opacity-50',
     VARIANTS[variant],
     block ? 'w-full' : '',
   ].join(' ');

@@ -179,6 +179,7 @@ Toutes chargées une seule fois dans `app/layout.tsx` via `next/font/google` (va
 - Do : une seule action principale colorée par écran.
 - Do : laisser un cadeau réservé à sa place, net, et emballé.
 - Do : tester chaque écran à 390px de large avant l'ordinateur.
+- Do : toute zone à toucher fait au moins 44px de haut (boutons `min-h-11` ; liens et actions texte `tap-y` : rembourrage vertical compensé par une marge négative, la mise en page ne bouge pas ; filtres et interrupteur : zone de 44px autour de la pilule visible).
 - Don't : tester `isChristmas` dans un composant pour choisir une couleur ou une police (autorisé uniquement pour afficher/masquer une couche décorative).
 - Don't : dégradés sur les boutons, verre dépoli, lueurs, emojis décoratifs, icône dans un carré arrondi au-dessus des titres.
 - Don't : flouter ou griser l'image d'un cadeau réservé.

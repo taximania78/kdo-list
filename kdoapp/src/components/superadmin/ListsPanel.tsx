@@ -171,15 +171,18 @@ export function ListsPanel({ users }: { users: AppUser[] }) {
                   aria-label={`Liste ${list.label} visible`}
                   disabled={togglingSlugs.has(list.slug)}
                   onClick={() => handleToggle(list.slug)}
-                  className="group relative h-7 w-12 shrink-0 rounded-full bg-line transition-colors aria-checked:bg-mine disabled:opacity-50"
+                  className="group relative -my-2 h-11 w-12 shrink-0 rounded-full disabled:opacity-50"
                 >
-                  <span className="absolute left-1 top-1 size-5 rounded-full bg-paper shadow transition-transform group-aria-checked:translate-x-5" />
+                  {/* Zone à toucher de 44px ; l'interrupteur visible garde 28px de haut. */}
+                  <span className="absolute inset-x-0 top-2 h-7 rounded-full bg-line transition-colors group-aria-checked:bg-mine">
+                    <span className="absolute left-1 top-1 size-5 rounded-full bg-paper shadow transition-transform group-aria-checked:translate-x-5" />
+                  </span>
                 </button>
-                <button type="button" onClick={() => openEdit(list)} className="text-primary underline-offset-4 hover:underline">
+                <button type="button" onClick={() => openEdit(list)} className="tap-y text-primary underline-offset-4 hover:underline">
                   Modifier
                 </button>
                 {!list.is_common && (
-                  <button type="button" onClick={() => setToDelete(list)} className="text-ink-muted hover:text-ink">
+                  <button type="button" onClick={() => setToDelete(list)} className="tap-y text-ink-muted hover:text-ink">
                     Supprimer
                   </button>
                 )}

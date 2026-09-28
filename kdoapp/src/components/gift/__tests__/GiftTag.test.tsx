@@ -37,6 +37,11 @@ describe('GiftTag', () => {
     expect(screen.getByText('Taille M')).toBeInTheDocument();
   });
 
+  it('gives « Voir le produit » a 44px tall hit area', () => {
+    render(<GiftTag kdo={velo} state="free" canRelease={false} onTake={noop} onRelease={noop} />);
+    expect(screen.getByRole('link', { name: 'Voir le produit' })).toHaveClass('tap-y');
+  });
+
   it('leaves no trace of a missing price or link', () => {
     render(
       <GiftTag kdo={{ ...velo, price: null, url: null }} state="free" canRelease={false} onTake={noop} onRelease={noop} />

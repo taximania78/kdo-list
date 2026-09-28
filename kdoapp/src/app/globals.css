@@ -116,6 +116,13 @@
   }
 }
 
+/* Zone à toucher de 44px de haut pour un lien ou un bouton texte d'une ligne, sans changer la
+   mise en page : le rembourrage vertical est compensé par une marge négative équivalente. */
+@utility tap-y {
+  padding-block: calc((44px - 1lh) / 2);
+  margin-block: calc((1lh - 44px) / 2);
+}
+
 /* Grain propre à une surface opaque posée au-dessus du grain global (ex. en-tête collant).
    L'élément doit déjà être positionné (sticky, relative…) ; le grain reste sous son contenu. */
 @utility grain {

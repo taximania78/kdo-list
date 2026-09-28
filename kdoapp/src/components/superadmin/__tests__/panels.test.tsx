@@ -39,6 +39,14 @@ describe('UsersPanel', () => {
     expect(within(rows[1]).getByRole('button', { name: 'Supprimer' })).toBeInTheDocument();
   });
 
+  it('gives the text actions a 44px tall hit area', () => {
+    render(<UsersPanel users={users} meId={1} onChanged={jest.fn()} />);
+    for (const name of ['Rendre admin', 'Supprimer']) {
+      expect(screen.getByRole('button', { name })).toHaveClass('tap-y');
+    }
+    for (const link of screen.getAllByRole('link', { name: 'Mot de passe' })) expect(link).toHaveClass('tap-y');
+  });
+
   it('cannot change the role of a super admin nor my own', () => {
     render(<UsersPanel users={users} meId={1} onChanged={jest.fn()} />);
     expect(screen.getAllByRole('button', { name: /admin/i })).toHaveLength(1);
@@ -135,6 +143,14 @@ describe('ListsPanel', () => {
     await screen.findByText('Léa', { selector: 'p' });
     await userEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
     expect(screen.getByRole('button', { name: /Oui, supprimer/ })).toHaveClass('bg-primary');
+  });
+
+  it('gives the visibility switch and the text actions a 44px tall hit area', async () => {
+    render(<ListsPanel users={users} />);
+    await screen.findByText('Léa', { selector: 'p' });
+    expect(screen.getByRole('switch', { name: 'Liste Léa visible' })).toHaveClass('h-11');
+    expect(screen.getByRole('button', { name: 'Modifier' })).toHaveClass('tap-y');
+    expect(screen.getByRole('button', { name: 'Supprimer' })).toHaveClass('tap-y');
   });
 
   it('lists the gift lists with their owner', async () => {

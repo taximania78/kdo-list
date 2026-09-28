@@ -71,7 +71,7 @@ export function GiftTag({
                   href={kdo.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-semibold text-primary underline decoration-[1.5px] underline-offset-[3px]"
+                  className="tap-y font-semibold text-primary underline decoration-[1.5px] underline-offset-[3px]"
                 >
                   Voir le produit<span aria-hidden> ↗</span>
                 </a>

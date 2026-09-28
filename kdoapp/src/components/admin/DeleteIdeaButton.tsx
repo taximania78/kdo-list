@@ -13,7 +13,7 @@ export function DeleteIdeaButton({ id, name, onDeleted }: DeleteIdeaButtonProps)
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className="text-sm font-bold text-ink-muted hover:text-ink">
+      <button type="button" onClick={() => setOpen(true)} className="tap-y text-sm font-bold text-ink-muted hover:text-ink">
         Supprimer
       </button>
       <ConfirmSheet
