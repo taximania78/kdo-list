@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { advanceFlake, createFlakes, frameDelta, rescaleFlakes, type Flake } from '@/lib/snow';
 
 const MAX_DPR = 2;
@@ -23,10 +24,24 @@ function makeSprite(radius: number, soft: boolean, dpr: number): HTMLCanvasEleme
   return canvas;
 }
 
-/** 250 flocons : 230 derrière le contenu, 20 devant (DESIGN.md › Motion). */
+/** Les gros flocons ne passent devant le contenu que sur les listes (/list et /list/…). */
+function snowInFront(pathname: string | null): boolean {
+  return pathname === '/list' || (pathname?.startsWith('/list/') ?? false);
+}
+
+/**
+ * 250 flocons : 230 derrière le contenu, 20 devant (DESIGN.md › Motion). Hors des pages de
+ * listes (connexion, admin, formulaires…), les 20 gros flocons sont dessinés derrière aussi.
+ */
 export default function Snowfall() {
   const backRef = useRef<HTMLCanvasElement>(null);
   const frontRef = useRef<HTMLCanvasElement>(null);
+  const pathname = usePathname();
+  const inFront = useRef(snowInFront(pathname));
+
+  useEffect(() => {
+    inFront.current = snowInFront(pathname);
+  }, [pathname]);
 
   useEffect(() => {
     const back = backRef.current;
@@ -77,7 +92,7 @@ export default function Snowfall() {
       frontCtx.clearRect(0, 0, width, height);
       for (const flake of flakes) {
         advanceFlake(flake, time, width, height, dt);
-        const ctx = flake.front ? frontCtx : backCtx;
+        const ctx = flake.front && inFront.current ? frontCtx : backCtx;
         const sprite = spriteFor(flake);
         const size = sprite.width / dpr;
         ctx.globalAlpha = flake.alpha;

@@ -152,7 +152,7 @@ Toutes chargées une seule fois dans `app/layout.tsx` via `next/font/google` (va
 
 - Pas de verre dépoli, pas de lueur. La profondeur vient d'ombres portées décalées vers le bas : `drop-shadow(0 1px 0 …) drop-shadow(0 10px 14px …)` (plus sombre à Noël). `drop-shadow` plutôt que `box-shadow` car les étiquettes sont découpées (`clip-path`).
 - Surfaces opaques partout. Le fond de réservation est un voile sombre à 42 %.
-- Ordre des couches à Noël : neige arrière → contenu → neige avant → panneaux/fenêtres.
+- Ordre des couches à Noël : neige arrière → contenu → neige avant (pages de listes seulement) → panneaux/fenêtres.
 
 ## Shapes
 
@@ -193,7 +193,7 @@ Toutes chargées une seule fois dans `app/layout.tsx` via `next/font/google` (va
 - **Duration :** micro 100ms, court 150–250ms (boutons, filtres, panneau 280ms), moyen 300–400ms, long 600ms (ouverture).
 - **Le moment signature — le ruban se noue (≈1s) :** ruban horizontal (340ms), ruban vertical (340ms, +160ms), nœud qui apparaît avec un léger rebond (+420ms), tampon qui se pose (+780ms), note manuscrite (+950ms). « Dénouer » joue une disparition courte (350ms).
 - **Ouverture « déballage » :** une fois par session (`sessionStorage`), le papier cadeau du thème (vermillon à pois crème / sapin à points dorés) couvre l'écran ; le nœud et les rubans s'en vont, puis le papier se déchire au milieu et s'ouvre des deux côtés (< 1,1s). Un toucher passe directement à la fin.
-- **Neige (Noël) :** exactement **250 flocons**, dessinés sur `<canvas>` en une seule boucle `requestAnimationFrame` (sprites pré-rendus, DPR ≤ 2). 230 petits flocons derrière le contenu, 20 gros flocons flous devant (`pointer-events: none`). Dérive sinusoïdale, pause quand l'onglet est caché.
+- **Neige (Noël) :** exactement **250 flocons**, dessinés sur `<canvas>` en une seule boucle `requestAnimationFrame` (sprites pré-rendus, DPR ≤ 2). 230 petits flocons derrière le contenu, 20 gros flocons flous devant (`pointer-events: none`) **sur les pages de listes seulement** (`/list` et `/list/…`) ; ailleurs (connexion, première connexion, admin, super-admin, mots de passe) ces 20 flocons sont dessinés derrière aussi, pour ne jamais passer devant un formulaire. Le total reste 250 partout. Dérive sinusoïdale, pause quand l'onglet est caché.
 
 ## Decisions Log
 | Date | Decision | Rationale |
@@ -213,3 +213,4 @@ Toutes chargées une seule fois dans `app/layout.tsx` via `next/font/google` (va
 | 2026-09-28 | Titre de connexion : « Des idées, juste au cas où. » | Les listes servent à donner des idées, pas une liste d'achats |
 | 2026-09-28 | Confirmation secondaire (`ghost`) pour « Je ne prends plus » et « Libérer la réservation » ; les suppressions gardent `primary` | Le rouge reste réservé à l'action principale ; annuler une prise n'est pas une action à mettre en avant |
 | 2026-09-28 | Neige posée en tuile de 80px répétée, bosses arrondies, bords adoucis | Le dessin étiré sur toute la largeur aplatissait les bosses en créneaux |
+| 2026-09-28 | Neige avant seulement sur les pages de listes ; ailleurs les 20 gros flocons passent derrière (250 au total partout) | Des flocons devant un champ de formulaire gênent la saisie et la lecture |
