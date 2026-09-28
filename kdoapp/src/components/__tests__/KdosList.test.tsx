@@ -70,7 +70,14 @@ describe('KdosList', () => {
     render(<KdosList listSlug="paul" />);
 
     await userEvent.click(await screen.findByRole('button', { name: /Je prends/ }));
-    expect(within(screen.getByRole('dialog')).getByText('Taille M, bleu marine')).toBeInTheDocument();
+    const comment = within(screen.getByRole('dialog')).getByText('Taille M, bleu marine');
+    expect(comment).toBeInTheDocument();
+    // Lisible : couleur d'encre, 15px, sous un fin séparateur, avec une icône décorative.
+    expect(comment).toHaveClass('text-ink', 'text-[15px]');
+    expect(comment).not.toHaveClass('text-ink-muted');
+    const block = comment.closest('.border-t');
+    expect(block).toHaveClass('border-line');
+    expect(block?.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
   });
 
   it('shows no comment in the take sheet when the idea has none', async () => {

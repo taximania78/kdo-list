@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { MessageSquareText } from 'lucide-react';
 import api from '@/lib/api';
 import { getUserInfo } from '@/lib/auth';
 import { formatPrice } from '@/lib/format';
@@ -34,13 +35,20 @@ function sheetCopy({ kind, kdo }: Pending, username: string | null): { title: st
       confirmLabel: 'Oui, je le prends',
       body: (
         <div className="grid gap-3.5">
-          <div className="grid grid-cols-[72px_1fr] items-center gap-3.5 rounded-lg bg-paper-2 p-3">
-            <GiftImage imageDisplay={kdo.imageDisplay} name={kdo.name} seed={kdo.id} sizes="72px" compact className="aspect-square" />
-            <div className="min-w-0">
-              <p className="font-display text-lg font-bold leading-tight break-words">{kdo.name}</p>
-              {kdo.price != null && <p className="mt-1 font-mono text-sm">{formatPrice(kdo.price)}</p>}
-              {kdo.comment && <p className="mt-1 text-sm text-ink-muted break-words">{kdo.comment}</p>}
+          <div className="rounded-lg bg-paper-2 p-3">
+            <div className="grid grid-cols-[72px_1fr] items-center gap-3.5">
+              <GiftImage imageDisplay={kdo.imageDisplay} name={kdo.name} seed={kdo.id} sizes="72px" compact className="aspect-square" />
+              <div className="min-w-0">
+                <p className="font-display text-lg font-bold leading-tight break-words">{kdo.name}</p>
+                {kdo.price != null && <p className="mt-1 font-mono text-sm">{formatPrice(kdo.price)}</p>}
+              </div>
             </div>
+            {kdo.comment && (
+              <div className="mt-3 flex gap-2 border-t border-line pt-3">
+                <MessageSquareText aria-hidden className="mt-[3px] size-4 shrink-0 text-ink-muted" />
+                <p className="text-[15px] leading-snug text-ink break-words">{kdo.comment}</p>
+              </div>
+            )}
           </div>
           <p className="font-hand text-[22px] font-semibold text-mine">Personne ne saura que c&apos;est toi.</p>
         </div>
