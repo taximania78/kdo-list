@@ -124,6 +124,35 @@ describe('Select', () => {
   });
 });
 
+describe('Select styling', () => {
+  it("drops the native arrow for the app's chevron, decorative only", () => {
+    render(
+      <Field label="Liste" htmlFor="list">
+        <Select id="list">
+          <option value="paul">Liste de Paul</option>
+        </Select>
+      </Field>
+    );
+    const select = screen.getByLabelText('Liste');
+    expect(select).toHaveClass('appearance-none', 'pr-10');
+    const chevron = select.parentElement?.querySelector('svg');
+    expect(chevron).not.toBeNull();
+    expect(chevron).toHaveAttribute('aria-hidden', 'true');
+    expect(chevron).toHaveClass('pointer-events-none', 'text-ink-muted');
+    expect(select.parentElement).toHaveClass('relative');
+  });
+
+  it('still hands its ref to the <select> (react-hook-form)', () => {
+    const ref = createRef<HTMLSelectElement>();
+    render(
+      <Select ref={ref} aria-label="Liste">
+        <option value="paul">Liste de Paul</option>
+      </Select>
+    );
+    expect(ref.current).toBe(screen.getByRole('combobox', { name: 'Liste' }));
+  });
+});
+
 describe('Textarea', () => {
   it('is linked to its label via Field and accepts typed text', async () => {
     render(
