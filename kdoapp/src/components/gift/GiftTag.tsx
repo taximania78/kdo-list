@@ -48,6 +48,7 @@ export function GiftTag({
           name={kdo.name}
           seed={kdo.id}
           sizes="(min-width: 720px) 300px, 40vw"
+          wrapped={state !== 'free'}
           className="gift-img"
         >
           {state !== 'free' && (

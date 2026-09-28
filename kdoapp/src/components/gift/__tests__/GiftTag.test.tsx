@@ -84,6 +84,29 @@ describe('GiftTag', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Libérer la réservation' }));
     expect(onRelease).toHaveBeenCalledTimes(1);
   });
+
+  it('turns the photo/background grey once the idea is taken (mine or someone else\'s)', () => {
+    const mine = { ...velo, availability: false, takenBy: 'marie' };
+    const { rerender } = render(<GiftTag kdo={mine} state="mine" canRelease={false} onTake={noop} onRelease={noop} />);
+    expect(screen.getByText('Vélo').parentElement).toHaveClass('is-wrapped');
+
+    const taken = { ...velo, availability: false, takenBy: 'Paul' };
+    rerender(<GiftTag kdo={taken} state="taken" canRelease={false} onTake={noop} onRelease={noop} />);
+    expect(screen.getByText('Vélo').parentElement).toHaveClass('is-wrapped');
+  });
+
+  it('keeps the photo/background in color for a free idea', () => {
+    render(<GiftTag kdo={velo} state="free" canRelease={false} onTake={noop} onRelease={noop} />);
+    expect(screen.getByText('Vélo').parentElement).not.toHaveClass('is-wrapped');
+  });
+
+  it('never marks the ribbon slot itself as wrapped (it stays in color)', () => {
+    const taken = { ...velo, availability: false, takenBy: 'Paul' };
+    const { container } = render(<GiftTag kdo={taken} state="taken" canRelease={false} onTake={noop} onRelease={noop} />);
+    const ribbon = container.querySelector('.gift-wrap') as HTMLElement;
+    expect(ribbon).not.toBeNull();
+    expect(ribbon).not.toHaveClass('is-wrapped');
+  });
 });
 
 describe('GiftTag layout', () => {
@@ -132,5 +155,27 @@ describe('GiftImage', () => {
 
     expect(screen.queryByRole('img')).toBeNull();
     expect(screen.getByText('Casque')).toBeInTheDocument();
+  });
+
+  it('marks the photo as wrapped (greyed out by CSS) when asked, not by default', () => {
+    const { rerender } = render(<GiftImage imageDisplay="12.jpg" name="Casque audio" seed={1} sizes="100px" />);
+    expect(screen.getByRole('img').parentElement).not.toHaveClass('is-wrapped');
+
+    rerender(<GiftImage imageDisplay="12.jpg" name="Casque audio" seed={1} sizes="100px" wrapped />);
+    expect(screen.getByRole('img').parentElement).toHaveClass('is-wrapped');
+  });
+
+  it('marks the tinted background as wrapped too, when there is no photo', () => {
+    render(<GiftImage imageDisplay="unknown.jpg" name="Casque audio" seed={1} sizes="100px" wrapped />);
+    expect(screen.getByText('Casque').parentElement).toHaveClass('is-wrapped');
+  });
+
+  it('never puts the ribbon slot inside the wrapped (greyed) element', () => {
+    render(
+      <GiftImage imageDisplay="unknown.jpg" name="Casque audio" seed={1} sizes="100px" wrapped>
+        <div className="gift-wrap" data-testid="ribbon" />
+      </GiftImage>
+    );
+    expect(screen.getByTestId('ribbon')).not.toHaveClass('is-wrapped');
   });
 });

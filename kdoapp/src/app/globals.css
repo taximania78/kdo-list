@@ -319,6 +319,11 @@
 .tint-2 { background: color-mix(in srgb, var(--foil) 30%, var(--paper)); --tint-ink: color-mix(in srgb, var(--foil) 55%, var(--ink)); }
 .tint-3 { background: color-mix(in srgb, var(--mine) 16%, var(--paper)); --tint-ink: var(--mine); }
 
+/* Cadeau pris (à moi ou à quelqu'un d'autre) : la photo (ou le fond teinté + le mot, sans
+   photo) passe en noir et blanc ; portée à l'élément qui tient le fond/la photo uniquement,
+   jamais à `.gift-img` lui-même, pour ne pas filtrer `.gift-wrap` (le ruban) posé par-dessus. */
+.gift-img > .is-wrapped { filter: grayscale(1); transition: filter 0.5s ease; }
+
 /* Emballage d'une idée réservée */
 .gift-wrap { position: absolute; inset: 0; pointer-events: none; }
 .rib-h, .rib-v { position: absolute; }
