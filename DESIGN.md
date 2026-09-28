@@ -139,7 +139,7 @@ Toutes chargées une seule fois dans `app/layout.tsx` via `next/font/google` (va
 - **Bricolage Grotesque** (variable, opsz 12–96, wght 400–800) : prénoms, titres de page (800, interlignage 0,92, approche −0,035em), noms d'idées (700). Grotesque expressive et un peu artisanale, qui fait « étiquette imprimée ».
 - **Figtree** (400–700) : texte, formulaires, boutons, navigation. Neutre et chaleureuse, très lisible sur mobile.
 - **DM Mono** (400/500, chiffres tabulaires) : prix (« 42,00 € »), compteurs, tampons (« DÉJÀ EMBALLÉ »), métadonnées d'admin. Donne le côté « tapé à la machine ».
-- **Caveat** (600) : touche manuscrite, **deux ou trois endroits seulement** : la phrase sous « À qui fait-on plaisir ? », « chut… c'est toi qui l'offres », « Léa n'en saura rien. ». Jamais pour un titre ou un bouton.
+- **Caveat** (600) : touche manuscrite, **deux ou trois endroits seulement** : la phrase sous « À qui fait-on plaisir ? » (« la personne ne saura pas ce que tu lui offres »), « chut… c'est toi qui l'offres ». Jamais pour un titre ou un bouton.
 - Échelle : prénom de liste 88–210px (`cqi`), titre de page 40–92px, nom d'idée 19–21px, texte 16px, méta 12–14px. Les niveaux diffèrent par la taille, pas seulement le poids.
 - Les polices Atma, Mountains of Christmas et Geist sont retirées.
 

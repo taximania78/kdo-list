@@ -35,6 +35,12 @@ describe('ListSelectorPage', () => {
     expect(screen.getByRole('link', { name: /Liste commune/ })).toHaveClass('is-common');
   });
 
+  it('reassures that the gift stays a surprise', () => {
+    get.mockResolvedValue({ status: 200, data: lists });
+    render(<ListSelectorPage />);
+    expect(screen.getByText('la personne ne saura pas ce que tu lui offres')).toBeInTheDocument();
+  });
+
   it('shows only the first name on each band, without a repeated « Voir les idées »', async () => {
     get.mockResolvedValue({ status: 200, data: lists });
     render(<ListSelectorPage />);

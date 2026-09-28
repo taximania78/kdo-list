@@ -39,7 +39,7 @@ export default function ListSelectorPage() {
   return (
     <PageShell>
       <div className="grid gap-7 md:grid-cols-[5fr_7fr] md:items-start md:gap-14 md:pt-6">
-        <PageTitle hand="personne ne saura qui offre quoi" className="md:sticky md:top-24">
+        <PageTitle hand="la personne ne saura pas ce que tu lui offres" className="md:sticky md:top-24">
           À qui fait-on plaisir ?
         </PageTitle>
         <div className="grid gap-[18px] pt-1.5">
