@@ -19,6 +19,7 @@ colors:
   mine: "#2F6B4E"
   line: "#E4D4B3"
   error: "#B8351F"
+  hand: "#5A4634"
   # Thème Noël
   noel-bg: "#10291F"
   noel-paper: "#F6EEDD"
@@ -123,7 +124,7 @@ components:
 - `paper-2` : surface secondaire sur papier (encart dans le panneau de réservation, dos d'étiquette, survol de ligne).
 - `primary` : l'unique action principale d'un écran (« Je prends ! », « Se connecter », « Ajouter une idée ») et le ruban d'emballage. `primary-deep` sert aux liserés du ruban et au nœud.
 - `mine` : « c'est toi qui l'offres » (tampon, note manuscrite).
-- Le thème s'applique par la classe `.theme-christmas` posée sur `<html>` par le layout serveur ; `:root.theme-christmas` redéfinit les variables. Jetons dérivés : `--hand` (touches manuscrites : `on-bg-muted`, or à Noël) et `--wordmark` (icône du nom de l'app : `primary`, or à Noël). **Aucun composant ne teste le thème pour choisir une couleur.**
+- Le thème s'applique par la classe `.theme-christmas` posée sur `<html>` par le layout serveur ; `:root.theme-christmas` redéfinit les variables. Jetons dérivés : `--hand` (touches manuscrites : brun soutenu `#5A4634` en Anniversaire, `foil` à Noël) et `--wordmark` (icône du nom de l'app : `primary`, or à Noël). **Aucun composant ne teste le thème pour choisir une couleur.**
 - Les messages d'erreur sont posés sur une pastille `paper` : `error` reste lisible sur les deux fonds.
 
 ## Typography
@@ -214,3 +215,4 @@ Toutes chargées une seule fois dans `app/layout.tsx` via `next/font/google` (va
 | 2026-09-28 | Confirmation secondaire (`ghost`) pour « Je ne prends plus » et « Libérer la réservation » ; les suppressions gardent `primary` | Le rouge reste réservé à l'action principale ; annuler une prise n'est pas une action à mettre en avant |
 | 2026-09-28 | Neige posée en tuile de 80px répétée, bosses arrondies, bords adoucis | Le dessin étiré sur toute la largeur aplatissait les bosses en créneaux |
 | 2026-09-28 | Neige avant seulement sur les pages de listes ; ailleurs les 20 gros flocons passent derrière (250 au total partout) | Des flocons devant un champ de formulaire gênent la saisie et la lecture |
+| 2026-09-28 | `--hand` Anniversaire : `#5A4634` au lieu d'`on-bg-muted` (#7A6752) ; Noël inchangé (`foil`) | Le Caveat, fin et clair sur le kraft, manquait de lisibilité |

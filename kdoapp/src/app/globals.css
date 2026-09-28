@@ -49,7 +49,7 @@
     --line: #E4D4B3;
     --error: #B8351F;
     /* Dérivés (même élément <html> que la classe de thème : les var() suivent le thème) */
-    --hand: var(--on-bg-muted);
+    --hand: #5A4634; /* brun soutenu : les touches manuscrites (Caveat, fines) restent lisibles sur le kraft */
     --wordmark: var(--primary);
     --paper-shadow: drop-shadow(0 1px 0 rgb(60 40 20 / 0.1))
       drop-shadow(0 10px 14px rgb(90 60 25 / 0.16));
