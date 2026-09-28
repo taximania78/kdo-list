@@ -64,7 +64,7 @@ export default function LoginPage() {
 
   return (
     <PageShell narrow>
-      <PageTitle className="mb-7 mt-6 md:mt-12">Les bonnes idées restent en famille.</PageTitle>
+      <PageTitle className="mb-7 mt-6 md:mt-12">Des idées, juste au cas où.</PageTitle>
       {error && (
         <p role="alert" className="animate-shake mb-5 w-fit rounded-md bg-paper px-3 py-2 font-semibold text-error">
           {error}

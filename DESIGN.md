@@ -208,3 +208,4 @@ Toutes chargées une seule fois dans `app/layout.tsx` via `next/font/google` (va
 | 2026-09-27 | Neige avant au-dessus de l'en-tête et des onglets (z-45), sous les panneaux (z-50) | Les gros flocons passent aussi devant l'en-tête collant, qui reçoit son propre grain de papier |
 | 2026-09-27 | Ouverture « déballage » sautée si `prefers-reduced-motion: reduce` ; la neige reste | Respect de la préférence système pour l'animation plein écran ; la neige (250 flocons) est fixée par la spec |
 | 2026-09-28 | Vocabulaire : « prendre » / « disponible » au lieu d'« emballer » ; « Libérer la réservation » gardé pour l'admin ; commentaire rappelé dans le panneau de prise | Plus clair pour la famille |
+| 2026-09-28 | Titre de connexion : « Des idées, juste au cas où. » | Les listes servent à donner des idées, pas une liste d'achats |
