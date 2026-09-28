@@ -78,6 +78,12 @@ describe('ConfirmSheet', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
+  it('shows no grab bar (swipe-to-close is not implemented, the handle would be misleading)', () => {
+    setup(jest.fn().mockResolvedValue(undefined));
+    const panel = screen.getByRole('dialog');
+    expect(panel.querySelector('.bg-line')).toBeNull();
+  });
+
   it('ignores Escape while a confirm is pending, then closes once it resolves', async () => {
     let resolve: () => void = () => {};
     const onConfirm = jest.fn(() => new Promise<void>((r) => { resolve = r; }));

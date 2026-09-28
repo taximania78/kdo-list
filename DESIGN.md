@@ -226,3 +226,4 @@ Toutes chargées une seule fois dans `app/layout.tsx` via `next/font/google` (va
 | 2026-09-28 | Confirmation des annulations en contour rouge (`outline-primary`) au lieu de `ghost` | Avec `ghost`, « Oui, je ne le prends plus » et « Annuler » étaient identiques ; le contour rouge distingue l'action sans rivaliser avec le rouge plein |
 | 2026-09-28 | Idées triées par ordre alphabétique côté API | Repère facile pour la famille, ordre stable après une réservation |
 | 2026-09-28 | Image en noir et blanc pour tout cadeau pris, ruban en couleur | Demande de l'utilisateur : repérer d'un coup d'œil ce qui reste disponible |
+| 2026-09-28 | Poignée du panneau retirée | Le glissement vers le bas n'est pas géré, la poignée trompait |
