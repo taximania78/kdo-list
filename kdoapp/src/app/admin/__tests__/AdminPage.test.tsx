@@ -110,3 +110,24 @@ describe('Admin page — list switching races', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 });
+
+describe('Admin page — list chips layout', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('wraps the list chips on every screen size instead of scrolling sideways', async () => {
+    get.mockImplementation((url: string) =>
+      url.includes('/api/lists/all/')
+        ? Promise.resolve({
+            status: 200,
+            data: [{ slug: 'a', label: 'Liste A', owner_name: 'Alice', is_common: false, enabled: true }],
+          })
+        : Promise.resolve({ status: 200, data: [] })
+    );
+    render(<Admin />);
+
+    const group = await screen.findByRole('group', { name: 'Choisir une liste' });
+    expect(group).toHaveClass('flex-wrap');
+    expect(group).not.toHaveClass('overflow-x-auto');
+    expect(group.className).not.toMatch(/(^|\s)-mx-/);
+  });
+});

@@ -120,7 +120,8 @@ export default function Admin() {
         </p>
       )}
 
-      <div role="group" aria-label="Choisir une liste" className="-mx-5 mt-6 flex gap-2 overflow-x-auto px-5 pb-1 md:mx-0 md:flex-wrap md:px-0">
+      {/* Retour à la ligne partout ; gap-y-3 : les zones à toucher de 44px des pastilles ne se chevauchent pas. */}
+      <div role="group" aria-label="Choisir une liste" className="mt-6 flex flex-wrap gap-x-2 gap-y-3">
         {listOptions.map((opt) => (
           <Chip key={opt.value} pressed={selected === opt.value} onClick={() => selectList(opt.value)}>
             {opt.label}
