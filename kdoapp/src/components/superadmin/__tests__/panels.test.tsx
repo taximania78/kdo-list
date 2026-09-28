@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ListsPanel } from '@/components/superadmin/ListsPanel';
 import { UsersPanel } from '@/components/superadmin/UsersPanel';
@@ -24,12 +24,18 @@ describe('UsersPanel', () => {
     const onChanged = jest.fn();
     render(<UsersPanel users={users} meId={1} onChanged={onChanged} />);
 
-    const [, leaDelete] = screen.getAllByRole('button', { name: 'Supprimer' });
-    await userEvent.click(leaDelete);
+    await userEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
     await userEvent.click(screen.getByRole('button', { name: /Oui, supprimer/ }));
 
     await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
     expect(mocked.delete).toHaveBeenCalledWith(expect.stringMatching(/\/api\/delete-user\/2$/));
+  });
+
+  it('cannot delete my own account, but can delete the others', () => {
+    render(<UsersPanel users={users} meId={1} onChanged={jest.fn()} />);
+    const rows = screen.getAllByRole('listitem');
+    expect(within(rows[0]).queryByRole('button', { name: 'Supprimer' })).not.toBeInTheDocument();
+    expect(within(rows[1]).getByRole('button', { name: 'Supprimer' })).toBeInTheDocument();
   });
 
   it('cannot change the role of a super admin nor my own', () => {

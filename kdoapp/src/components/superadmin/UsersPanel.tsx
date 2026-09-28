@@ -81,9 +81,11 @@ export function UsersPanel({ users, meId, onChanged }: UsersPanelProps) {
               >
                 Mot de passe
               </Link>
-              <button type="button" onClick={() => setToDelete(user)} className="text-ink-muted hover:text-ink">
-                Supprimer
-              </button>
+              {user.id !== meId && (
+                <button type="button" onClick={() => setToDelete(user)} className="text-ink-muted hover:text-ink">
+                  Supprimer
+                </button>
+              )}
             </div>
           </li>
         ))}
