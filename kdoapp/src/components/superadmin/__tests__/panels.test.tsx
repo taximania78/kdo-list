@@ -54,6 +54,13 @@ describe('UsersPanel', () => {
     for (const link of screen.getAllByRole('link', { name: 'Mot de passe' })) expect(link).toHaveClass('rounded-md');
   });
 
+  it('spaces wrapped action rows so their 44px touch zones never overlap', () => {
+    render(<UsersPanel users={users} meId={1} onChanged={jest.fn()} />);
+    const row = screen.getByRole('button', { name: 'Rendre admin' }).parentElement;
+    // Texte de 20px, zone de 44px (−12px de chaque côté) : il faut au moins 24px entre deux lignes.
+    expect(row).toHaveClass('flex-wrap', 'gap-y-6');
+  });
+
   it('cannot change the role of a super admin nor my own', () => {
     render(<UsersPanel users={users} meId={1} onChanged={jest.fn()} />);
     expect(screen.getAllByRole('button', { name: /admin/i })).toHaveLength(1);

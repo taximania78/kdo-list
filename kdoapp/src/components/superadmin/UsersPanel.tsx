@@ -64,7 +64,8 @@ export function UsersPanel({ users, meId, onChanged }: UsersPanelProps) {
               <p className="font-bold break-words">{user.name}</p>
               <p className="font-mono text-xs text-ink-muted">{roleLabel(user)}</p>
             </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold">
+            {/* gap-y-6 : si les actions passent à la ligne, leurs zones à toucher de 44px ne se chevauchent pas. */}
+            <div className="flex flex-wrap gap-x-4 gap-y-6 text-sm font-bold">
               {!user.isMegaAdmin && user.id !== meId && (
                 <button
                   type="button"

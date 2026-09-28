@@ -201,7 +201,8 @@ export default function KdosList({ listSlug, listLabel }: { listSlug: string; li
 
   return (
     <>
-      <div role="group" aria-label="Filtrer les idées" className="mb-6 flex flex-wrap gap-2">
+      {/* gap-y-3 : si les filtres passent à la ligne, leurs zones à toucher de 44px ne se chevauchent pas. */}
+      <div role="group" aria-label="Filtrer les idées" className="mb-6 flex flex-wrap gap-x-2 gap-y-3">
         {FILTERS.map((f) => (
           <Chip key={f.key} pressed={filter === f.key} count={counts[f.key]} onClick={() => setFilter(f.key)}>
             {f.label}

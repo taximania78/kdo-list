@@ -169,6 +169,14 @@ describe('KdosList', () => {
     expect(within(dialog).getByText(/est pris par Paul\. Il redeviendra disponible pour tout le monde\./)).toBeInTheDocument();
   });
 
+  it('spaces wrapped filter rows so their 44px touch zones never overlap', async () => {
+    listOf(baseKdo);
+    render(<KdosList listSlug="paul" />);
+    const group = await screen.findByRole('group', { name: 'Filtrer les idées' });
+    // Pastille visible 32px, zone de 44px (−6px de chaque côté) : il faut au moins 12px entre deux lignes.
+    expect(group).toHaveClass('flex-wrap', 'gap-x-2', 'gap-y-3');
+  });
+
   it('filters the free ideas and mine', async () => {
     listOf(
       baseKdo,
