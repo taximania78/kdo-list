@@ -290,6 +290,7 @@
 
 .gift-string { display: none; }
 .gift-img { aspect-ratio: 1; align-self: start; }
+.gift-action { grid-column: 1 / -1; }
 .gift-tag .snowcap { left: 4px; right: 18px; }
 
 .gift-word {

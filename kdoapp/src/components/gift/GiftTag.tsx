@@ -59,7 +59,7 @@ export function GiftTag({
             </div>
           )}
         </GiftImage>
-        <div className="flex min-w-0 flex-col">
+        <div className="min-w-0">
           <h3 className="font-display text-[19px] font-bold leading-[1.12] tracking-[-0.02em] break-words md:text-[21px]">
             {kdo.name}
           </h3>
@@ -79,9 +79,10 @@ export function GiftTag({
             </p>
           )}
           {kdo.comment && <p className="mt-1 text-sm text-ink-muted break-words">{kdo.comment}</p>}
-          <div className="mt-auto pt-3 md:pt-4">
-            <GiftAction kdo={kdo} state={state} canRelease={canRelease} onTake={onTake} onRelease={onRelease} />
-          </div>
+        </div>
+        {/* Mobile : toute la largeur de l'étiquette, sous l'image et le texte ; md : sous le texte. */}
+        <div className="gift-action pt-3.5 md:pt-4">
+          <GiftAction kdo={kdo} state={state} canRelease={canRelease} onTake={onTake} onRelease={onRelease} />
         </div>
       </div>
     </article>

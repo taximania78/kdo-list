@@ -81,6 +81,36 @@ describe('GiftTag', () => {
   });
 });
 
+describe('GiftTag layout', () => {
+  // Sur mobile, l'action prend toute la largeur de l'étiquette, sous l'image et le texte :
+  // elle est donc un enfant direct du papier, hors de la colonne de texte.
+  const actionZone = (el: HTMLElement) => {
+    const zone = el.closest('.gift-action');
+    expect(zone).not.toBeNull();
+    expect(zone?.parentElement).toHaveClass('gift-paper');
+    return zone as HTMLElement;
+  };
+
+  it('puts « Je prends ! » in its own row under the image and the text', () => {
+    render(<GiftTag kdo={velo} state="free" canRelease={false} onTake={noop} onRelease={noop} />);
+    actionZone(screen.getByRole('button', { name: /Je prends/ }));
+  });
+
+  it('keeps the « chut… » note with the untie button', () => {
+    const mine = { ...velo, availability: false, takenBy: 'marie' };
+    render(<GiftTag kdo={mine} state="mine" canRelease={false} onTake={noop} onRelease={noop} />);
+    const zone = actionZone(screen.getByRole('button', { name: 'Je ne prends plus' }));
+    expect(zone).toContainElement(screen.getByText(/c'est toi qui l'offres/));
+  });
+
+  it('keeps « Pris par X » with the release button', () => {
+    const taken = { ...velo, availability: false, takenBy: 'Paul' };
+    render(<GiftTag kdo={taken} state="taken" canRelease onTake={noop} onRelease={noop} />);
+    const zone = actionZone(screen.getByRole('button', { name: 'Libérer la réservation' }));
+    expect(zone).toContainElement(screen.getByText('Pris par Paul'));
+  });
+});
+
 describe('GiftImage', () => {
   it('shows the gift name in big letters when there is no image', () => {
     render(<GiftImage imageDisplay="unknown.jpg" name="Casque audio" seed={1} sizes="100px" />);
