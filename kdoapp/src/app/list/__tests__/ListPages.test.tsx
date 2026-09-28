@@ -35,6 +35,16 @@ describe('ListSelectorPage', () => {
     expect(screen.getByRole('link', { name: /Liste commune/ })).toHaveClass('is-common');
   });
 
+  it('shows only the first name on each band, without a repeated « Voir les idées »', async () => {
+    get.mockResolvedValue({ status: 200, data: lists });
+    render(<ListSelectorPage />);
+
+    // Le nom accessible du lien est exactement le libellé de la liste.
+    expect(await screen.findByRole('link', { name: 'Léa' })).toHaveAttribute('href', '/list/lea');
+    expect(screen.getByRole('link', { name: 'Liste commune' })).toHaveAttribute('href', '/list/commune');
+    expect(screen.queryByText('Voir les idées')).toBeNull();
+  });
+
   it('shows an empty state', async () => {
     get.mockResolvedValue({ status: 200, data: [] });
     render(<ListSelectorPage />);
