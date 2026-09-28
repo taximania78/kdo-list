@@ -28,6 +28,27 @@ const FILTERS: { key: GiftFilter; label: string }[] = [
 
 type Pending = { kind: 'take' | 'release'; kdo: Kdo };
 
+/** Encart commun aux trois fenêtres : image, nom, prix (et commentaire pour la prise). */
+function GiftSummary({ kdo, withComment = false }: { kdo: Kdo; withComment?: boolean }) {
+  return (
+    <div className="rounded-lg bg-paper-2 p-3">
+      <div className="grid grid-cols-[72px_1fr] items-center gap-3.5">
+        <GiftImage imageDisplay={kdo.imageDisplay} name={kdo.name} seed={kdo.id} sizes="72px" compact className="aspect-square" />
+        <div className="min-w-0">
+          <p className="font-display text-lg font-bold leading-tight break-words">{kdo.name}</p>
+          {kdo.price != null && <p className="mt-1 font-mono text-sm">{formatPrice(kdo.price)}</p>}
+        </div>
+      </div>
+      {withComment && kdo.comment && (
+        <div className="mt-3 flex gap-2 border-t border-line pt-3">
+          <MessageSquareText aria-hidden className="mt-[3px] size-4 shrink-0 text-ink-muted" />
+          <p className="text-[15px] leading-snug text-ink break-words">{kdo.comment}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function sheetCopy({ kind, kdo }: Pending, username: string | null): { title: string; confirmLabel: string; body: ReactNode } {
   if (kind === 'take') {
     return {
@@ -35,21 +56,7 @@ function sheetCopy({ kind, kdo }: Pending, username: string | null): { title: st
       confirmLabel: 'Oui, je le prends',
       body: (
         <div className="grid gap-3.5">
-          <div className="rounded-lg bg-paper-2 p-3">
-            <div className="grid grid-cols-[72px_1fr] items-center gap-3.5">
-              <GiftImage imageDisplay={kdo.imageDisplay} name={kdo.name} seed={kdo.id} sizes="72px" compact className="aspect-square" />
-              <div className="min-w-0">
-                <p className="font-display text-lg font-bold leading-tight break-words">{kdo.name}</p>
-                {kdo.price != null && <p className="mt-1 font-mono text-sm">{formatPrice(kdo.price)}</p>}
-              </div>
-            </div>
-            {kdo.comment && (
-              <div className="mt-3 flex gap-2 border-t border-line pt-3">
-                <MessageSquareText aria-hidden className="mt-[3px] size-4 shrink-0 text-ink-muted" />
-                <p className="text-[15px] leading-snug text-ink break-words">{kdo.comment}</p>
-              </div>
-            )}
-          </div>
+          <GiftSummary kdo={kdo} withComment />
           <p className="font-hand text-[22px] font-semibold text-mine">Personne ne saura que c&apos;est toi.</p>
         </div>
       ),
@@ -60,9 +67,12 @@ function sheetCopy({ kind, kdo }: Pending, username: string | null): { title: st
       title: 'Tu ne prends plus ce cadeau ?',
       confirmLabel: 'Oui, je ne le prends plus',
       body: (
-        <p>
-          <strong>{kdo.name}</strong> redeviendra disponible pour les autres.
-        </p>
+        <div className="grid gap-3.5">
+          <GiftSummary kdo={kdo} />
+          <p>
+            <strong>{kdo.name}</strong> redeviendra disponible pour les autres.
+          </p>
+        </div>
       ),
     };
   }
@@ -70,9 +80,12 @@ function sheetCopy({ kind, kdo }: Pending, username: string | null): { title: st
     title: 'Libérer la réservation ?',
     confirmLabel: 'Oui, libérer',
     body: (
-      <p>
-        <strong>{kdo.name}</strong> est pris par {kdo.takenBy}. Il redeviendra disponible pour tout le monde.
-      </p>
+      <div className="grid gap-3.5">
+        <GiftSummary kdo={kdo} />
+        <p>
+          <strong>{kdo.name}</strong> est pris par {kdo.takenBy}. Il redeviendra disponible pour tout le monde.
+        </p>
+      </div>
     ),
   };
 }

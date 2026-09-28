@@ -137,6 +137,31 @@ describe('KdosList', () => {
     await waitFor(() => expect(post).toHaveBeenCalledWith(expect.stringMatching(/\/api\/untake-api\/7$/)));
   });
 
+  it('shows the same idea summary (image, name, price) in the untake sheet', async () => {
+    listOf({ ...baseKdo, price: 42, imageDisplay: 'velo.jpg', availability: false, takenBy: 'marie' });
+    render(<KdosList listSlug="paul" />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Je ne prends plus' }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByRole('img', { name: 'Vélo' })).toBeInTheDocument();
+    expect(within(dialog).getByText('Vélo', { selector: 'p' })).toBeInTheDocument();
+    expect(within(dialog).getByText(/42,00\s€/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/redeviendra disponible pour les autres/)).toBeInTheDocument();
+  });
+
+  it('shows the same idea summary (image, name, price) in the admin release sheet', async () => {
+    (getUserInfo as jest.Mock).mockReturnValue({ username: 'julie', isAdmin: true, isMegaAdmin: false });
+    listOf({ ...baseKdo, id: 7, price: 42, imageDisplay: 'velo.jpg', availability: false, takenBy: 'Paul' });
+    render(<KdosList listSlug="paul" />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Libérer la réservation' }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByRole('img', { name: 'Vélo' })).toBeInTheDocument();
+    expect(within(dialog).getByText('Vélo', { selector: 'p' })).toBeInTheDocument();
+    expect(within(dialog).getByText(/42,00\s€/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/est pris par Paul\. Il redeviendra disponible pour tout le monde\./)).toBeInTheDocument();
+  });
+
   it('filters the free ideas and mine', async () => {
     listOf(
       baseKdo,
