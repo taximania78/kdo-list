@@ -236,6 +236,11 @@ describe('PageTitle', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'À qui fait-on plaisir ?' })).toBeInTheDocument();
     expect(screen.getByText('personne ne saura qui offre quoi')).toBeInTheDocument();
   });
+
+  it('balances the title so a lone word never sits alone on the last line', () => {
+    render(<PageTitle>Tu ne prends plus ce cadeau ?</PageTitle>);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveClass('text-balance');
+  });
 });
 
 describe('PageShell', () => {

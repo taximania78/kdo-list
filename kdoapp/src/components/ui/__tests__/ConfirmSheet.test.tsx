@@ -67,6 +67,11 @@ describe('ConfirmSheet', () => {
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
   });
 
+  it('balances the title so a lone word never sits alone on the last line', () => {
+    setup(jest.fn().mockResolvedValue(undefined));
+    expect(screen.getByRole('heading', { name: "Tu t'en occupes ?" })).toHaveClass('text-balance');
+  });
+
   it('closes on cancel', async () => {
     const { onOpenChange } = setup(jest.fn().mockResolvedValue(undefined));
     await userEvent.click(screen.getByRole('button', { name: 'Annuler' }));

@@ -70,6 +70,13 @@ describe('ListDetailPage', () => {
     expect(screen.getByText('idées de lea')).toBeInTheDocument();
   });
 
+  it('balances the giant first name so a lone word never sits alone on the last line', async () => {
+    get.mockResolvedValue({ status: 200, data: lists });
+    render(<ListDetailPage />);
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Léa' })).toHaveClass('text-balance');
+  });
+
   it('says so when the list does not exist', async () => {
     get.mockResolvedValue({ status: 200, data: [lists[1]] });
     render(<ListDetailPage />);

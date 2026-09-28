@@ -65,7 +65,7 @@ export default function ListDetailPage() {
     <PageShell>
       <BackLink href="/list">Toutes les listes</BackLink>
       <p className="text-[17px] text-on-bg-muted">{list.is_common ? 'Pour tout le monde' : 'Les envies de'}</p>
-      <h1 className="-ml-1 mb-5 mt-0.5 font-display text-[clamp(72px,22vw,190px)] font-extrabold leading-[0.85] tracking-[-0.035em] break-words md:text-[clamp(110px,14vw,210px)]">
+      <h1 className="-ml-1 mb-5 mt-0.5 font-display text-[clamp(72px,22vw,190px)] font-extrabold leading-[0.85] tracking-[-0.035em] break-words text-balance md:text-[clamp(110px,14vw,210px)]">
         {list.label}
       </h1>
       <KdosList listSlug={list.slug} listLabel={list.label} />
