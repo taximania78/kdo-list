@@ -33,7 +33,15 @@ function GiftSummary({ kdo, withComment = false }: { kdo: Kdo; withComment?: boo
   return (
     <div className="rounded-lg bg-paper-2 p-3">
       <div className="grid grid-cols-[72px_1fr] items-center gap-3.5">
-        <GiftImage imageDisplay={kdo.imageDisplay} name={kdo.name} seed={kdo.id} sizes="72px" compact className="aspect-square" />
+        <GiftImage
+          imageDisplay={kdo.imageDisplay}
+          name={kdo.name}
+          seed={kdo.id}
+          sizes="72px"
+          compact
+          wrapped={!kdo.availability}
+          className="aspect-square"
+        />
         <div className="min-w-0">
           <p className="font-display text-lg font-bold leading-tight break-words">{kdo.name}</p>
           {kdo.price != null && <p className="mt-1 font-mono text-sm">{formatPrice(kdo.price)}</p>}

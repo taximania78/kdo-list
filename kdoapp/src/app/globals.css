@@ -321,8 +321,12 @@
 
 /* Cadeau pris (à moi ou à quelqu'un d'autre) : la photo (ou le fond teinté + le mot, sans
    photo) passe en noir et blanc ; portée à l'élément qui tient le fond/la photo uniquement,
-   jamais à `.gift-img` lui-même, pour ne pas filtrer `.gift-wrap` (le ruban) posé par-dessus. */
-.gift-img > .is-wrapped { filter: grayscale(1); transition: filter 0.5s ease; }
+   jamais à `.gift-img` lui-même, pour ne pas filtrer `.gift-wrap` (le ruban) posé par-dessus.
+   La transition est sur la règle toujours présente (pas seulement `.is-wrapped`) pour jouer
+   dans les deux sens : au retrait de la classe (« je ne prends plus »), le retour en couleur
+   est aussi progressif que le passage en gris. */
+.gift-img-fill { transition: filter 0.5s ease; }
+.gift-img-fill.is-wrapped { filter: grayscale(1); }
 
 /* Emballage d'une idée réservée */
 .gift-wrap { position: absolute; inset: 0; pointer-events: none; }

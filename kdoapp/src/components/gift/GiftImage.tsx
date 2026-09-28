@@ -31,7 +31,7 @@ export function GiftImage({ imageDisplay, name, seed, sizes, compact = false, wr
           le noir et blanc d'un cadeau pris ne doit filtrer que la photo/le fond, jamais le
           ruban qui reste par-dessus, en couleur. */}
       <div
-        className={`absolute inset-0 ${TINTS[Math.abs(seed) % TINTS.length]} ${wrapped ? 'is-wrapped' : ''}`}
+        className={`gift-img-fill absolute inset-0 ${TINTS[Math.abs(seed) % TINTS.length]} ${wrapped ? 'is-wrapped' : ''}`}
       >
         {showPhoto ? (
           <Image

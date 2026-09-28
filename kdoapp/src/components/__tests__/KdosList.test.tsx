@@ -169,6 +169,34 @@ describe('KdosList', () => {
     expect(within(dialog).getByText(/est pris par Paul\. Il redeviendra disponible pour tout le monde\./)).toBeInTheDocument();
   });
 
+  it('keeps the take sheet preview in color (the idea is still free)', async () => {
+    listOf({ ...baseKdo, imageDisplay: 'velo.jpg' });
+    render(<KdosList listSlug="paul" />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /Je prends/ }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByRole('img', { name: 'Vélo' }).parentElement).not.toHaveClass('is-wrapped');
+  });
+
+  it('greys the preview in the untake sheet (the idea is taken, by me)', async () => {
+    listOf({ ...baseKdo, imageDisplay: 'velo.jpg', availability: false, takenBy: 'marie' });
+    render(<KdosList listSlug="paul" />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Je ne prends plus' }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByRole('img', { name: 'Vélo' }).parentElement).toHaveClass('is-wrapped');
+  });
+
+  it('greys the preview in the admin release sheet (the idea is taken, by someone else)', async () => {
+    (getUserInfo as jest.Mock).mockReturnValue({ username: 'julie', isAdmin: true, isMegaAdmin: false });
+    listOf({ ...baseKdo, id: 7, imageDisplay: 'velo.jpg', availability: false, takenBy: 'Paul' });
+    render(<KdosList listSlug="paul" />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Libérer la réservation' }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByRole('img', { name: 'Vélo' }).parentElement).toHaveClass('is-wrapped');
+  });
+
   it('spaces wrapped filter rows so their 44px touch zones never overlap', async () => {
     listOf(baseKdo);
     render(<KdosList listSlug="paul" />);
