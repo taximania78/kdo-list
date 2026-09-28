@@ -85,6 +85,11 @@ components:
   button-ghost:
     textColor: "{colors.ink}"
     rounded: "{rounded.md}"
+  button-outline-primary:
+    backgroundColor: "{colors.paper}"
+    textColor: "{colors.primary}"
+    borderColor: "{colors.primary}"
+    rounded: "{rounded.md}"
   input:
     backgroundColor: "{colors.paper}"
     borderColor: "{colors.line}"
@@ -166,9 +171,10 @@ Toutes chargées une seule fois dans `app/layout.tsx` via `next/font/google` (va
 
 - **Bouton principal :** `primary` plein, texte `on-primary`, 700, 15px ; survol `primary-hover` ; appui : descend de 1px ; désactivé : opacité 0,5. Jamais de dégradé.
 - **Bouton secondaire :** contour 1,5px encre à 22 %, fond `paper-2` au survol.
+- **Bouton contour rouge (`outline-primary`) :** fond `paper`, texte et contour 1,5px `primary`, fond `paper-2` au survol. Sert uniquement à confirmer une annulation (« Oui, je ne le prends plus », « Oui, libérer ») : distinct du bouton « Annuler » neutre, sans voler la place du rouge plein.
 - **Étiquette d'idée :** image (ou nom de l'idée en gros sur fond teinté s'il n'y a pas d'image), nom, prix mono, « Voir le produit ↗ » en `primary`, commentaire en `ink-muted`, action en bas. Prix et lien absents : rien n'est affiché à leur place.
 - **États d'une étiquette :** libre (bouton « Je prends ! ») ; à moi (emballée, tampon « Pris par toi » en `mine`, note Caveat « chut… c'est toi qui l'offres », bouton secondaire « Je ne prends plus ») ; prise par quelqu'un (emballée, texte mono « Pris par {prénom} » ou « Déjà pris » en `ink-muted` ; un admin voit « Libérer la réservation »).
-- **Réservation :** panneau qui monte du bas sur mobile, fenêtre centrée de 440px sur ordinateur. Prendre : titre « Tu prends ce cadeau ? », encart avec l'idée (image, nom, prix ; le commentaire de l'idée, s'il existe, sous un fin séparateur `line`, en `ink` 15px, précédé d'une petite icône de bulle en `ink-muted`), note Caveat, « Oui, je le prends » + « Annuler ». Ne plus prendre : titre « Tu ne prends plus ce cadeau ? », « Oui, je ne le prends plus ». Admin (réservation d'un autre) : titre « Libérer la réservation ? », « Oui, libérer ». Les trois fenêtres montrent le même encart (image, nom, prix ; commentaire seulement pour la prise), suivi de leur phrase. Seule la prise a un bouton de confirmation `primary` ; « ne plus prendre » et « libérer » confirment avec le bouton secondaire (`ghost`). En cas d'erreur, un message reste dans le panneau (plus d'erreur silencieuse). La confirmation de suppression utilise ce même composant (plus de `window.confirm`).
+- **Réservation :** panneau qui monte du bas sur mobile, fenêtre centrée de 440px sur ordinateur. Prendre : titre « Tu prends ce cadeau ? », encart avec l'idée (image, nom, prix ; le commentaire de l'idée, s'il existe, sous un fin séparateur `line`, en `ink` 15px, précédé d'une petite icône de bulle en `ink-muted`), note Caveat, « Oui, je le prends » + « Annuler ». Ne plus prendre : titre « Tu ne prends plus ce cadeau ? », « Oui, je ne le prends plus ». Admin (réservation d'un autre) : titre « Libérer la réservation ? », « Oui, libérer ». Les trois fenêtres montrent le même encart (image, nom, prix ; commentaire seulement pour la prise), suivi de leur phrase. Seule la prise a un bouton de confirmation `primary` ; « ne plus prendre » et « libérer » confirment avec le bouton contour rouge (`outline-primary`) ; « Annuler » reste le bouton secondaire neutre. En cas d'erreur, un message reste dans le panneau (plus d'erreur silencieuse). La confirmation de suppression utilise ce même composant (plus de `window.confirm`).
 - **Bande de liste :** feuille `paper`, prénom en display (seul texte de la bande, nom accessible du lien), ruban vertical `primary` (ou `foil` pour la liste commune), flèche. Ni compteur ni sous-titre : l'API ne fournit pas de compteur, le nombre d'idées déjà prises gâcherait la surprise sur sa propre liste, et « Voir les idées » répété sur chaque bande n'apportait rien (toute la bande est le lien). Hauteur mini 88px (112px ≥ 720px), prénom centré verticalement.
 - **Champs :** libellé visible au-dessus (14px, 600), fond `paper`, bordure `line`, focus = contour 2,5px `primary`. Erreur sous le champ en `error`. Menu déroulant sans flèche native : chevron `ink-muted` à droite, décoratif.
 - **Anneau de focus :** contour 2,5px `primary` décalé de 2px ; onglets, liens de navigation, liens retour et actions texte ont des coins de 6px pour que l'anneau soit arrondi. Le soulignement de l'onglet ou du lien actif est une barre `primary` (`::after`), pas une ombre intérieure, pour rester droit.
@@ -217,3 +223,4 @@ Toutes chargées une seule fois dans `app/layout.tsx` via `next/font/google` (va
 | 2026-09-28 | Neige avant seulement sur les pages de listes ; ailleurs les 20 gros flocons passent derrière (250 au total partout) | Des flocons devant un champ de formulaire gênent la saisie et la lecture |
 | 2026-09-28 | `--hand` Anniversaire : `#5A4634` au lieu d'`on-bg-muted` (#7A6752) ; Noël inchangé (`foil`) | Le Caveat, fin et clair sur le kraft, manquait de lisibilité |
 | 2026-09-28 | Bandes de listes sans la ligne « Voir les idées » (prénom, ruban, flèche) | Mention répétée à chaque bande, sans information ; la bande entière est déjà le lien |
+| 2026-09-28 | Confirmation des annulations en contour rouge (`outline-primary`) au lieu de `ghost` | Avec `ghost`, « Oui, je ne le prends plus » et « Annuler » étaient identiques ; le contour rouge distingue l'action sans rivaliser avec le rouge plein |

@@ -2,7 +2,7 @@ import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ConfirmSheet } from '@/components/ui/ConfirmSheet';
 
-function setup(onConfirm: () => Promise<void>, confirmVariant?: 'primary' | 'ghost') {
+function setup(onConfirm: () => Promise<void>, confirmVariant?: 'primary' | 'outline-primary') {
   const onOpenChange = jest.fn();
   render(
     <ConfirmSheet
@@ -33,11 +33,14 @@ describe('ConfirmSheet', () => {
     expect(screen.getByRole('button', { name: /Oui, je l'emballe/ })).toHaveClass('bg-primary');
   });
 
-  it('uses a secondary (ghost) confirm button when asked', () => {
-    setup(jest.fn().mockResolvedValue(undefined), 'ghost');
+  it('uses a red outline confirm button when asked, the cancel button staying neutral', () => {
+    setup(jest.fn().mockResolvedValue(undefined), 'outline-primary');
     const confirm = screen.getByRole('button', { name: /Oui, je l'emballe/ });
     expect(confirm).not.toHaveClass('bg-primary');
-    expect(confirm).toHaveClass('ring-ink/20');
+    expect(confirm).toHaveClass('text-primary', 'ring-primary', 'bg-paper');
+    const cancel = screen.getByRole('button', { name: 'Annuler' });
+    expect(cancel).toHaveClass('ring-ink/20');
+    expect(cancel).not.toHaveClass('ring-primary');
   });
 
   it('confirms only once on a double tap, then closes', async () => {

@@ -11,8 +11,8 @@ type ConfirmSheetProps = {
   title: string;
   confirmLabel: string;
   cancelLabel?: string;
-  /** « ghost » pour une annulation (ne plus prendre, libérer) : le rouge reste aux actions principales. */
-  confirmVariant?: 'primary' | 'ghost';
+  /** « outline-primary » (contour rouge) pour une annulation (ne plus prendre, libérer) : le rouge plein reste aux actions principales. */
+  confirmVariant?: 'primary' | 'outline-primary';
   onConfirm: () => Promise<void>;
   children?: ReactNode;
 };

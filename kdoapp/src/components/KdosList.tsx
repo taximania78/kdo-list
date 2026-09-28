@@ -52,7 +52,7 @@ function GiftSummary({ kdo, withComment = false }: { kdo: Kdo; withComment?: boo
 function sheetCopy({ kind, kdo }: Pending, username: string | null): {
   title: string;
   confirmLabel: string;
-  confirmVariant: 'primary' | 'ghost';
+  confirmVariant: 'primary' | 'outline-primary';
   body: ReactNode;
 } {
   if (kind === 'take') {
@@ -72,7 +72,7 @@ function sheetCopy({ kind, kdo }: Pending, username: string | null): {
     return {
       title: 'Tu ne prends plus ce cadeau ?',
       confirmLabel: 'Oui, je ne le prends plus',
-      confirmVariant: 'ghost',
+      confirmVariant: 'outline-primary',
       body: (
         <div className="grid gap-3.5">
           <GiftSummary kdo={kdo} />
@@ -86,7 +86,7 @@ function sheetCopy({ kind, kdo }: Pending, username: string | null): {
   return {
     title: 'Libérer la réservation ?',
     confirmLabel: 'Oui, libérer',
-    confirmVariant: 'ghost',
+    confirmVariant: 'outline-primary',
     body: (
       <div className="grid gap-3.5">
         <GiftSummary kdo={kdo} />

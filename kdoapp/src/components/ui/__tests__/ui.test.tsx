@@ -180,6 +180,20 @@ describe('Chip', () => {
 
 // Zones à toucher ≥ 44px (jsdom ne calcule pas la mise en page : on vérifie les classes
 // qui la garantissent ; la mesure réelle se fait dans le navigateur à 390px).
+describe('Button outline-primary', () => {
+  it('is a red outline on paper, with a paper-2 hover', () => {
+    render(<Button variant="outline-primary">Oui, libérer</Button>);
+    expect(screen.getByRole('button')).toHaveClass(
+      'bg-paper',
+      'text-primary',
+      'ring-[1.5px]',
+      'ring-inset',
+      'ring-primary',
+      'hover:bg-paper-2'
+    );
+  });
+});
+
 describe('touch targets', () => {
   it('gives every button a 44px minimum height', () => {
     render(<Button>Je prends !</Button>);

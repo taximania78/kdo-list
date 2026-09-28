@@ -1,13 +1,15 @@
 import type { ButtonHTMLAttributes } from 'react';
 import { Loader2 } from 'lucide-react';
 
-type Variant = 'primary' | 'outline' | 'ghost';
+type Variant = 'primary' | 'outline' | 'ghost' | 'outline-primary';
 
-// outline : posé sur le fond de page ; ghost : posé sur du papier.
+// outline : posé sur le fond de page ; ghost : posé sur du papier ;
+// outline-primary : contour rouge sur papier, pour confirmer une annulation sans voler la place du bouton plein.
 const VARIANTS: Record<Variant, string> = {
   primary: 'bg-primary text-on-primary hover:bg-primary-hover',
   outline: 'text-on-bg ring-[1.5px] ring-inset ring-on-bg/30 hover:bg-on-bg/10',
   ghost: 'text-ink ring-[1.5px] ring-inset ring-ink/20 hover:bg-paper-2',
+  'outline-primary': 'bg-paper text-primary ring-[1.5px] ring-inset ring-primary hover:bg-paper-2',
 };
 
 export function buttonClass(variant: Variant = 'primary', block = false): string {
