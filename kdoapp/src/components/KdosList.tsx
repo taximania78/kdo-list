@@ -71,7 +71,7 @@ function sheetCopy({ kind, kdo }: Pending, username: string | null): {
       body: (
         <div className="grid gap-3.5">
           <GiftSummary kdo={kdo} withComment />
-          <p className="font-hand text-[22px] font-semibold text-mine">Personne ne saura que c&apos;est toi.</p>
+          <p className="font-hand text-[22px] font-semibold text-mine">la personne ne saura pas ce que tu lui offres.</p>
         </div>
       ),
     };

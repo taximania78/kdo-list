@@ -66,6 +66,14 @@ describe('KdosList', () => {
     await waitFor(() => expect(get).toHaveBeenCalledTimes(2));
   });
 
+  it('reassures with a handwritten note that says what the person will not know', async () => {
+    listOf(baseKdo);
+    render(<KdosList listSlug="paul" />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /Je prends/ }));
+    expect(screen.getByText('la personne ne saura pas ce que tu lui offres.')).toBeInTheDocument();
+  });
+
   it("shows the idea's comment in the take sheet when there is one", async () => {
     listOf({ ...baseKdo, comment: 'Taille M, bleu marine' });
     render(<KdosList listSlug="paul" />);
