@@ -41,6 +41,12 @@ describe('LoginPage Component', () => {
     expect(screen.getByRole('button', { name: /Se connecter/i })).toBeInTheDocument();
   });
 
+  it('shows the forgot-password hint pointing to contacting me', () => {
+    render(<LoginPage />);
+
+    expect(screen.getByText('mot de passe oublié ? contactez-moi')).toBeInTheDocument();
+  });
+
   it('redirects to /list if user is already authenticated (regular user)', () => {
     (useAuth as jest.Mock).mockReturnValue({
       isAuthenticated: true,

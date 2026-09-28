@@ -49,7 +49,7 @@ test.describe('Mise en page mobile (390px)', () => {
     test(`${path} ne défile pas horizontalement`, async ({ page }) => {
       await page.goto(path);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-      if (path === '/list/lea') await expect(page.getByText('Emballé par Paul')).toBeVisible();
+      if (path === '/list/lea') await expect(page.getByText('Pris par Paul')).toBeVisible();
 
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       expect(overflow).toBeLessThanOrEqual(0);

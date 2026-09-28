@@ -21,8 +21,8 @@ function kdosUrl(listSlug: string): string {
 
 const FILTERS: { key: GiftFilter; label: string }[] = [
   { key: 'all', label: 'Tout' },
-  { key: 'free', label: 'Libres' },
-  { key: 'mine', label: 'Les miens' },
+  { key: 'free', label: 'Disponibles' },
+  { key: 'mine', label: 'Pris par moi' },
 ];
 
 type Pending = { kind: 'take' | 'release'; kdo: Kdo };
@@ -30,8 +30,8 @@ type Pending = { kind: 'take' | 'release'; kdo: Kdo };
 function sheetCopy({ kind, kdo }: Pending, username: string | null): { title: string; confirmLabel: string; body: ReactNode } {
   if (kind === 'take') {
     return {
-      title: "Tu t'en occupes ?",
-      confirmLabel: "Oui, je l'emballe",
+      title: 'Tu prends ce cadeau ?',
+      confirmLabel: 'Oui, je le prends',
       body: (
         <div className="grid gap-3.5">
           <div className="grid grid-cols-[72px_1fr] items-center gap-3.5 rounded-lg bg-paper-2 p-3">
@@ -39,6 +39,7 @@ function sheetCopy({ kind, kdo }: Pending, username: string | null): { title: st
             <div className="min-w-0">
               <p className="font-display text-lg font-bold leading-tight break-words">{kdo.name}</p>
               {kdo.price != null && <p className="mt-1 font-mono text-sm">{formatPrice(kdo.price)}</p>}
+              {kdo.comment && <p className="mt-1 text-sm text-ink-muted break-words">{kdo.comment}</p>}
             </div>
           </div>
           <p className="font-hand text-[22px] font-semibold text-mine">Personne ne saura que c&apos;est toi.</p>
@@ -48,11 +49,11 @@ function sheetCopy({ kind, kdo }: Pending, username: string | null): { title: st
   }
   if (kdo.takenBy === username) {
     return {
-      title: 'Dénouer le ruban ?',
-      confirmLabel: 'Oui, dénouer',
+      title: 'Tu ne prends plus ce cadeau ?',
+      confirmLabel: 'Oui, je ne le prends plus',
       body: (
         <p>
-          <strong>{kdo.name}</strong> redeviendra libre pour les autres.
+          <strong>{kdo.name}</strong> redeviendra disponible pour les autres.
         </p>
       ),
     };
@@ -62,7 +63,7 @@ function sheetCopy({ kind, kdo }: Pending, username: string | null): { title: st
     confirmLabel: 'Oui, libérer',
     body: (
       <p>
-        <strong>{kdo.name}</strong> est réservé par {kdo.takenBy}. Il redeviendra libre.
+        <strong>{kdo.name}</strong> est pris par {kdo.takenBy}. Il redeviendra disponible pour tout le monde.
       </p>
     ),
   };

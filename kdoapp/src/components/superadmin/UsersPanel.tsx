@@ -102,8 +102,8 @@ export function UsersPanel({ users, meId, onChanged }: UsersPanelProps) {
         }}
       >
         <p>
-          <strong>{toDelete?.name}</strong> ne pourra plus se connecter et ses réservations seront libérées. Action
-          irréversible.
+          <strong>{toDelete?.name}</strong> ne pourra plus se connecter et les cadeaux qu&apos;elle a pris redeviendront
+          disponibles. Action irréversible.
         </p>
       </ConfirmSheet>
     </>

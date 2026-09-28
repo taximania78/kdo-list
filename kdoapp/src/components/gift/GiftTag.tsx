@@ -55,7 +55,7 @@ export function GiftTag({
               <i className="rib-h" />
               <i className="rib-v" />
               <Bow className="gift-bow" />
-              <span className="gift-stamp">{state === 'mine' ? 'À toi · chut !' : 'Déjà emballé'}</span>
+              <span className="gift-stamp">{state === 'mine' ? 'Pris par toi' : 'Déjà pris'}</span>
             </div>
           )}
         </GiftImage>
@@ -104,7 +104,7 @@ function GiftAction({ kdo, state, canRelease, onTake, onRelease }: Omit<GiftTagP
           chut… c&apos;est toi qui l&apos;offres
         </p>
         <Button variant="ghost" block onClick={onRelease} className="py-2 text-sm">
-          Dénouer le ruban
+          Je ne prends plus
         </Button>
       </>
     );
@@ -112,7 +112,7 @@ function GiftAction({ kdo, state, canRelease, onTake, onRelease }: Omit<GiftTagP
   return (
     <>
       <p className="font-mono text-xs text-ink-muted">
-        {kdo.takenBy ? `Emballé par ${kdo.takenBy}` : 'Déjà emballé'}
+        {kdo.takenBy ? `Pris par ${kdo.takenBy}` : 'Déjà pris'}
       </p>
       {canRelease && (
         <Button variant="ghost" block onClick={onRelease} className="mt-2 py-2 text-sm">

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import KdosList from '@/components/KdosList';
 import api from '@/lib/api';
@@ -58,10 +58,29 @@ describe('KdosList', () => {
     render(<KdosList listSlug="paul" />);
 
     await userEvent.click(await screen.findByRole('button', { name: /Je prends/ }));
-    await userEvent.click(screen.getByRole('button', { name: /Oui, je l'emballe/ }));
+    expect(screen.getByRole('heading', { name: 'Tu prends ce cadeau ?' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /Oui, je le prends/ }));
 
     await waitFor(() => expect(post).toHaveBeenCalledWith(expect.stringMatching(/\/api\/take-api\/1$/)));
     await waitFor(() => expect(get).toHaveBeenCalledTimes(2));
+  });
+
+  it("shows the idea's comment in the take sheet when there is one", async () => {
+    listOf({ ...baseKdo, comment: 'Taille M, bleu marine' });
+    render(<KdosList listSlug="paul" />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /Je prends/ }));
+    expect(within(screen.getByRole('dialog')).getByText('Taille M, bleu marine')).toBeInTheDocument();
+  });
+
+  it('shows no comment in the take sheet when the idea has none', async () => {
+    listOf({ ...baseKdo, comment: null });
+    render(<KdosList listSlug="paul" />);
+
+    await userEvent.click(await screen.findByRole('button', { name: /Je prends/ }));
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).queryByText('Taille M', { exact: false })).toBeNull();
+    expect(dialog.querySelector('.text-ink-muted')).toBeNull();
   });
 
   it('keeps the sheet open with the API message when someone was faster', async () => {
@@ -70,7 +89,7 @@ describe('KdosList', () => {
     render(<KdosList listSlug="paul" />);
 
     await userEvent.click(await screen.findByRole('button', { name: /Je prends/ }));
-    await userEvent.click(screen.getByRole('button', { name: /Oui, je l'emballe/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Oui, je le prends/ }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent("Cette idée vient d'être réservée.");
     expect(get).toHaveBeenCalledTimes(2);
@@ -81,8 +100,10 @@ describe('KdosList', () => {
     post.mockResolvedValue({ status: 200, data: { success: true } });
     render(<KdosList listSlug="paul" />);
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Dénouer le ruban' }));
-    await userEvent.click(screen.getByRole('button', { name: /Oui, dénouer/ }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Je ne prends plus' }));
+    expect(screen.getByRole('heading', { name: 'Tu ne prends plus ce cadeau ?' })).toBeInTheDocument();
+    expect(screen.getByText(/redeviendra disponible pour les autres/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /Oui, je ne le prends plus/ }));
 
     await waitFor(() => expect(post).toHaveBeenCalledWith(expect.stringMatching(/\/api\/untake-api\/1$/)));
   });
@@ -91,7 +112,7 @@ describe('KdosList', () => {
     listOf({ ...baseKdo, id: 7, availability: false, takenBy: 'Paul' });
     render(<KdosList listSlug="paul" />);
 
-    expect(await screen.findByText('Emballé par Paul')).toBeInTheDocument();
+    expect(await screen.findByText('Pris par Paul')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Libérer/ })).toBeNull();
   });
 
@@ -102,6 +123,8 @@ describe('KdosList', () => {
     render(<KdosList listSlug="paul" />);
 
     await userEvent.click(await screen.findByRole('button', { name: 'Libérer la réservation' }));
+    expect(screen.getByRole('heading', { name: 'Libérer la réservation ?' })).toBeInTheDocument();
+    expect(screen.getByText(/est pris par Paul\. Il redeviendra disponible pour tout le monde\./)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /Oui, libérer/ }));
 
     await waitFor(() => expect(post).toHaveBeenCalledWith(expect.stringMatching(/\/api\/untake-api\/7$/)));
@@ -116,11 +139,11 @@ describe('KdosList', () => {
     render(<KdosList listSlug="paul" />);
     await screen.findByRole('heading', { name: 'Pull' });
 
-    await userEvent.click(screen.getByRole('button', { name: /Libres/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Disponibles/ }));
     expect(screen.getByRole('heading', { name: 'Vélo' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Pull' })).toBeNull();
 
-    await userEvent.click(screen.getByRole('button', { name: /Les miens/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Pris par moi/ }));
     expect(screen.getByRole('heading', { name: 'Livre' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Vélo' })).toBeNull();
   });
@@ -153,7 +176,7 @@ describe('KdosList', () => {
 
       render(<KdosList listSlug="paul" />);
       fireEvent.click(await screen.findByRole('button', { name: /Je prends/ }));
-      fireEvent.click(screen.getByRole('button', { name: /Oui, je l'emballe/ }));
+      fireEvent.click(screen.getByRole('button', { name: /Oui, je le prends/ }));
 
       // Laisse le POST se résoudre et l'appel de recharge démarrer, sans avancer le
       // minuteur de 800 ms de la recharge elle-même.
@@ -187,16 +210,16 @@ describe('KdosList', () => {
     }
   });
 
-  it('keeps the freshly wrapped gift visible by switching back to "Tout" when "Libres" was active', async () => {
+  it('keeps the freshly wrapped gift visible by switching back to "Tout" when "Disponibles" was active', async () => {
     get
       .mockResolvedValueOnce({ status: 200, data: [baseKdo] })
       .mockResolvedValueOnce({ status: 200, data: [{ ...baseKdo, availability: false, takenBy: 'marie' }] });
     post.mockResolvedValue({ status: 200, data: { success: true } });
     render(<KdosList listSlug="paul" />);
 
-    await userEvent.click(await screen.findByRole('button', { name: /Libres/ }));
+    await userEvent.click(await screen.findByRole('button', { name: /Disponibles/ }));
     await userEvent.click(screen.getByRole('button', { name: /Je prends/ }));
-    await userEvent.click(screen.getByRole('button', { name: /Oui, je l'emballe/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Oui, je le prends/ }));
 
     await waitFor(() => expect(get).toHaveBeenCalledTimes(2));
     expect(await screen.findByRole('heading', { name: 'Vélo' })).toBeInTheDocument();
@@ -234,8 +257,8 @@ describe('KdosList', () => {
         .mockResolvedValueOnce({ status: 200, data: [baseKdo] });
       post.mockResolvedValue({ status: 200, data: { success: true } });
       render(<KdosList listSlug="paul" />);
-      fireEvent.click(await screen.findByRole('button', { name: 'Dénouer le ruban' }));
-      fireEvent.click(screen.getByRole('button', { name: /Oui, dénouer/ }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Je ne prends plus' }));
+      fireEvent.click(screen.getByRole('button', { name: /Oui, je ne le prends plus/ }));
       await act(async () => {}); // le POST se résout
 
       const tag = screen.getByLabelText('Vélo');
@@ -259,7 +282,7 @@ describe('KdosList', () => {
     }
   });
 
-  it('keeps the released gift visible by switching back to "Tout" when "Les miens" was active', async () => {
+  it('keeps the released gift visible by switching back to "Tout" when "Pris par moi" was active', async () => {
     jest.useFakeTimers();
     try {
       get
@@ -267,9 +290,9 @@ describe('KdosList', () => {
         .mockResolvedValueOnce({ status: 200, data: [baseKdo] });
       post.mockResolvedValue({ status: 200, data: { success: true } });
       render(<KdosList listSlug="paul" />);
-      fireEvent.click(await screen.findByRole('button', { name: /Les miens/ }));
-      fireEvent.click(screen.getByRole('button', { name: 'Dénouer le ruban' }));
-      fireEvent.click(screen.getByRole('button', { name: /Oui, dénouer/ }));
+      fireEvent.click(await screen.findByRole('button', { name: /Pris par moi/ }));
+      fireEvent.click(screen.getByRole('button', { name: 'Je ne prends plus' }));
+      fireEvent.click(screen.getByRole('button', { name: /Oui, je ne le prends plus/ }));
       await act(async () => {});
 
       expect(screen.getByLabelText('Vélo')).toHaveClass('is-untying');

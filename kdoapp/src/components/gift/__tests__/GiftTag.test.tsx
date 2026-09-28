@@ -24,7 +24,7 @@ describe('GiftTag', () => {
     render(<GiftTag kdo={velo} state="free" canRelease={false} onTake={onTake} onRelease={noop} />);
     await userEvent.click(screen.getByRole('button', { name: /Je prends/ }));
     expect(onTake).toHaveBeenCalledTimes(1);
-    expect(screen.queryByText('Déjà emballé')).toBeNull();
+    expect(screen.queryByText('Déjà pris')).toBeNull();
   });
 
   it('shows the price, the product link and the comment', () => {
@@ -49,9 +49,9 @@ describe('GiftTag', () => {
     const onRelease = jest.fn();
     const mine = { ...velo, availability: false, takenBy: 'marie' };
     render(<GiftTag kdo={mine} state="mine" canRelease={false} onTake={noop} onRelease={onRelease} />);
-    expect(screen.getByText('À toi · chut !')).toBeInTheDocument();
+    expect(screen.getByText('Pris par toi')).toBeInTheDocument();
     expect(screen.getByText(/c'est toi qui l'offres/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Dénouer le ruban' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Je ne prends plus' }));
     expect(onRelease).toHaveBeenCalledTimes(1);
   });
 
@@ -65,10 +65,10 @@ describe('GiftTag', () => {
     expect(screen.getByLabelText('Vélo de route')).toHaveClass('is-untying');
   });
 
-  it("shows who wrapped someone else's reservation, without action", () => {
+  it("shows who took someone else's reservation, without action", () => {
     const taken = { ...velo, availability: false, takenBy: 'Paul' };
     render(<GiftTag kdo={taken} state="taken" canRelease={false} onTake={noop} onRelease={noop} />);
-    expect(screen.getByText('Emballé par Paul')).toBeInTheDocument();
+    expect(screen.getByText('Pris par Paul')).toBeInTheDocument();
     expect(screen.queryByRole('button')).toBeNull();
   });
 

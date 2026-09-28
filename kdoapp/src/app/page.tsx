@@ -97,7 +97,7 @@ export default function LoginPage() {
           {isLoading ? 'Connexion…' : 'Se connecter'}
         </Button>
       </form>
-      <p className="mt-5 font-hand text-[22px] font-semibold text-hand">mot de passe oublié ? demande à l&apos;admin</p>
+      <p className="mt-5 font-hand text-[22px] font-semibold text-hand">mot de passe oublié ? contactez-moi</p>
     </PageShell>
   );
 }
