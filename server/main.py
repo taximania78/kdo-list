@@ -236,6 +236,10 @@ async def get_kdo_list(user: str = "all", list: str = None, current_user: Curren
             raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
         query = query.filter(Idea.userId == user_instance.id)
 
+    # Ordre alphabétique (insensible à la casse), id en cas d'égalité : repère stable
+    # pour la famille, qui ne bouge pas quand une idée est réservée ou libérée.
+    query = query.order_by(func.lower(Idea.name), Idea.id)
+
     result = await db.execute(query)
 
     rows = result.mappings().all()
@@ -272,6 +276,8 @@ async def get_kdo_list_admin(user: str = "all", list: str = None, db: AsyncSessi
             raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
 
         query = query.filter(Idea.userId == user_instance.id)
+
+    query = query.order_by(func.lower(Idea.name), Idea.id)
 
     result = await db.execute(query)
     rows = result.mappings().all()
@@ -766,7 +772,8 @@ async def export_ideas_csv(db: AsyncSession = Depends(get_db)):
         Idea.url,
         func.coalesce(user_owner.name, GiftList.label).label("user")
     ).outerjoin(user_owner, Idea.userId == user_owner.id) \
-    .outerjoin(GiftList, Idea.list_id == GiftList.id)
+    .outerjoin(GiftList, Idea.list_id == GiftList.id) \
+    .order_by(func.lower(Idea.name), Idea.id)
 
     result = await db.execute(query)
     rows = result.mappings().all()

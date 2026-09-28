@@ -9,7 +9,7 @@ export function ThemeProvider({ theme, children }: { theme: ThemeName; children:
   return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;
 }
 
-export function useTheme(): { name: ThemeName; config: ThemeConfig; isChristmas: boolean } {
+export function useTheme(): { name: ThemeName; config: ThemeConfig } {
   const name = useContext(ThemeContext);
-  return { name, config: THEMES[name], isChristmas: name === 'christmas' };
+  return { name, config: THEMES[name] };
 }

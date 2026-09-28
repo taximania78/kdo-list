@@ -1,213 +1,257 @@
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
+'use client';
+
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { MessageSquareText } from 'lucide-react';
 import api from '@/lib/api';
 import { getUserInfo } from '@/lib/auth';
-import DialogKdo from './DialogKdo';
-import Link from 'next/link';
-import {
-  ExternalLink,
-  Euro,
-  User,
-  MessageCircle,
-  CheckCircle,
-  XCircle,
-} from 'lucide-react';
-
-type Kdo = {
-  id: number;
-  name: string;
-  price: number | null;
-  user: string;
-  url: string | null;
-  comment: string;
-  imageDisplay: string;
-  availability: boolean;
-  takenBy: string;
-};
+import { formatPrice } from '@/lib/format';
+import { filterGifts, giftState, type GiftFilter, type Kdo } from '@/lib/gifts';
+import { GiftImage } from '@/components/gift/GiftImage';
+import { GiftTag } from '@/components/gift/GiftTag';
+import { Chip } from '@/components/ui/Chip';
+import { ConfirmSheet } from '@/components/ui/ConfirmSheet';
+import { PaperState } from '@/components/ui/PaperState';
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
+const TIE_DURATION_MS = 1400;
+const UNTIE_DURATION_MS = 350; // DESIGN.md › Motion : « Dénouer » joue une disparition courte
 
-type KdosListProps = {
-  listSlug?: string;
-  user?: string;
-};
+function kdosUrl(listSlug: string): string {
+  return `${ApiAdress}/api/kdos/?format=json&list=${encodeURIComponent(listSlug)}`;
+}
 
-const KdosList = ({ listSlug, user }: KdosListProps) => {
-  const [kdosList, setKdosList] = useState<Kdo[] | null>(null);
-  const [userLogged, setUserLogged] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+const FILTERS: { key: GiftFilter; label: string }[] = [
+  { key: 'all', label: 'Tout' },
+  { key: 'free', label: 'Disponibles' },
+  { key: 'mine', label: 'Pris par moi' },
+];
 
-  const fetchKdos = async () => {
-    let apiUrl = `${ApiAdress}/api/kdos/?format=json`;
-    if (listSlug) {
-      apiUrl += `&list=${encodeURIComponent(listSlug)}`;
-    } else if (user) {
-      apiUrl += `&user=${encodeURIComponent(user)}`;
-    }
+type Pending = { kind: 'take' | 'release'; kdo: Kdo };
 
-    try {
-      const response = await api.get(apiUrl);
-      if (response.status !== 200) {
-        throw new Error('Network response was not ok');
-      }
-      const data = response.data;
-      setKdosList(data);
-    } catch (error) {
-      console.error('Failed to fetch kdos:', error);
-    }
-  };
-
-  const fetchUsername = () => {
-    const userInfo = getUserInfo();
-    if (userInfo) {
-      setUserLogged(userInfo.username);
-      setIsAdmin(userInfo.isAdmin === true);
-    }
-  };
-
-  useEffect(() => {
-    fetchKdos();
-    fetchUsername();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listSlug, user]);
-
-  if (!kdosList)
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="surface-card rounded-2xl p-8 shadow-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-6 h-6 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
-            <p className="text-[var(--text-primary)] text-lg font-medium">
-              Chargement de la liste en cours...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-
-  if (kdosList.length === 0)
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="surface-card rounded-2xl p-8 shadow-lg text-center">
-          <p className="text-[var(--text-primary)] text-lg font-medium">
-            Aucun cadeau n&apos;a été trouvé.
-          </p>
-        </div>
-      </div>
-    );
-
+/** Encart commun aux trois fenêtres : image, nom, prix (et commentaire pour la prise). */
+function GiftSummary({ kdo, withComment = false }: { kdo: Kdo; withComment?: boolean }) {
   return (
-    <div className="grid xl:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-6 pb-8">
-      {kdosList.map((kdo, index) => (
-        <div
-          key={index}
-          className={`surface-card rounded-2xl shadow-lg p-6 flex flex-col justify-between transition-all duration-300 hover:scale-[1.02] hover:shadow-xl group ${
-            !kdo.availability ? 'opacity-75' : ''
-          }`}
-        >
-          <div className="space-y-4">
-            {/* Title */}
-            <h2 className="text-xl font-bold text-center text-[var(--text-primary)]">
-              {kdo.name}
-            </h2>
-
-            {/* Image */}
-            <div className="relative overflow-hidden rounded-xl aspect-square">
-              <Image
-                src={`/api/kdos/${kdo.imageDisplay}`}
-                alt={`Image ${kdo.name}`}
-                width={500}
-                height={500}
-                className={`object-contain w-full h-full rounded-xl transition-all duration-300 ${
-                  !kdo.availability ? 'grayscale blur-sm group-hover:blur-none' : 'group-hover:scale-105'
-                }`}
-              />
-            </div>
-
-            {/* Details */}
-            <div className="space-y-3 text-[var(--text-primary)]">
-              {/* Availability */}
-              <div className="flex items-center gap-2">
-                {kdo.availability ? (
-                  <>
-                    <CheckCircle className="w-5 h-5 flex-shrink-0 text-[var(--success)]" />
-                    <span className="text-sm font-medium text-[var(--text-secondary)]">
-                      Disponible
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="w-5 h-5 flex-shrink-0 text-[var(--danger)]" />
-                    <span className="text-sm font-medium text-[var(--text-secondary)]">
-                      Déjà réservé
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {/* Price (facultatif) */}
-              {kdo.price != null && (
-                <div className="flex items-center gap-2">
-                  <Euro className="w-5 h-5 flex-shrink-0 text-[var(--text-muted)]" />
-                  <span className="text-sm">
-                    <span className="font-semibold">{kdo.price}€</span>
-                  </span>
-                </div>
-              )}
-
-              {/* User */}
-              <div className="flex items-center gap-2">
-                <User className="w-5 h-5 flex-shrink-0 text-[var(--text-muted)]" />
-                <span className="text-sm">
-                  <span className="text-[var(--text-muted)]">Pour :</span>{' '}
-                  <span className="font-medium">{kdo.user}</span>
-                </span>
-              </div>
-
-              {/* Link (facultatif) */}
-              {kdo.url && (
-                <div className="flex items-start gap-2">
-                  <ExternalLink className="w-5 h-5 flex-shrink-0 text-[var(--text-muted)] mt-0.5" />
-                  <Link
-                    href={kdo.url}
-                    target="_blank"
-                    className="text-sm underline hover:no-underline transition-colors duration-200 text-[var(--link)] hover:text-[var(--link-hover)]"
-                  >
-                    Voir le produit
-                  </Link>
-                </div>
-              )}
-
-              {/* Comment */}
-              {kdo.comment && (
-                <div className="flex items-start gap-2 pt-2 border-t border-[var(--border-light)]">
-                  <MessageCircle className="w-5 h-5 flex-shrink-0 text-[var(--text-muted)] mt-0.5" />
-                  <div className="text-sm">
-                    <p className="text-[var(--text-muted)] mb-1 font-medium">Commentaire :</p>
-                    <p className="text-[var(--text-secondary)] italic">{kdo.comment}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Action button */}
-          <div className="w-full mt-6 pt-4 border-t border-[var(--border-light)]">
-            <DialogKdo
-              id={kdo.id}
-              name={kdo.name}
-              comment={kdo.comment}
-              takenBy={kdo.takenBy}
-              availability={kdo.availability}
-              userLogged={userLogged ?? ''}
-              canReleaseOthers={isAdmin}
-              onValidation={fetchKdos}
-            />
-          </div>
+    <div className="rounded-lg bg-paper-2 p-3">
+      <div className="grid grid-cols-[72px_1fr] items-center gap-3.5">
+        <GiftImage
+          imageDisplay={kdo.imageDisplay}
+          name={kdo.name}
+          seed={kdo.id}
+          sizes="72px"
+          compact
+          wrapped={!kdo.availability}
+          className="aspect-square"
+        />
+        <div className="min-w-0">
+          <p className="font-display text-lg font-bold leading-tight break-words">{kdo.name}</p>
+          {kdo.price != null && <p className="mt-1 font-mono text-sm">{formatPrice(kdo.price)}</p>}
         </div>
-      ))}
+      </div>
+      {withComment && kdo.comment && (
+        <div className="mt-3 flex gap-2 border-t border-line pt-3">
+          <MessageSquareText aria-hidden className="mt-[3px] size-4 shrink-0 text-ink-muted" />
+          <p className="text-[15px] leading-snug text-ink break-words">{kdo.comment}</p>
+        </div>
+      )}
     </div>
   );
-};
+}
 
-export default KdosList;
+function sheetCopy({ kind, kdo }: Pending, username: string | null): {
+  title: string;
+  confirmLabel: string;
+  confirmVariant: 'primary' | 'outline-primary';
+  body: ReactNode;
+} {
+  if (kind === 'take') {
+    return {
+      title: 'Tu prends ce cadeau ?',
+      confirmLabel: 'Oui, je le prends',
+      confirmVariant: 'primary',
+      body: (
+        <div className="grid gap-3.5">
+          <GiftSummary kdo={kdo} withComment />
+          <p className="font-hand text-[22px] font-semibold text-mine">la personne ne saura pas ce que tu lui offres.</p>
+        </div>
+      ),
+    };
+  }
+  if (kdo.takenBy === username) {
+    return {
+      title: 'Tu ne prends plus ce cadeau ?',
+      confirmLabel: 'Oui, je ne le prends plus',
+      confirmVariant: 'outline-primary',
+      body: (
+        <div className="grid gap-3.5">
+          <GiftSummary kdo={kdo} />
+          <p>
+            <strong>{kdo.name}</strong> redeviendra disponible pour les autres.
+          </p>
+        </div>
+      ),
+    };
+  }
+  return {
+    title: 'Libérer la réservation ?',
+    confirmLabel: 'Oui, libérer',
+    confirmVariant: 'outline-primary',
+    body: (
+      <div className="grid gap-3.5">
+        <GiftSummary kdo={kdo} />
+        <p>
+          <strong>{kdo.name}</strong> est pris par {kdo.takenBy}. Il redeviendra disponible pour tout le monde.
+        </p>
+      </div>
+    ),
+  };
+}
+
+export default function KdosList({ listSlug, listLabel }: { listSlug: string; listLabel?: string }) {
+  const [me] = useState(() => getUserInfo());
+  const username = me?.username ?? null;
+  const [kdos, setKdos] = useState<Kdo[] | null>(null);
+  const [loadError, setLoadError] = useState(false);
+  const [filter, setFilter] = useState<GiftFilter>('all');
+  const [pending, setPending] = useState<Pending | null>(null);
+  const [tyingId, setTyingId] = useState<number | null>(null);
+  const [untyingId, setUntyingId] = useState<number | null>(null);
+
+  const fetchKdos = useCallback(async () => {
+    try {
+      const response = await api.get(kdosUrl(listSlug));
+      setKdos(response.data);
+      setLoadError(false);
+    } catch (error) {
+      console.error('Failed to fetch kdos:', error);
+      setLoadError(true);
+    }
+  }, [listSlug]);
+
+  useEffect(() => {
+    // Ignore une réponse périmée : si listSlug change avant que cette requête ne
+    // revienne, on ne doit pas écraser la liste de la nouvelle liste avec l'ancienne.
+    let ignore = false;
+    api
+      .get(kdosUrl(listSlug))
+      .then((response) => {
+        if (ignore) return;
+        setKdos(response.data);
+        setLoadError(false);
+      })
+      .catch((error) => {
+        console.error('Failed to fetch kdos:', error);
+        if (!ignore) setLoadError(true);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [listSlug]);
+
+  useEffect(() => {
+    if (tyingId === null) return;
+    const timer = setTimeout(() => setTyingId(null), TIE_DURATION_MS);
+    return () => clearTimeout(timer);
+  }, [tyingId]);
+
+  // Le ruban se dénoue d'abord (350 ms), puis la recharge montre l'idée redevenue libre.
+  useEffect(() => {
+    if (untyingId === null) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      await fetchKdos();
+      if (!cancelled) setUntyingId(null);
+    }, UNTIE_DURATION_MS);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [untyingId, fetchKdos]);
+
+  const confirmPending = async () => {
+    if (!pending) return;
+    const endpoint = pending.kind === 'take' ? 'take-api' : 'untake-api';
+    try {
+      await api.post(`${ApiAdress}/api/${endpoint}/${pending.kdo.id}`);
+    } catch (error) {
+      await fetchKdos(); // l'état a pu changer entre-temps : on montre le vrai
+      throw error; // ConfirmSheet affiche le message et reste ouvert
+    }
+    if (pending.kind === 'release') {
+      // Le panneau se ferme tout de suite ; la recharge attend la fin de l'animation.
+      setUntyingId(pending.kdo.id);
+      if (filter === 'mine') setFilter('all'); // sinon l'idée disparaît en plein dénouement
+      return;
+    }
+    await fetchKdos(); // recharge d'abord : le nœud ne démarre que sur la carte déjà réservée
+    setTyingId(pending.kdo.id);
+    if (filter === 'free') setFilter('all'); // sinon l'idée fraîchement emballée disparaît aussitôt
+  };
+
+  if (!kdos && loadError) {
+    return <PaperState kind="error">La liste n&apos;a pas pu être chargée. Recharge la page.</PaperState>;
+  }
+  if (!kdos) return <PaperState kind="loading">Chargement des idées…</PaperState>;
+  if (kdos.length === 0) {
+    return (
+      <PaperState kind="empty">
+        {listLabel ? `Aucune idée pour ${listLabel} pour l'instant.` : "Aucune idée pour l'instant."}
+      </PaperState>
+    );
+  }
+
+  const counts: Record<GiftFilter, number> = {
+    all: kdos.length,
+    free: filterGifts(kdos, 'free', username).length,
+    mine: filterGifts(kdos, 'mine', username).length,
+  };
+  const visible = filterGifts(kdos, filter, username);
+  const sheet = pending ? sheetCopy(pending, username) : null;
+
+  return (
+    <>
+      {/* gap-y-3 : si les filtres passent à la ligne, leurs zones à toucher de 44px ne se chevauchent pas. */}
+      <div role="group" aria-label="Filtrer les idées" className="mb-6 flex flex-wrap gap-x-2 gap-y-3">
+        {FILTERS.map((f) => (
+          <Chip key={f.key} pressed={filter === f.key} count={counts[f.key]} onClick={() => setFilter(f.key)}>
+            {f.label}
+          </Chip>
+        ))}
+      </div>
+
+      {visible.length === 0 ? (
+        <PaperState kind="empty">Rien ici pour l&apos;instant.</PaperState>
+      ) : (
+        <div className="grid gap-[22px] md:grid-cols-[repeat(auto-fill,minmax(236px,1fr))] md:gap-x-6 md:gap-y-11 md:pt-[18px]">
+          {visible.map((kdo) => {
+            const state = giftState(kdo, username);
+            return (
+              <GiftTag
+                key={kdo.id}
+                kdo={kdo}
+                state={state}
+                canRelease={state === 'taken' && me?.isAdmin === true}
+                tying={tyingId === kdo.id}
+                untying={untyingId === kdo.id}
+                onTake={() => setPending({ kind: 'take', kdo })}
+                onRelease={() => setPending({ kind: 'release', kdo })}
+              />
+            );
+          })}
+        </div>
+      )}
+
+      <ConfirmSheet
+        open={pending !== null}
+        onOpenChange={(open) => {
+          if (!open) setPending(null);
+        }}
+        title={sheet?.title ?? ''}
+        confirmLabel={sheet?.confirmLabel ?? ''}
+        confirmVariant={sheet?.confirmVariant}
+        onConfirm={confirmPending}
+      >
+        {sheet?.body}
+      </ConfirmSheet>
+    </>
+  );
+}
