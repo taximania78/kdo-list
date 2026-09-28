@@ -44,4 +44,16 @@ describe('AppHeader', () => {
     expect(screen.getByRole('link', { name: 'Listes' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('button', { name: 'Déconnexion' })).toBeInTheDocument();
   });
+
+  it('gives every nav link a rounded focus ring, the current one included, with a straight underline', () => {
+    loggedAs({ isAdmin: true, isMegaAdmin: false });
+    render(<AppHeader />);
+    const nav = screen.getByRole('navigation');
+    for (const item of [...nav.querySelectorAll('a, button')]) {
+      expect(item).toHaveClass('rounded-md');
+      expect(item.className).not.toMatch(/rounded-none/);
+      expect(item.className).not.toMatch(/shadow-\[inset/);
+    }
+    expect(screen.getByRole('link', { name: 'Listes' }).className).toMatch(/after:bg-primary/);
+  });
 });

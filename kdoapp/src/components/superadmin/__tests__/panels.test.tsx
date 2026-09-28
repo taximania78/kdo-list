@@ -47,6 +47,13 @@ describe('UsersPanel', () => {
     for (const link of screen.getAllByRole('link', { name: 'Mot de passe' })) expect(link).toHaveClass('tap-y');
   });
 
+  it('rounds the text actions for a rounded focus ring', () => {
+    render(<UsersPanel users={users} meId={1} onChanged={jest.fn()} />);
+    expect(screen.getByRole('button', { name: 'Rendre admin' })).toHaveClass('rounded-md');
+    expect(screen.getByRole('button', { name: 'Supprimer' })).toHaveClass('rounded-md');
+    for (const link of screen.getAllByRole('link', { name: 'Mot de passe' })) expect(link).toHaveClass('rounded-md');
+  });
+
   it('cannot change the role of a super admin nor my own', () => {
     render(<UsersPanel users={users} meId={1} onChanged={jest.fn()} />);
     expect(screen.getAllByRole('button', { name: /admin/i })).toHaveLength(1);
@@ -151,6 +158,13 @@ describe('ListsPanel', () => {
     expect(screen.getByRole('switch', { name: 'Liste Léa visible' })).toHaveClass('h-11');
     expect(screen.getByRole('button', { name: 'Modifier' })).toHaveClass('tap-y');
     expect(screen.getByRole('button', { name: 'Supprimer' })).toHaveClass('tap-y');
+  });
+
+  it('rounds the list text actions for a rounded focus ring', async () => {
+    render(<ListsPanel users={users} />);
+    await screen.findByText('Léa', { selector: 'p' });
+    expect(screen.getByRole('button', { name: 'Modifier' })).toHaveClass('rounded-md');
+    expect(screen.getByRole('button', { name: 'Supprimer' })).toHaveClass('rounded-md');
   });
 
   it('lists the gift lists with their owner', async () => {

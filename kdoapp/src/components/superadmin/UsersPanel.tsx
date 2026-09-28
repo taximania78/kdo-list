@@ -9,7 +9,7 @@ import { ConfirmSheet } from '@/components/ui/ConfirmSheet';
 import { PaperState } from '@/components/ui/PaperState';
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
-const actionClass = 'tap-y text-primary underline-offset-4 hover:underline';
+const actionClass = 'tap-y rounded-md text-primary underline-offset-4 hover:underline';
 
 type UsersPanelProps = { users: AppUser[] | null; meId: number | null; onChanged: () => void };
 
@@ -82,7 +82,7 @@ export function UsersPanel({ users, meId, onChanged }: UsersPanelProps) {
                 Mot de passe
               </Link>
               {user.id !== meId && (
-                <button type="button" onClick={() => setToDelete(user)} className="tap-y text-ink-muted hover:text-ink">
+                <button type="button" onClick={() => setToDelete(user)} className="tap-y rounded-md text-ink-muted hover:text-ink">
                   Supprimer
                 </button>
               )}

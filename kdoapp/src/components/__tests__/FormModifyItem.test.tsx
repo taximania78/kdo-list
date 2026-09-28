@@ -23,6 +23,12 @@ describe('FormModifyItem', () => {
     expect(screen.getByRole('button', { name: 'Modifier' })).toHaveClass('tap-y');
   });
 
+  it('rounds its « Modifier » trigger for a rounded focus ring', () => {
+    const kdo = { id: 3, name: 'Vélo', price: 120, user: 'Paul', url: null, comment: '', image: '' };
+    render(<FormModifyItem kdo={kdo} id={3} listOptions={listOptions} />);
+    expect(screen.getByRole('button', { name: 'Modifier' })).toHaveClass('rounded-md');
+  });
+
   it('sends null when the URL and price are cleared', async () => {
     put.mockResolvedValue({ status: 200, data: { success: true } });
     const kdo = { id: 3, name: 'Vélo', price: 120, user: 'Paul', url: 'https://example.com/velo', comment: '', image: '' };

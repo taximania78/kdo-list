@@ -29,6 +29,11 @@ describe('DeleteIdeaButton', () => {
     expect(screen.getByRole('button', { name: 'Supprimer' })).toHaveClass('tap-y');
   });
 
+  it('rounds its text trigger for a rounded focus ring', () => {
+    render(<DeleteIdeaButton id={5} name="Vélo" onDeleted={jest.fn()} />);
+    expect(screen.getByRole('button', { name: 'Supprimer' })).toHaveClass('rounded-md');
+  });
+
   it('does nothing without confirmation', async () => {
     render(<DeleteIdeaButton id={5} name="Vélo" onDeleted={jest.fn()} />);
     await userEvent.click(screen.getByRole('button', { name: 'Supprimer' }));

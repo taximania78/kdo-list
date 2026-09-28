@@ -29,4 +29,10 @@ describe('TabBar', () => {
     expect(screen.getByRole('link', { name: 'Mes idées' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: 'Admin' })).toBeInTheDocument();
   });
+
+  it('gives the tabs a rounded focus ring', () => {
+    loggedAs({ isAdmin: false, isMegaAdmin: false });
+    render(<TabBar />);
+    expect(screen.getByRole('link', { name: /Listes/ })).toHaveClass('rounded-md');
+  });
 });

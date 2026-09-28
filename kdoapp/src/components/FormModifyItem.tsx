@@ -84,7 +84,7 @@ export default function FormModifyItem({ kdo, id, onFormSubmit, listOptions }: F
 
   return (
     <>
-      <button type="button" onClick={openSheet} className="tap-y text-sm font-bold text-primary underline-offset-4 hover:underline">
+      <button type="button" onClick={openSheet} className="tap-y rounded-md text-sm font-bold text-primary underline-offset-4 hover:underline">
         Modifier
       </button>
       <Sheet open={open} onOpenChange={handleOpenChange} title={`Modifier : ${kdo.name}`} wide>

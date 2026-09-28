@@ -8,8 +8,10 @@ import { useTheme } from '@/components/ThemeProvider';
 import { isActive, navItems } from '@/lib/navigation';
 import { logout } from '@/lib/logout';
 
+// Coins arrondis pour l'anneau de focus ; le soulignement de la page active est une barre
+// (::after) et non une ombre intérieure, pour rester droit malgré les coins arrondis.
 const linkClass =
-  'rounded-md px-3 py-2 text-[15px] font-semibold text-on-bg-muted hover:text-on-bg aria-[current=page]:rounded-none aria-[current=page]:text-on-bg aria-[current=page]:shadow-[inset_0_-2px_0_var(--primary)]';
+  'relative rounded-md px-3 py-2 text-[15px] font-semibold text-on-bg-muted hover:text-on-bg aria-[current=page]:text-on-bg aria-[current=page]:after:absolute aria-[current=page]:after:inset-x-0 aria-[current=page]:after:bottom-0 aria-[current=page]:after:h-0.5 aria-[current=page]:after:bg-primary';
 
 export function AppHeader() {
   const { config } = useTheme();

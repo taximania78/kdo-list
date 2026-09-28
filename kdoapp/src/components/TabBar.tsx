@@ -10,7 +10,7 @@ import { logout } from '@/lib/logout';
 const ICONS: Record<NavIcon, LucideIcon> = { list: List, ideas: Pencil, admin: Shield };
 
 const tabClass =
-  'grid w-full justify-items-center gap-0.5 py-2 text-xs font-semibold aria-[current=page]:text-primary';
+  'grid w-full justify-items-center gap-0.5 rounded-md py-2 text-xs font-semibold aria-[current=page]:text-primary';
 
 /** Barre d'onglets du bas, mobile uniquement. */
 export function TabBar() {

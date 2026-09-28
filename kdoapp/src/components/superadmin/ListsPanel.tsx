@@ -178,11 +178,11 @@ export function ListsPanel({ users }: { users: AppUser[] }) {
                     <span className="absolute left-1 top-1 size-5 rounded-full bg-paper shadow transition-transform group-aria-checked:translate-x-5" />
                   </span>
                 </button>
-                <button type="button" onClick={() => openEdit(list)} className="tap-y text-primary underline-offset-4 hover:underline">
+                <button type="button" onClick={() => openEdit(list)} className="tap-y rounded-md text-primary underline-offset-4 hover:underline">
                   Modifier
                 </button>
                 {!list.is_common && (
-                  <button type="button" onClick={() => setToDelete(list)} className="tap-y text-ink-muted hover:text-ink">
+                  <button type="button" onClick={() => setToDelete(list)} className="tap-y rounded-md text-ink-muted hover:text-ink">
                     Supprimer
                   </button>
                 )}

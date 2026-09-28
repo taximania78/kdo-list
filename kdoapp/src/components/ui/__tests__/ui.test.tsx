@@ -200,6 +200,13 @@ describe('touch targets', () => {
   });
 });
 
+describe('rounded focus rings', () => {
+  it('rounds the back link so its focus ring follows a rounded outline', () => {
+    render(<BackLink href="/list">Toutes les listes</BackLink>);
+    expect(screen.getByRole('link', { name: 'Toutes les listes' })).toHaveClass('rounded-md');
+  });
+});
+
 describe('PaperState', () => {
   it('announces errors as alerts and the rest as status', () => {
     const { rerender } = render(<PaperState kind="error">Échec</PaperState>);
