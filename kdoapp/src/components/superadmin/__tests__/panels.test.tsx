@@ -25,6 +25,7 @@ describe('UsersPanel', () => {
     render(<UsersPanel users={users} meId={1} onChanged={onChanged} />);
 
     await userEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
+    expect(screen.getByRole('button', { name: /Oui, supprimer/ })).toHaveClass('bg-primary');
     await userEvent.click(screen.getByRole('button', { name: /Oui, supprimer/ }));
 
     await waitFor(() => expect(onChanged).toHaveBeenCalledTimes(1));
@@ -127,6 +128,13 @@ describe('ListsPanel', () => {
       status: 200,
       data: [{ slug: 'lea', label: 'Léa', owner_id: 2, owner_name: 'Léa', is_common: false, enabled: true }],
     });
+  });
+
+  it('keeps the primary confirm button to delete a list', async () => {
+    render(<ListsPanel users={users} />);
+    await screen.findByText('Léa', { selector: 'p' });
+    await userEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
+    expect(screen.getByRole('button', { name: /Oui, supprimer/ })).toHaveClass('bg-primary');
   });
 
   it('lists the gift lists with their owner', async () => {

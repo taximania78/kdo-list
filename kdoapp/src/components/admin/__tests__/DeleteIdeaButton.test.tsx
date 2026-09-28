@@ -17,6 +17,7 @@ describe('DeleteIdeaButton', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
     expect(screen.getByRole('heading', { name: "Supprimer l'idée ?" })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Oui, supprimer/ })).toHaveClass('bg-primary');
     await userEvent.click(screen.getByRole('button', { name: /Oui, supprimer/ }));
 
     await waitFor(() => expect(onDeleted).toHaveBeenCalledTimes(1));

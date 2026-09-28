@@ -49,11 +49,17 @@ function GiftSummary({ kdo, withComment = false }: { kdo: Kdo; withComment?: boo
   );
 }
 
-function sheetCopy({ kind, kdo }: Pending, username: string | null): { title: string; confirmLabel: string; body: ReactNode } {
+function sheetCopy({ kind, kdo }: Pending, username: string | null): {
+  title: string;
+  confirmLabel: string;
+  confirmVariant: 'primary' | 'ghost';
+  body: ReactNode;
+} {
   if (kind === 'take') {
     return {
       title: 'Tu prends ce cadeau ?',
       confirmLabel: 'Oui, je le prends',
+      confirmVariant: 'primary',
       body: (
         <div className="grid gap-3.5">
           <GiftSummary kdo={kdo} withComment />
@@ -66,6 +72,7 @@ function sheetCopy({ kind, kdo }: Pending, username: string | null): { title: st
     return {
       title: 'Tu ne prends plus ce cadeau ?',
       confirmLabel: 'Oui, je ne le prends plus',
+      confirmVariant: 'ghost',
       body: (
         <div className="grid gap-3.5">
           <GiftSummary kdo={kdo} />
@@ -79,6 +86,7 @@ function sheetCopy({ kind, kdo }: Pending, username: string | null): { title: st
   return {
     title: 'Libérer la réservation ?',
     confirmLabel: 'Oui, libérer',
+    confirmVariant: 'ghost',
     body: (
       <div className="grid gap-3.5">
         <GiftSummary kdo={kdo} />
@@ -230,6 +238,7 @@ export default function KdosList({ listSlug, listLabel }: { listSlug: string; li
         }}
         title={sheet?.title ?? ''}
         confirmLabel={sheet?.confirmLabel ?? ''}
+        confirmVariant={sheet?.confirmVariant}
         onConfirm={confirmPending}
       >
         {sheet?.body}

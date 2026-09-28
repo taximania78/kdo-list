@@ -59,6 +59,7 @@ describe('KdosList', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: /Je prends/ }));
     expect(screen.getByRole('heading', { name: 'Tu prends ce cadeau ?' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Oui, je le prends/ })).toHaveClass('bg-primary');
     await userEvent.click(screen.getByRole('button', { name: /Oui, je le prends/ }));
 
     await waitFor(() => expect(post).toHaveBeenCalledWith(expect.stringMatching(/\/api\/take-api\/1$/)));
@@ -110,6 +111,7 @@ describe('KdosList', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Je ne prends plus' }));
     expect(screen.getByRole('heading', { name: 'Tu ne prends plus ce cadeau ?' })).toBeInTheDocument();
     expect(screen.getByText(/redeviendra disponible pour les autres/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Oui, je ne le prends plus/ })).not.toHaveClass('bg-primary');
     await userEvent.click(screen.getByRole('button', { name: /Oui, je ne le prends plus/ }));
 
     await waitFor(() => expect(post).toHaveBeenCalledWith(expect.stringMatching(/\/api\/untake-api\/1$/)));
@@ -132,6 +134,7 @@ describe('KdosList', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Libérer la réservation' }));
     expect(screen.getByRole('heading', { name: 'Libérer la réservation ?' })).toBeInTheDocument();
     expect(screen.getByText(/est pris par Paul\. Il redeviendra disponible pour tout le monde\./)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Oui, libérer/ })).not.toHaveClass('bg-primary');
     await userEvent.click(screen.getByRole('button', { name: /Oui, libérer/ }));
 
     await waitFor(() => expect(post).toHaveBeenCalledWith(expect.stringMatching(/\/api\/untake-api\/7$/)));

@@ -11,6 +11,8 @@ type ConfirmSheetProps = {
   title: string;
   confirmLabel: string;
   cancelLabel?: string;
+  /** « ghost » pour une annulation (ne plus prendre, libérer) : le rouge reste aux actions principales. */
+  confirmVariant?: 'primary' | 'ghost';
   onConfirm: () => Promise<void>;
   children?: ReactNode;
 };
@@ -21,6 +23,7 @@ export function ConfirmSheet({
   title,
   confirmLabel,
   cancelLabel = 'Annuler',
+  confirmVariant = 'primary',
   onConfirm,
   children,
 }: ConfirmSheetProps) {
@@ -61,7 +64,7 @@ export function ConfirmSheet({
         </p>
       )}
       <div className="mt-6 grid gap-2.5 md:grid-cols-2">
-        <Button onClick={confirm} pending={pending} className="md:order-2">
+        <Button variant={confirmVariant} onClick={confirm} pending={pending} className="md:order-2">
           {confirmLabel}
         </Button>
         <Button variant="ghost" onClick={() => handleOpenChange(false)} disabled={pending}>

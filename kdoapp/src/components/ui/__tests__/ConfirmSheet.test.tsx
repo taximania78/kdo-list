@@ -2,7 +2,7 @@ import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ConfirmSheet } from '@/components/ui/ConfirmSheet';
 
-function setup(onConfirm: () => Promise<void>) {
+function setup(onConfirm: () => Promise<void>, confirmVariant?: 'primary' | 'ghost') {
   const onOpenChange = jest.fn();
   render(
     <ConfirmSheet
@@ -11,6 +11,7 @@ function setup(onConfirm: () => Promise<void>) {
       title="Tu t'en occupes ?"
       confirmLabel="Oui, je l'emballe"
       onConfirm={onConfirm}
+      confirmVariant={confirmVariant}
     >
       <p>Casque audio</p>
     </ConfirmSheet>
@@ -25,6 +26,18 @@ describe('ConfirmSheet', () => {
     expect(screen.getByText('Casque audio')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Oui, je l'emballe/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Annuler' })).toBeInTheDocument();
+  });
+
+  it('uses the primary (red) confirm button by default', () => {
+    setup(jest.fn().mockResolvedValue(undefined));
+    expect(screen.getByRole('button', { name: /Oui, je l'emballe/ })).toHaveClass('bg-primary');
+  });
+
+  it('uses a secondary (ghost) confirm button when asked', () => {
+    setup(jest.fn().mockResolvedValue(undefined), 'ghost');
+    const confirm = screen.getByRole('button', { name: /Oui, je l'emballe/ });
+    expect(confirm).not.toHaveClass('bg-primary');
+    expect(confirm).toHaveClass('ring-ink/20');
   });
 
   it('confirms only once on a double tap, then closes', async () => {
