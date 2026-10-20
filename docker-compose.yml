@@ -2,7 +2,6 @@ services:
   fastapi:
     build:
       context: ./server
-      network: host
     depends_on:
       db:
         # L'API lance les migrations au démarrage : attendre que PostgreSQL accepte les connexions
@@ -28,7 +27,6 @@ services:
   nextjs:
     build:
       context: ./kdoapp
-      network: host
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
     depends_on:
