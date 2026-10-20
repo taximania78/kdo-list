@@ -44,15 +44,17 @@ export function ListsPanel({ users }: { users: AppUser[] }) {
 
   const fetchSeq = useRef(0); // ignore une réponse arrivée après une plus récente (course entre deux toggles)
 
-  const fetchLists = useCallback(async () => {
+  const fetchLists = useCallback(() => {
     const seq = ++fetchSeq.current;
-    try {
-      const response = await api.get(`${ApiAdress}/api/lists/all/`);
-      if (seq === fetchSeq.current) setLists(response.data);
-    } catch (error) {
-      console.error('Failed to fetch gift lists:', error);
-      if (seq === fetchSeq.current) setLists([]);
-    }
+    return api
+      .get(`${ApiAdress}/api/lists/all/`)
+      .then((response) => {
+        if (seq === fetchSeq.current) setLists(response.data);
+      })
+      .catch((error) => {
+        console.error('Failed to fetch gift lists:', error);
+        if (seq === fetchSeq.current) setLists([]);
+      });
   }, []);
 
   useEffect(() => {
