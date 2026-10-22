@@ -1,0 +1,8 @@
+# Environnement virtuel local : sans cette exclusion, `COPY . .` embarquait le venv
+# de dev (binaires macOS/Python 3.14, deps éventuellement obsolètes ou vulnérables)
+# dans l'image, en plus des deps installées depuis requirements.txt.
+venv
+.venv
+__pycache__
+.pytest_cache
+.env
