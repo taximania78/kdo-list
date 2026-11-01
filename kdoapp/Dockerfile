@@ -1,49 +1,94 @@
-# --------- Étape 1 : install des dépendances ---------
-FROM node:24-alpine3.24 AS deps
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci --frozen-lockfile
 
-# --------- Étape 2 : build Next.js -------------------
-FROM node:24-alpine3.24 AS builder
+# syntax=docker/dockerfile:1
+
+# ============================================================
+# STAGE 1 — Dépendances complètes pour la compilation
+# ============================================================
+FROM node:24-alpine3.24 AS deps
+
 WORKDIR /app
-# Copie des deps installées
+
+COPY package.json package-lock.json ./
+
+# Installation reproductible depuis le lockfile
+RUN npm ci
+
+
+# ============================================================
+# STAGE 2 — Dépendances de production uniquement
+# ============================================================
+FROM node:24-alpine3.24 AS prod-deps
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+
+# Exclut les devDependencies de l'image finale
+RUN npm ci --omit=dev
+
+
+# ============================================================
+# STAGE 3 — Compilation Next.js
+# ============================================================
+FROM node:24-alpine3.24 AS builder
+
+WORKDIR /app
+
 COPY --from=deps /app/node_modules ./node_modules
 
-# Variable d'environnement pour le build
-# On déclare les build-args
+# URL publique intégrée au build Next.js
+# Ne jamais utiliser ARG pour transmettre des secrets
 ARG NEXT_PUBLIC_API_URL
 
-# On exporte ces args en ENV pour que Next.js les lise au build
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-
-# Copie du reste du code (y compris config.json, public/, etc.)
-COPY . .
-
-RUN npm run build && \
-    echo "🗂  .next contenu :" && find .next -maxdepth 2
-
-# --------- Étape 3 : image runtime minimale ----------
-FROM node:24-alpine3.24 AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-# Télémetry off, sinon Next demande l'opt‑in
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Créer un groupe et utilisateur non-root pour la sécurité
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+COPY . .
 
-# Copie uniquement ce qui est nécessaire pour run
+RUN npm run build
+
+
+# ============================================================
+# STAGE 4 — Image de production
+# ============================================================
+FROM node:24-alpine3.24 AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0
+
+# Utilisateur et groupe dédiés
+RUN addgroup -S -g 1001 nodejs && \
+    adduser -S -u 1001 -G nodejs nextjs
+
+# Fichiers publics : propriété root, lecture autorisée
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./package.json
 
-# Copier le dossier .next avec les bonnes permissions
-COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
+# package.json : lecture seule pour l'application
+COPY --from=builder --chmod=644 \
+    /app/package.json ./package.json
 
-# Passer à l'utilisateur non-root
-USER nextjs
+# Build Next.js : fichiers applicatifs appartenant à root
+COPY --from=builder /app/.next ./.next
+
+# Uniquement les dépendances de production
+COPY --from=prod-deps /app/node_modules ./node_modules
+
+# Permissions :
+# - Lecture des fichiers publics et du build Next.js
+# - Pas d'écriture dans le code applicatif
+# - Écriture limitée au cache Next.js
+RUN chmod -R a+rX /app/public /app/.next && \
+    mkdir -p /app/public/kdos /app/.next/cache && \
+    chown -R nextjs:nodejs /app/.next/cache && \
+    chmod -R u+rwX,go-rwx /app/.next/cache
+
+# Exécution sans privilèges root
+USER 1001:1001
 
 EXPOSE 3000
+
 CMD ["npm", "start"]
