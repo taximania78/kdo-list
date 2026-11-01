@@ -1,5 +1,5 @@
 # Dockerfile for FastAPI application
-FROM python:3.13-slim
+FROM python:3.13-slim-trixie
 
 # Set the working directory
 WORKDIR /app
