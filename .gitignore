@@ -38,3 +38,13 @@ CLAUDE.md
 docs/superpowers/
 
 kdoapp/AGENTS.md
+
+# Secrets et sauvegardes
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.dump
+sauvegarde-*.sql

@@ -1,3 +1,10 @@
 node_modules
 .next
 .git
+# Secrets et fichiers locaux
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
