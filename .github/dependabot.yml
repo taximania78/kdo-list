@@ -72,6 +72,26 @@ updates:
     cooldown:
       default-days: 3
     groups:
+      # pydantic exige une version EXACTE de pydantic-core (ex. pydantic 2.14.2
+      # -> pydantic-core==2.50.2). Bumpés séparément, l'install devient insoluble
+      # (ResolutionImpossible, cf. PR #112). Ce groupe les met à jour ensemble.
+      # Il doit rester AVANT pip-patches / pip-minors : Dependabot range chaque
+      # dépendance dans le premier groupe qui la correspond.
+      # Auto-merge inchangé : il ne s'applique que si la PR est un patch.
+      # Les deux orthographes car requirements.txt écrit "pydantic_core".
+      pydantic:
+        applies-to: version-updates
+        patterns:
+          - "pydantic"
+          - "pydantic-core"
+          - "pydantic_core"
+      # Même couplage pour les mises à jour de sécurité.
+      pydantic-securite:
+        applies-to: security-updates
+        patterns:
+          - "pydantic"
+          - "pydantic-core"
+          - "pydantic_core"
       pip-patches:
         applies-to: version-updates
         update-types:
@@ -81,12 +101,6 @@ updates:
         update-types:
           - "minor"
     # Majors hors groupe -> 1 PR par paquet, merge manuel.
-    ignore:
-      # pydantic-core est couplé au pin EXACT de pydantic (ex. pydantic 2.13.4
-      # -> pydantic-core==2.46.4). Bumpé seul, il rend l'install insoluble
-      # (ResolutionImpossible). On ne le met pas à jour en standalone : il suivra
-      # automatiquement quand Dependabot bumpera pydantic (dep directe).
-      - dependency-name: "pydantic-core"
 
   # ── CI : versions des GitHub Actions ──────────────────────────────────────
   # Faible fréquence, on veut un œil sur les majors -> tous types groupés, manuel.
