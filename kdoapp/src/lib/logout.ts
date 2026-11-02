@@ -3,12 +3,15 @@ import { clearAuthStorage } from '@/lib/auth';
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
 export async function logout(): Promise<void> {
-  const token = localStorage.getItem('authToken');
-  if (token) {
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (refreshToken) {
     try {
-      await fetch(`${ApiAdress}/api/auth/logout/`, {
+      // Révoque la session côté serveur (réponse 204, aucun Authorization requis)
+      await fetch(`${ApiAdress}/api/logout/`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+        keepalive: true,
       });
     } catch (error) {
       // La déconnexion locale a lieu quand même

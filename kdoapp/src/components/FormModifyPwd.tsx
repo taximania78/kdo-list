@@ -50,12 +50,18 @@ export default function FormModifyPwd({ firstConnection = false }: { firstConnec
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      await api.post(`${ApiAdress}/api/modify-password/`, {
+      const response = await api.post(`${ApiAdress}/api/modify-password/`, {
         password: data.password,
         passwordConfirmation: data.passwordConfirmation,
         currentPassword: data.currentPassword,
         firstConnection,
       });
+      // Le serveur a révoqué les autres sessions : on garde les jetons frais
+      const { access_token, refresh_token } = response?.data ?? {};
+      if (access_token && refresh_token) {
+        localStorage.setItem('authToken', access_token);
+        localStorage.setItem('refreshToken', refresh_token);
+      }
       if (firstConnection) sessionStorage.removeItem('requirePasswordChange');
       router.push('/');
     } catch (error) {

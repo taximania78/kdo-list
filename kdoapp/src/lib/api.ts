@@ -38,9 +38,51 @@ let isRefreshing = false;
 let refreshPromise: Promise<void> | null = null;
 
 /**
+ * Exécute fn sous un verrou inter-onglets quand l'API existe.
+ * Rejouer un refresh token déjà tourné révoque toutes les sessions : deux onglets
+ * ne doivent donc jamais envoyer le même jeton en même temps.
+ */
+function withRefreshLock(fn: () => Promise<void>): Promise<void> {
+  if (typeof navigator !== 'undefined' && navigator.locks?.request) {
+    return navigator.locks.request('kdo-refresh', fn);
+  }
+  return fn();
+}
+
+/**
+ * Appel réseau vers /api/refresh/ (exécuté sous verrou)
+ */
+async function doRefresh(): Promise<void> {
+  // Un autre onglet a peut-être déjà rafraîchi pendant l'attente du verrou
+  const currentAccess = localStorage.getItem('authToken');
+  if (currentAccess && !isTokenExpiringSoon(currentAccess)) {
+    console.log('⏭️ [AUTH] Token already refreshed by another tab');
+    return;
+  }
+
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) {
+    console.warn('⚠️ [AUTH] No refresh token found');
+    return;
+  }
+
+  // Appel vers /api/refresh/ avec refresh_token
+  const response = await axios.post(`${ApiAdress}/api/refresh/`, {
+    refresh_token: refreshToken,
+  });
+
+  console.log('✅ [AUTH] Token refreshed successfully at:', new Date().toISOString());
+  console.log('📅 [AUTH] New token expires:', new Date(jwtDecode<DecodedToken>(response.data.access_token).exp * 1000).toISOString());
+
+  // On stocke les nouveaux tokens
+  localStorage.setItem('authToken', response.data.access_token);
+  localStorage.setItem('refreshToken', response.data.refresh_token);
+}
+
+/**
  * Appel à l'endpoint /api/refresh
  */
-async function refreshAccessToken() {
+export async function refreshAccessToken() {
   console.log('🔄 [AUTH] Token refresh initiated at:', new Date().toISOString());
 
   if (isRefreshing) {
@@ -52,23 +94,7 @@ async function refreshAccessToken() {
 
   refreshPromise = (async () => {
     try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) {
-        console.warn('⚠️ [AUTH] No refresh token found');
-        return;
-      }
-
-      // Appel vers /api/refresh/ avec refresh_token
-      const response = await axios.post(`${ApiAdress}/api/refresh/`, {
-        refresh_token: refreshToken,
-      });
-
-      console.log('✅ [AUTH] Token refreshed successfully at:', new Date().toISOString());
-      console.log('📅 [AUTH] New token expires:', new Date(jwtDecode<DecodedToken>(response.data.access_token).exp * 1000).toISOString());
-
-      // On stocke les nouveaux tokens
-      localStorage.setItem('authToken', response.data.access_token);
-      localStorage.setItem('refreshToken', response.data.refresh_token);
+      await withRefreshLock(doRefresh);
     } catch (err) {
       console.error('❌ [AUTH] Token refresh failed:', err);
       console.log('🚪 [AUTH] Logging out user due to refresh failure');
