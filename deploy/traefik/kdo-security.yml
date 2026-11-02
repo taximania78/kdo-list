@@ -1,0 +1,24 @@
+# Configuration dynamique Traefik (file provider) : en-têtes de sécurité de KDO.
+# À copier dans le répertoire surveillé par le file provider de Traefik.
+# Le middleware s'utilise sous le nom `kdo-security@file`.
+#
+# Pourquoi 'unsafe-inline' dans la CSP : Next.js (App Router) injecte des scripts
+# inline (self.__next_f) et React pose des attributs `style`. Pour durcir plus tard,
+# passer à une CSP à nonce via le proxy Next.js ; c'est possible puisque le layout
+# est déjà `force-dynamic`.
+#
+# HSTS : un an. Ne l'activer qu'une fois HTTPS confirmé sur le domaine ; pour garder
+# une marge de retour arrière, commencer par stsSeconds: 86400.
+http:
+  middlewares:
+    kdo-security:
+      headers:
+        stsSeconds: 31536000
+        stsIncludeSubdomains: false
+        stsPreload: false
+        frameDeny: true
+        contentTypeNosniff: true
+        referrerPolicy: "same-origin"
+        contentSecurityPolicy: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+        customResponseHeaders:
+          X-Robots-Tag: "noindex, nofollow, nosnippet, noarchive"
