@@ -23,6 +23,7 @@ from auth import (
     hash_password,
     verify_password,
     verify_and_update_password,
+    burn_password_check,
 )
 from refresh_tokens import consume_refresh_token, issue_refresh_token, revoke_all_refresh_tokens, revoke_refresh_token
 from deps import CurrentUser, get_current_user, require_admin, require_megaadmin
@@ -291,6 +292,8 @@ async def login_api(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncS
     user = result.scalars().first()
 
     if not user:
+        # Vérification factice pour que le temps de réponse ne révèle pas si le compte existe
+        burn_password_check(form_data.password)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Identifiants incorrects",

@@ -302,3 +302,16 @@ async def test_admin_reset_password_revokes_user_sessions(client: AsyncClient, a
     assert res.status_code == 200
 
     assert (await client.post("/api/refresh/", json={"refresh_token": session_user["refresh_token"]})).status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_login_unknown_user_still_runs_password_check(client: AsyncClient, monkeypatch):
+    """Un utilisateur inconnu déclenche quand même une vérification Argon2 factice."""
+    appels = []
+    monkeypatch.setattr("main.burn_password_check", lambda password: appels.append(password))
+
+    response = await client.post("/api/login/", data={"username": "inconnu", "password": "Secret@123"})
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Identifiants incorrects"
+    assert appels == ["Secret@123"]
