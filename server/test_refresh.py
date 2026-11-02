@@ -147,3 +147,25 @@ async def test_refresh_purges_expired_tokens(client: AsyncClient, normal_user):
     assert expired_hash in await _stored_tokens()
     assert (await _refresh(client, tokens["refresh_token"])).status_code == 200
     assert expired_hash not in await _stored_tokens()
+
+
+async def test_logout_revokes_only_that_session(client: AsyncClient, normal_user):
+    """La déconnexion révoque uniquement le jeton envoyé, pas les autres sessions."""
+    a = (await _login(client))["refresh_token"]
+    b = (await _login(client))["refresh_token"]
+
+    res = await client.post("/api/logout/", json={"refresh_token": a})
+    assert res.status_code == 204
+    assert res.content == b""
+
+    assert (await _refresh(client, a)).status_code == 401
+    assert (await _refresh(client, b)).status_code == 200
+
+
+async def test_logout_with_unknown_or_garbage_token_returns_204(client: AsyncClient, normal_user):
+    """Déconnexion idempotente : jeton illisible ou valide mais jamais stocké, toujours 204."""
+    from auth import create_refresh_token
+    never_stored, _ = create_refresh_token({"sub": str(normal_user.id)})
+
+    assert (await client.post("/api/logout/", json={"refresh_token": "garbage"})).status_code == 204
+    assert (await client.post("/api/logout/", json={"refresh_token": never_stored})).status_code == 204

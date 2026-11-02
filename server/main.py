@@ -317,10 +317,14 @@ async def login_api(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncS
         await db.commit()
     
     # Générer un Access Token et un Refresh Token
-    access_token = create_access_token({"sub": str(user.id), "username": user.name, "isAdmin": user.isAdmin, "isMegaAdmin": user.isMegaAdmin})
+    access_token = _access_token_for(user)
     refresh_token = await issue_refresh_token(db, user.id)
     await db.commit()
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer", "isAdmin": user.isAdmin, "username": user.name, "isMegaAdmin": user.isMegaAdmin, "firstConnection": user.firstConnection}
+
+def _access_token_for(user: User) -> str:
+    """Access token avec les claims communs (login, refresh, changement de mot de passe)."""
+    return create_access_token({"sub": str(user.id), "username": user.name, "isAdmin": user.isAdmin, "isMegaAdmin": user.isMegaAdmin})
 
 @app.post("/api/refresh/")
 async def refresh_token(data: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
@@ -357,12 +361,7 @@ async def refresh_token(data: RefreshTokenRequest, db: AsyncSession = Depends(ge
         await db.commit()  # conserve la consommation du jeton
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur non trouvé")
 
-    new_access_token = create_access_token({
-        "sub": str(user.id),
-        "username": user.name,
-        "isAdmin": user.isAdmin,
-        "isMegaAdmin": user.isMegaAdmin
-    })
+    new_access_token = _access_token_for(user)
 
     # Purger les jetons expirés (y compris les anciens jetons échangés, conservés pour détecter un rejeu).
     await db.execute(delete(RefreshToken).where(RefreshToken.expires_at < datetime.now(timezone.utc)))
@@ -370,6 +369,14 @@ async def refresh_token(data: RefreshTokenRequest, db: AsyncSession = Depends(ge
     await db.commit()
 
     return {"access_token": new_access_token, "refresh_token": new_refresh_token_raw, "token_type": "bearer", "isAdmin": user.isAdmin, "username": user.name, "isMegaAdmin": user.isMegaAdmin}
+
+
+@app.post("/api/logout/")
+async def logout_api(data: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
+    # Posséder le jeton suffit à le révoquer : pas de décodage, toujours 204 (idempotent).
+    await revoke_refresh_token(db, data.refresh_token)
+    await db.commit()
+    return Response(status_code=204)
 
 
 @app.get("/api/test_token/")
@@ -594,6 +601,8 @@ async def modify_password_api_admin(user_id: int, payload: PasswordChange, db: A
         .values(password=hashed_password, firstConnection=True)
     )
     await db.execute(stmt)
+    # Le mot de passe a changé : toutes les sessions de l'utilisateur sont révoquées.
+    await revoke_all_refresh_tokens(db, user_id)
     await db.commit()
 
     return {"success": True, "message": "Mot de passe mis à jour avec succès"}
@@ -633,9 +642,17 @@ async def modify_password_api(payload: PasswordChange, current_user: CurrentUser
         .values(password=hashed_password, firstConnection=False)
     )
     await db.execute(stmt)
+    # Révoque toutes les sessions (autres appareils), puis ouvre une session fraîche pour l'appareil courant.
+    await revoke_all_refresh_tokens(db, user_id)
+    new_refresh_token = await issue_refresh_token(db, user_id)
     await db.commit()
 
-    return {"success": True, "message": "Mot de passe mis à jour avec succès"}
+    return {
+        "success": True,
+        "message": "Mot de passe mis à jour avec succès",
+        "access_token": _access_token_for(user),
+        "refresh_token": new_refresh_token,
+    }
 
 @app.delete("/api/delete-user/{user_id}", dependencies=[Depends(require_megaadmin)])
 async def delete_user_api(user_id: int, db: AsyncSession = Depends(get_db)):
