@@ -6,10 +6,16 @@
 #
 #   cp docker-compose.override.example.yml docker-compose.override.yml
 #
+# Le middleware kdo-security@file vient de deploy/traefik/kdo-security.yml
+# (à copier dans le répertoire du file provider de Traefik).
+#
 # Exemple ci-dessous : exposition derrière Traefik + CrowdSec avec isolation de la base.
 services:
   fastapi:
     networks: [edge-kdo, data-kdo]
+    # environment:
+    #   # IP ou sous-réseau de Traefik, jamais `*`.
+    #   FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS}
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=edge-kdo"
@@ -17,7 +23,7 @@ services:
       - "traefik.http.routers.kdo-api.priority=100"
       - "traefik.http.routers.kdo-api.entrypoints=websecure"
       - "traefik.http.routers.kdo-api.tls.certresolver=tls"
-      - "traefik.http.routers.kdo-api.middlewares=crowdsec@file"
+      - "traefik.http.routers.kdo-api.middlewares=crowdsec@file,kdo-security@file"
       - "traefik.http.services.kdo-api.loadbalancer.server.port=8000"
 
   nextjs:
@@ -29,8 +35,7 @@ services:
       - "traefik.http.routers.kdo-front.entrypoints=websecure"
       - "traefik.http.routers.kdo-front.tls.certresolver=tls"
       - "traefik.http.services.kdo-front.loadbalancer.server.port=3000"
-      - "traefik.http.middlewares.kdo-headers.headers.customResponseHeaders.X-Robots-Tag=noindex, nofollow, nosnippet, noarchive"
-      - "traefik.http.routers.kdo-front.middlewares=crowdsec@file,kdo-headers"
+      - "traefik.http.routers.kdo-front.middlewares=crowdsec@file,kdo-security@file"
 
   db:
     networks: [data-kdo]

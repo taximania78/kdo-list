@@ -50,3 +50,9 @@ def test_production_refuses_weak_secret_key(isolated_env):
 
     with pytest.raises(RuntimeError):
         config.get_config()
+
+
+def test_algorithm_is_fixed_to_hs256(isolated_env):
+    os.environ["ALGORITHM"] = "none"
+
+    assert config.get_config()["ALGORITHM"] == "HS256"

@@ -110,3 +110,23 @@ export function getUserInfo(): {
     isMegaAdmin: decoded.isMegaAdmin,
   };
 }
+
+/**
+ * Exécute fn sous le verrou inter-onglets `kdo-refresh` quand l'API existe.
+ * Toute lecture ou écriture des jetons qui peut croiser un refresh passe par ici :
+ * rejouer un refresh token déjà tourné révoque toutes les sessions.
+ */
+export function withRefreshLock<T>(fn: () => Promise<T>): Promise<T> {
+  if (typeof navigator !== 'undefined' && navigator.locks?.request) {
+    return navigator.locks.request('kdo-refresh', fn);
+  }
+  // navigator.locks n'existe qu'en contexte sécurisé (HTTPS) : sans lui, deux onglets peuvent encore déclencher la détection de rejeu
+  return fn();
+}
+
+/**
+ * Renvoie vers l'accueil (formulaire de connexion).
+ */
+export function redirectToLogin(): void {
+  window.location.href = '/';
+}

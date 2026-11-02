@@ -56,11 +56,18 @@ async def test_login_wrong_creds(client: AsyncClient):
     assert "Identifiants incorrects" in response.text
 
 @pytest.mark.asyncio
-async def test_test_token(client: AsyncClient):
-    """Test /api/test_token/ => 200 OK + {'Hello': 'World'}."""
+async def test_test_token_route_removed(client: AsyncClient):
+    """La route de test /api/test_token/ n'existe plus."""
     response = await client.get("/api/test_token/")
-    assert response.status_code == 200
-    assert response.json() == {"Hello": "World"}
+    assert response.status_code == 404
+
+
+def test_cors_does_not_allow_credentials():
+    """Les jetons passent par l'en-tête Authorization : pas de credentials CORS."""
+    from fastapi.middleware.cors import CORSMiddleware
+    from main import app
+    cors = next(m for m in app.user_middleware if m.cls is CORSMiddleware)
+    assert cors.kwargs["allow_credentials"] is False
 
 
 @pytest.mark.asyncio

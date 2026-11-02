@@ -1,4 +1,5 @@
 import jwt
+import secrets
 from uuid import uuid4
 from datetime import datetime, timedelta, timezone
 from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
@@ -49,3 +50,12 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def verify_and_update_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify_and_update(plain_password, hashed_password)
+
+
+# Hash factice calculé une seule fois au chargement : sert à égaliser le temps de réponse
+# du login pour les utilisateurs inconnus.
+_DUMMY_HASH = hash_password(secrets.token_urlsafe(32))
+
+def burn_password_check(password: str) -> None:
+    """Vérifie le mot de passe contre un hash factice et ignore le résultat (temps de réponse constant)."""
+    verify_password(password, _DUMMY_HASH)
