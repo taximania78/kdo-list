@@ -23,13 +23,17 @@ def _kdos_path(filename: str):
 
 
 def _is_blocked_ip(ip_str: str) -> bool:
-    """True si l'IP est privée, loopback, link-local ou réservée (anti-SSRF)."""
+    """True si l'IP n'est pas une adresse Internet publique (anti-SSRF)."""
     try:
         ip = ipaddress.ip_address(ip_str)
     except ValueError:
         return True
+    # IPv4 représentée en IPv6 (::ffff:a.b.c.d) : juger l'IPv4 sous-jacente
+    if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped is not None:
+        ip = ip.ipv4_mapped
     return (
-        ip.is_private
+        not ip.is_global  # « non privé » ≠ public : exclut 100.64.0.0/10 (CGNAT, Tailscale)
+        or ip.is_private
         or ip.is_loopback
         or ip.is_link_local
         or ip.is_reserved
@@ -39,7 +43,7 @@ def _is_blocked_ip(ip_str: str) -> bool:
 
 
 def _is_safe_image_url(url: str) -> bool:
-    """Schéma http(s) uniquement + aucune IP résolue ne doit être interne."""
+    """Schéma http(s) uniquement + toutes les IP résolues doivent être publiques."""
     try:
         parsed = urlparse(url)
     except ValueError:
