@@ -27,7 +27,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    name: Mapped[str] = mapped_column(String, index=True, unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String, nullable=False)
     isAdmin: Mapped[bool] = mapped_column(Boolean, default=False)
     isMegaAdmin: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -107,8 +107,10 @@ class RefreshToken(Base):
     # Référence correcte à "users.id"
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     user: Mapped[User] = relationship("User", back_populates="token")
-    refresh_token: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    token_hash: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # NULL = jeton actif ; renseignée = jeton déjà échangé, gardé jusqu'à expiration pour détecter un rejeu
+    rotated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str

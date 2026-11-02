@@ -13,7 +13,7 @@ import models  # noqa: F401 — enregistre les tables dans Base.metadata
 from database import Base
 
 ALEMBIC_INI = Path(__file__).parent / "alembic.ini"
-HEAD = "0003"
+HEAD = "0004"
 
 
 def _alembic(db_path: Path) -> Config:
@@ -158,13 +158,89 @@ def test_upgrade_aligns_production_schema(tmp_path):
             "VALUES (1, 1, 'avec-date', '2026-10-01'), (2, 1, 'sans-date', NULL)"
         ))
 
-    command.upgrade(_alembic(db), "head")
+    command.upgrade(_alembic(db), "0003")
 
     con = sqlite3.connect(db)
-    assert _revision(db) == HEAD
+    assert _revision(db) == "0003"
     assert con.execute('SELECT "isMegaAdmin", "firstConnection" FROM users').fetchall() == [(0, 0)]
     assert con.execute("SELECT enabled FROM gift_lists").fetchall() == [(0,)]
     tokens = con.execute("SELECT refresh_token, expires_at FROM refresh_tokens").fetchall()
     assert [t for t, _ in tokens] == ["avec-date"]
     assert tokens[0][1].startswith("2026-10-02 00:00:00")
+
+
+def _columns(db_path: Path, table: str) -> set[str]:
+    return {row[1] for row in sqlite3.connect(db_path).execute(f"PRAGMA table_info({table})")}
+
+
+def _users_name_index_is_unique(db_path: Path) -> bool:
+    rows = sqlite3.connect(db_path).execute("PRAGMA index_list(users)").fetchall()
+    return [row[2] for row in rows if row[1] == "ix_users_name"] == [1]
+
+
+def _db_at_0003(db: Path) -> None:
+    command.upgrade(_alembic(db), "0003")
+
+
+def test_upgrade_purges_plaintext_refresh_tokens(tmp_path):
+    """0004 : les jetons en clair sont supprimés, la colonne devient token_hash."""
+    db = tmp_path / "jetons.db"
+    _db_at_0003(db)
+    with _sync_engine(db).begin() as conn:
+        conn.execute(text(
+            'INSERT INTO users (id, name, password, "isAdmin", "isMegaAdmin", "firstConnection") '
+            "VALUES (1, 'paul', 'x', 0, 0, 0)"
+        ))
+        conn.execute(text(
+            "INSERT INTO refresh_tokens (id, user_id, refresh_token, expires_at) VALUES (1, 1, 'en-clair', '2030-01-01')"
+        ))
+
+    command.upgrade(_alembic(db), "head")
+
+    assert sqlite3.connect(db).execute("SELECT COUNT(*) FROM refresh_tokens").fetchone() == (0,)
+    columns = _columns(db, "refresh_tokens")
+    assert "token_hash" in columns and "rotated_at" in columns
+    assert "refresh_token" not in columns
+
+
+def test_upgrade_refuses_duplicate_usernames(tmp_path):
+    """0004 : deux comptes du même nom bloquent la migration, avec le nom dans le message."""
+    db = tmp_path / "doublons.db"
+    _db_at_0003(db)
+    with _sync_engine(db).begin() as conn:
+        for uid in (1, 2):
+            conn.execute(text(
+                'INSERT INTO users (id, name, password, "isAdmin", "isMegaAdmin", "firstConnection") '
+                f"VALUES ({uid}, 'paul', 'x', 0, 0, 0)"
+            ))
+
+    with pytest.raises(RuntimeError, match="paul"):
+        command.upgrade(_alembic(db), "head")
+
+
+def test_downgrade_0004_restores_columns(tmp_path):
+    """Retour de 0004 à 0003 : colonne refresh_token de retour, index des noms non unique."""
+    db = tmp_path / "retour.db"
+    command.upgrade(_alembic(db), "head")
+    assert _users_name_index_is_unique(db)
+
+    command.downgrade(_alembic(db), "0003")
+
+    columns = _columns(db, "refresh_tokens")
+    assert "refresh_token" in columns
+    assert "token_hash" not in columns and "rotated_at" not in columns
+    assert not _users_name_index_is_unique(db)
+    assert _revision(db) == "0003"
+
+
+def test_upgrade_production_schema_to_head_matches_models(tmp_path):
+    """Prod d'origine jusqu'à 0004 : renommage sous batch, la contrainte unique survit sur token_hash."""
+    db = tmp_path / "prod_head.db"
+    with _sync_engine(db).begin() as conn:
+        for statement in PRODUCTION_SCHEMA:
+            conn.execute(text(statement))
+
+    command.upgrade(_alembic(db), "head")
+
+    assert _revision(db) == HEAD
     assert _schema_diff(db) == []

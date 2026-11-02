@@ -10,6 +10,7 @@ from config import SECRET_KEY, ALGORITHM
 from database import get_db
 from main import app
 from models import RefreshToken, User
+from refresh_tokens import hash_refresh_token
 
 
 @pytest_asyncio.fixture
@@ -36,7 +37,7 @@ async def _login(client: AsyncClient) -> dict:
 async def _stored_tokens() -> list[str]:
     async_gen = app.dependency_overrides[get_db]()
     session = await anext(async_gen)
-    rows = (await session.execute(select(RefreshToken.refresh_token))).scalars().all()
+    rows = (await session.execute(select(RefreshToken.token_hash))).scalars().all()
     await async_gen.aclose()
     return list(rows)
 
@@ -76,14 +77,14 @@ async def test_refresh_rejects_legacy_token_without_type(client: AsyncClient, no
     legacy = jwt.encode({"sub": str(normal_user.id), "exp": expire}, SECRET_KEY, algorithm=ALGORITHM)
     async_gen = app.dependency_overrides[get_db]()
     session = await anext(async_gen)
-    session.add(RefreshToken(user_id=normal_user.id, refresh_token=legacy, expires_at=expire))
+    session.add(RefreshToken(user_id=normal_user.id, token_hash=hash_refresh_token(legacy), expires_at=expire))
     await session.commit()
     await async_gen.aclose()
 
     res = await client.post("/api/refresh/", json={"refresh_token": legacy})
     assert res.status_code == 401
     assert res.json()["detail"] == "Refresh Token invalide ou expiré"
-    assert legacy not in await _stored_tokens()
+    assert hash_refresh_token(legacy) not in await _stored_tokens()
 
 
 async def test_refresh_rejects_non_numeric_sub(client: AsyncClient):

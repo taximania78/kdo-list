@@ -25,6 +25,7 @@ from auth import (
     verify_password,
     verify_and_update_password,
 )
+from refresh_tokens import hash_refresh_token, issue_refresh_token, revoke_refresh_token
 from deps import CurrentUser, get_current_user, require_admin, require_megaadmin
 from image import KDOS_DIR, get_image, remove_image
 from config import MODE, URL_CONNECTION
@@ -318,13 +319,7 @@ async def login_api(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncS
     
     # Générer un Access Token et un Refresh Token
     access_token = create_access_token({"sub": str(user.id), "username": user.name, "isAdmin": user.isAdmin, "isMegaAdmin": user.isMegaAdmin})
-    refresh_token,expire = create_refresh_token({"sub": str(user.id)})
-    new_refresh_token = RefreshToken(
-        user_id=user.id,
-        refresh_token=refresh_token,
-        expires_at=expire
-    )
-    db.add(new_refresh_token)
+    refresh_token = await issue_refresh_token(db, user.id)
     await db.commit()
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer", "isAdmin": user.isAdmin, "username": user.name, "isMegaAdmin": user.isMegaAdmin, "firstConnection": user.firstConnection}
 
@@ -340,7 +335,7 @@ async def refresh_token(data: RefreshTokenRequest, db: AsyncSession = Depends(ge
     if user_id is None:
         # Jeton invalide, expiré, de mauvais type (ex. ancien jeton sans claim type) ou mal formé :
         # on le supprime de la DB s'il y est.
-        await db.execute(delete(RefreshToken).where(RefreshToken.refresh_token == refresh_token))
+        await revoke_refresh_token(db, refresh_token)
         await db.commit()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -348,7 +343,7 @@ async def refresh_token(data: RefreshTokenRequest, db: AsyncSession = Depends(ge
         )
 
     # Vérifier que le token existe bien en DB pour s'assurer qu'il n'a pas été révoqué.
-    result = await db.execute(select(RefreshToken).filter(RefreshToken.refresh_token == refresh_token))
+    result = await db.execute(select(RefreshToken).filter(RefreshToken.token_hash == hash_refresh_token(refresh_token)))
     if not result.scalars().first():
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh Token non reconnu")
 
@@ -367,8 +362,8 @@ async def refresh_token(data: RefreshTokenRequest, db: AsyncSession = Depends(ge
 
     # Supprimer l'ancien refresh token et les expirés AVANT d'insérer le nouveau :
     # émis dans la même seconde, le nouveau peut être identique à l'ancien (contrainte unique).
-    await db.execute(delete(RefreshToken).where(or_(RefreshToken.refresh_token == refresh_token, RefreshToken.expires_at < datetime.now(timezone.utc))))
-    db.add(RefreshToken(user_id=user.id, refresh_token=new_refresh_token_raw, expires_at=expire))
+    await db.execute(delete(RefreshToken).where(or_(RefreshToken.token_hash == hash_refresh_token(refresh_token), RefreshToken.expires_at < datetime.now(timezone.utc))))
+    db.add(RefreshToken(user_id=user.id, token_hash=hash_refresh_token(new_refresh_token_raw), expires_at=expire))
     await db.commit()
 
     return {"access_token": new_access_token, "refresh_token": new_refresh_token_raw, "token_type": "bearer", "isAdmin": user.isAdmin, "username": user.name, "isMegaAdmin": user.isMegaAdmin}
