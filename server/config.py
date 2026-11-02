@@ -38,7 +38,7 @@ def get_config():
         "MODE": "production" if mode in SERVER_MODES else mode,
         #TOKEN
         "SECRET_KEY": secret,  # Clé secrète pour JWT
-        "ALGORITHM": os.getenv("ALGORITHM", "HS256"),  # Algorithme de cryptage
+        "ALGORITHM": "HS256",  # Algorithme JWT figé : non configurable (évite les attaques par confusion d'algorithme)
         "ACCESS_TOKEN_EXPIRE_MINUTES": int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30)),  # Durée d'expiration du token d'accès
         "REFRESH_TOKEN_EXPIRE_DAYS": int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7)),  # Durée d'expiration du token de rafraîchissement
         #DATABASE

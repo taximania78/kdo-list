@@ -58,14 +58,9 @@ async def test_login_invalid(client: AsyncClient, setup_test_users):
     assert "Identifiants" in response.json()["detail"]
 
 @pytest.mark.asyncio
-async def test_auth_route(client: AsyncClient, setup_test_users):
-    login_res = await client.post("/api/login/", data={"username": "user", "password": "NormalUser@123"})
-    token = login_res.json()["access_token"]
-    
-    headers = {"Authorization": f"Bearer {token}"}
-    response = await client.get("/api/auth/", headers=headers)
-    assert response.status_code == 200
-    assert response.json() == {"Hello": "World"}
+async def test_auth_route_removed(client: AsyncClient):
+    response = await client.get("/api/auth/")
+    assert response.status_code == 404
 
 @pytest.mark.asyncio
 async def test_create_user_by_admin(client: AsyncClient, admin_token: str):

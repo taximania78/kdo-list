@@ -39,7 +39,7 @@ app = FastAPI(
 )
 
 
-# Autoriser toutes les origines (⚠️ à limiter en production)
+# Origines autorisées : uniquement le frontend (URL de production, ou localhost en développement)
 if MODE == "production":
     origins = [
         URL_CONNECTION,  # Frontend Next.js en production
@@ -53,7 +53,7 @@ else:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # Autoriser les domaines spécifiés
-    allow_credentials=True,  # Autoriser l'envoi des cookies
+    allow_credentials=False,  # Pas de cookies : les jetons passent par l'en-tête Authorization
     allow_methods=["*"],  # Autoriser toutes les méthodes (GET, POST, PUT, DELETE, etc.)
     allow_headers=["*"],  # Autoriser tous les headers
 )
@@ -381,10 +381,6 @@ async def logout_api(data: RefreshTokenRequest, db: AsyncSession = Depends(get_d
     await db.commit()
     return Response(status_code=204)
 
-
-@app.get("/api/test_token/")
-def test_token():
-    return {"Hello": "World"}
 
 @app.post("/api/add-item/", dependencies=[Depends(require_admin)])
 async def add_item_api(idea_data: IdeaCreate, db: AsyncSession = Depends(get_db)):
@@ -744,10 +740,6 @@ async def update_theme_api(data: ThemeUpdate, db: AsyncSession = Depends(get_db)
         setting.value = data.theme
     await db.commit()
     return {"theme": data.theme}
-
-@app.get("/api/auth/")
-def auth():
-    return {"Hello": "World"}
 
 @app.get("/api/kdos/{filename:path}")
 async def fetch_image(
