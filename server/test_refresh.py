@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 import jwt
 import pytest_asyncio
 from httpx import AsyncClient
+from sqlalchemy import update
 from sqlalchemy.future import select
 
 from auth import create_access_token, decode_jwt, hash_password
@@ -99,6 +100,50 @@ async def _refresh(client: AsyncClient, token: str):
     return await client.post("/api/refresh/", json={"refresh_token": token})
 
 
+async def _backdate_rotation(token: str, minutes: int) -> None:
+    """Recule rotated_at pour sortir de la fenêtre de grâce."""
+    async_gen = app.dependency_overrides[get_db]()
+    session = await anext(async_gen)
+    await session.execute(
+        update(RefreshToken)
+        .where(RefreshToken.token_hash == hash_refresh_token(token))
+        .values(rotated_at=datetime.now(timezone.utc) - timedelta(minutes=minutes))
+    )
+    await session.commit()
+    await async_gen.aclose()
+
+
+async def test_replay_within_grace_window_does_not_revoke(client: AsyncClient, normal_user):
+    """Rejeu juste après l'échange (page tuée en plein refresh) : 401 sans révoquer les sessions."""
+    a = (await _login(client))["refresh_token"]
+    first = await _refresh(client, a)
+    assert first.status_code == 200
+    a2 = first.json()["refresh_token"]
+
+    replay = await _refresh(client, a)
+    assert replay.status_code == 401
+    assert replay.json()["detail"] == "Refresh Token non reconnu"
+
+    assert (await _refresh(client, a2)).status_code == 200
+
+
+async def test_replay_after_grace_window_revokes_all(client: AsyncClient, normal_user):
+    """Rejeu au-delà de la fenêtre de grâce : toutes les sessions sont révoquées."""
+    a = (await _login(client))["refresh_token"]
+    b = (await _login(client))["refresh_token"]
+    first = await _refresh(client, a)
+    assert first.status_code == 200
+    a2 = first.json()["refresh_token"]
+    await _backdate_rotation(a, minutes=2)
+
+    replay = await _refresh(client, a)
+    assert replay.status_code == 401
+
+    assert (await _refresh(client, b)).status_code == 401
+    assert (await _refresh(client, a2)).status_code == 401
+    assert await _stored_tokens() == []
+
+
 async def test_reused_refresh_token_revokes_all_sessions(client: AsyncClient, normal_user):
     """Rejouer un jeton déjà échangé révoque toutes les sessions de l'utilisateur."""
     a = (await _login(client))["refresh_token"]
@@ -106,6 +151,7 @@ async def test_reused_refresh_token_revokes_all_sessions(client: AsyncClient, no
     first = await _refresh(client, a)
     assert first.status_code == 200
     a2 = first.json()["refresh_token"]
+    await _backdate_rotation(a, minutes=2)
 
     replay = await _refresh(client, a)
     assert replay.status_code == 401
