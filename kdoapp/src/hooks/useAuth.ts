@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   getTokenFromStorage,
   decodeToken,
-  clearAuthStorage,
   DecodedToken,
 } from '@/lib/auth';
+import { logout as serverLogout } from '@/lib/logout';
 
 interface UseAuthReturn {
   isAuthenticated: boolean;
@@ -23,7 +23,6 @@ export function useAuth(): UseAuthReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const pathname = usePathname();
-  const router = useRouter();
 
   useEffect(() => {
     const checkAuth = () => {
@@ -61,11 +60,11 @@ export function useAuth(): UseAuthReturn {
 
   const logout = () => {
     console.log('🚪 [AUTH] User logging out');
-    clearAuthStorage();
     setIsAuthenticated(false);
     setUser(null);
     setError(null);
-    router.push('/');
+    // Révoque la session côté serveur, vide le stockage puis redirige vers l'accueil
+    void serverLogout();
   };
 
   return {

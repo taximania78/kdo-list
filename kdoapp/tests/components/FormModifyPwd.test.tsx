@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import FormModifyPwd from '@/components/FormModifyPwd';
 import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
 
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
@@ -62,5 +63,51 @@ describe('FormModifyPwd Component', () => {
       expect(errors.length).toBeGreaterThan(0);
       expect(errors[0]).toBeInTheDocument();
     });
+  });
+
+  it('stores fresh tokens returned by modify-password', async () => {
+    (api.post as jest.Mock).mockResolvedValue({
+      data: { success: true, access_token: 'new-access', refresh_token: 'new-refresh' },
+    });
+    localStorage.setItem('authToken', 'old-access');
+    localStorage.setItem('refreshToken', 'old-refresh');
+    render(<FormModifyPwd firstConnection={true} />);
+
+    await userEvent.type(screen.getByPlaceholderText('Entrer votre nouveau mot de passe'), 'StrongPass1!');
+    await userEvent.type(screen.getByPlaceholderText('Confirmer votre mot de passe'), 'StrongPass1!');
+    await userEvent.click(screen.getByRole('button', { name: /Modifier/i }));
+
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'));
+    expect(localStorage.getItem('authToken')).toBe('new-access');
+    expect(localStorage.getItem('refreshToken')).toBe('new-refresh');
+  });
+
+  it('password form stores tokens under the lock', async () => {
+    (api.post as jest.Mock).mockResolvedValue({
+      data: { success: true, access_token: 'new-access', refresh_token: 'new-refresh' },
+    });
+    localStorage.setItem('authToken', 'old-access');
+    localStorage.setItem('refreshToken', 'old-refresh');
+    let storedInLock = false;
+    const request = jest.fn(async (_name: string, cb: () => Promise<unknown>) => {
+      const result = await cb();
+      storedInLock = localStorage.getItem('refreshToken') === 'new-refresh';
+      return result;
+    });
+    const nav = navigator as unknown as { locks?: unknown };
+    nav.locks = { request };
+    try {
+      render(<FormModifyPwd firstConnection={true} />);
+
+      await userEvent.type(screen.getByPlaceholderText('Entrer votre nouveau mot de passe'), 'StrongPass1!');
+      await userEvent.type(screen.getByPlaceholderText('Confirmer votre mot de passe'), 'StrongPass1!');
+      await userEvent.click(screen.getByRole('button', { name: /Modifier/i }));
+
+      await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'));
+      expect(request).toHaveBeenCalledWith('kdo-refresh', expect.any(Function));
+      expect(storedInLock).toBe(true);
+    } finally {
+      delete nav.locks;
+    }
   });
 });

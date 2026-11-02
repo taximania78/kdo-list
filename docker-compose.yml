@@ -15,7 +15,6 @@ services:
       URL_CONNECTION: ${URL_CONNECTION}
       DEBUG: ${DEBUG}
       SECRET_KEY: ${SECRET_KEY}
-      ALGORITHM: ${ALGORITHM}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS}
       DATABASE_USER: ${DATABASE_USER}
@@ -23,6 +22,8 @@ services:
       DATABASE_HOST: ${DATABASE_HOST}
       DATABASE_PORT: ${DATABASE_PORT}
       DATABASE_NAME: ${DATABASE_NAME}
+      # Proxys de confiance pour X-Forwarded-* (lu par uvicorn). Défaut : comportement actuel.
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
 
   nextjs:
     build:

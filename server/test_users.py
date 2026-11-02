@@ -58,14 +58,9 @@ async def test_login_invalid(client: AsyncClient, setup_test_users):
     assert "Identifiants" in response.json()["detail"]
 
 @pytest.mark.asyncio
-async def test_auth_route(client: AsyncClient, setup_test_users):
-    login_res = await client.post("/api/login/", data={"username": "user", "password": "NormalUser@123"})
-    token = login_res.json()["access_token"]
-    
-    headers = {"Authorization": f"Bearer {token}"}
-    response = await client.get("/api/auth/", headers=headers)
-    assert response.status_code == 200
-    assert response.json() == {"Hello": "World"}
+async def test_auth_route_removed(client: AsyncClient):
+    response = await client.get("/api/auth/")
+    assert response.status_code == 404
 
 @pytest.mark.asyncio
 async def test_create_user_by_admin(client: AsyncClient, admin_token: str):
@@ -260,3 +255,58 @@ async def test_two_logins_in_the_same_second(client: AsyncClient, setup_test_use
     assert first.status_code == 200
     assert second.status_code == 200
     assert first.json()["refresh_token"] != second.json()["refresh_token"]
+
+
+@pytest.mark.asyncio
+async def test_modify_password_revokes_other_sessions_and_returns_fresh_tokens(client: AsyncClient, setup_test_users):
+    a = (await client.post("/api/login/", data={"username": "user", "password": "NormalUser@123"})).json()
+    b = (await client.post("/api/login/", data={"username": "user", "password": "NormalUser@123"})).json()
+
+    payload = {
+        "password": "Standard@Pass1",
+        "passwordConfirmation": "Standard@Pass1",
+        "currentPassword": "NormalUser@123",
+        "firstConnection": False,
+    }
+    res = await client.post("/api/modify-password/", json=payload, headers={"Authorization": f"Bearer {a['access_token']}"})
+    assert res.status_code == 200
+    body = res.json()
+    assert body["success"] is True
+    n = body["refresh_token"]
+    assert body["access_token"]
+
+    # Le nouvel access token porte les claims de l'utilisateur
+    from auth import decode_jwt
+    claims = decode_jwt(body["access_token"])
+    assert claims["sub"] == str(setup_test_users["user"].id)
+    assert claims["username"] == "user"
+
+    # Les anciennes sessions sont mortes, sans tuer la session courante
+    assert (await client.post("/api/refresh/", json={"refresh_token": a["refresh_token"]})).status_code == 401
+    assert (await client.post("/api/refresh/", json={"refresh_token": b["refresh_token"]})).status_code == 401
+    assert (await client.post("/api/refresh/", json={"refresh_token": n})).status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_admin_reset_password_revokes_user_sessions(client: AsyncClient, admin_token: str, setup_test_users):
+    session_user = (await client.post("/api/login/", data={"username": "user", "password": "NormalUser@123"})).json()
+    user_id = setup_test_users["user"].id
+
+    payload = {"password": "AdminReset@12", "passwordConfirmation": "AdminReset@12", "firstConnection": True}
+    res = await client.patch(f"/api/modify-password-admin/{user_id}", json=payload, headers={"Authorization": f"Bearer {admin_token}"})
+    assert res.status_code == 200
+
+    assert (await client.post("/api/refresh/", json={"refresh_token": session_user["refresh_token"]})).status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_login_unknown_user_still_runs_password_check(client: AsyncClient, monkeypatch):
+    """Un utilisateur inconnu déclenche quand même une vérification Argon2 factice."""
+    appels = []
+    monkeypatch.setattr("main.burn_password_check", lambda password: appels.append(password))
+
+    response = await client.post("/api/login/", data={"username": "inconnu", "password": "Secret@123"})
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Identifiants incorrects"
+    assert appels == ["Secret@123"]

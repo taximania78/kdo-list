@@ -2,44 +2,45 @@
 # syntax=docker/dockerfile:1
 
 # ============================================================
-# STAGE 1 — Dépendances complètes pour la compilation
+# STAGE 0 — Base Node.js pour les builds
 # ============================================================
-FROM node:24-alpine3.24 AS deps
+FROM node:24-alpine3.24 AS node-base
+
+
+# ============================================================
+# STAGE 1 — Dépendances complètes
+# ============================================================
+FROM node-base AS deps
 
 WORKDIR /app
 
 COPY package.json package-lock.json ./
 
-# Installation reproductible depuis le lockfile
 RUN npm ci
 
 
 # ============================================================
-# STAGE 2 — Dépendances de production uniquement
+# STAGE 2 — Dépendances de production
 # ============================================================
-FROM node:24-alpine3.24 AS prod-deps
+FROM node-base AS prod-deps
 
 WORKDIR /app
 
 COPY package.json package-lock.json ./
 
-# Exclut les devDependencies de l'image finale
 RUN npm ci --omit=dev
 
 
 # ============================================================
 # STAGE 3 — Compilation Next.js
 # ============================================================
-FROM node:24-alpine3.24 AS builder
+FROM node-base AS builder
 
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 
-# URL publique intégrée au build Next.js
-# Ne jamais utiliser ARG pour transmettre des secrets
 ARG NEXT_PUBLIC_API_URL
-
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
 
@@ -49,9 +50,9 @@ RUN npm run build
 
 
 # ============================================================
-# STAGE 4 — Image de production
+# STAGE 4 — Runtime Alpine minimal sans npm
 # ============================================================
-FROM node:24-alpine3.24 AS runner
+FROM alpine:3.24 AS runner
 
 WORKDIR /app
 
@@ -60,35 +61,52 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0
 
-# Utilisateur et groupe dédiés
-RUN addgroup -S -g 1001 nodejs && \
-    adduser -S -u 1001 -G nodejs nextjs
+# Bibliothèques nécessaires à Node.js,
+# certificats TLS et gestion des signaux
+RUN apk add --no-cache \
+      libatomic \
+      libstdc++ \
+      ca-certificates \
+      dumb-init \
+    && addgroup -S -g 1001 nodejs \
+    && adduser -S -u 1001 -G nodejs nextjs
 
-# Fichiers publics : propriété root, lecture autorisée
+# Copier uniquement le binaire Node.js
+# Aucun npm, npx ou Yarn dans le runtime
+COPY --from=node-base \
+    /usr/local/bin/node /usr/local/bin/node
+
+# Vérifier que Node.js fonctionne
+RUN node --version
+
+# Ressources publiques
 COPY --from=builder /app/public ./public
 
-# package.json : lecture seule pour l'application
+# Configuration applicative
 COPY --from=builder --chmod=644 \
     /app/package.json ./package.json
 
-# Build Next.js : fichiers applicatifs appartenant à root
+# Build Next.js
 COPY --from=builder /app/.next ./.next
 
-# Uniquement les dépendances de production
-COPY --from=prod-deps /app/node_modules ./node_modules
+# Dépendances de production uniquement
+COPY --from=prod-deps \
+    /app/node_modules ./node_modules
 
-# Permissions :
-# - Lecture des fichiers publics et du build Next.js
-# - Pas d'écriture dans le code applicatif
-# - Écriture limitée au cache Next.js
-RUN chmod -R a+rX /app/public /app/.next && \
-    mkdir -p /app/public/kdos /app/.next/cache && \
-    chown -R nextjs:nodejs /app/.next/cache && \
-    chmod -R u+rwX,go-rwx /app/.next/cache
+# Fichiers applicatifs lisibles, non modifiables
+# par l'utilisateur d'exécution
+RUN chmod -R a+rX /app/public /app/.next \
+    && mkdir -p /app/public/kdos /app/.next/cache \
+    && chown -R nextjs:nodejs /app/.next/cache \
+    && chmod -R u+rwX,go-rwx /app/.next/cache
 
-# Exécution sans privilèges root
+# Exécution non-root
 USER 1001:1001
 
 EXPOSE 3000
 
-CMD ["npm", "start"]
+# Démarrage direct sans npm
+# dumb-init gère correctement les signaux d'arrêt
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+
+CMD ["node", "node_modules/next/dist/bin/next", "start"]

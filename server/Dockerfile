@@ -10,7 +10,9 @@ RUN groupadd --system --gid 1001 appgroup && \
 
 # Copy the requirements file and install dependencies
 COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install --no-cache-dir -r requirements.txt \
+    && python -m pip check \
+    && python -m pip uninstall --yes pip
 
 # Copy the application code
 COPY --chown=appuser:appgroup . .

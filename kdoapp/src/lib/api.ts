@@ -1,6 +1,7 @@
 // api.ts
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import { redirectToLogin, withRefreshLock } from '@/lib/auth';
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
@@ -38,9 +39,61 @@ let isRefreshing = false;
 let refreshPromise: Promise<void> | null = null;
 
 /**
+ * Vide le stockage seulement si le refresh token stocké est encore celui envoyé
+ * (null si aucun n'a été envoyé) : sinon un autre onglet vient d'y écrire des jetons
+ * frais (changement de mot de passe, refresh) qu'il ne faut pas effacer.
+ */
+function clearIfUnchanged(sentRefreshToken: string | null): void {
+  if (localStorage.getItem('refreshToken') === sentRefreshToken) {
+    localStorage.clear();
+  }
+}
+
+/**
+ * Appel réseau vers /api/refresh/ (exécuté sous verrou).
+ * seenToken : le jeton d'accès que l'appelant a vu (expirant ou rejeté en 401).
+ */
+async function doRefresh(seenToken: string | null | undefined, onSend: (refreshToken: string) => void): Promise<void> {
+  // Si le jeton stocké diffère de celui de l'appelant, un autre onglet a déjà rafraîchi
+  const currentAccess = localStorage.getItem('authToken');
+  if (seenToken && currentAccess && currentAccess !== seenToken) {
+    console.log('⏭️ [AUTH] Token already refreshed by another tab');
+    return;
+  }
+
+  // Relu sous verrou : jamais de rejeu d'un refresh token déjà tourné
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) {
+    // Plus de refresh token (ex. un autre onglet a échoué) : échec, l'appelant redirige
+    throw new Error('No refresh token found');
+  }
+
+  onSend(refreshToken);
+  try {
+    // Appel vers /api/refresh/ avec refresh_token
+    const response = await axios.post(
+      `${ApiAdress}/api/refresh/`,
+      { refresh_token: refreshToken },
+      { timeout: 15000 }
+    );
+
+    console.log('✅ [AUTH] Token refreshed successfully at:', new Date().toISOString());
+    console.log('📅 [AUTH] New token expires:', new Date(jwtDecode<DecodedToken>(response.data.access_token).exp * 1000).toISOString());
+
+    // On stocke les nouveaux tokens
+    localStorage.setItem('authToken', response.data.access_token);
+    localStorage.setItem('refreshToken', response.data.refresh_token);
+  } catch (err) {
+    // Nettoyage sous verrou : un onglet en attente ne doit pas rejouer ce refresh token
+    clearIfUnchanged(refreshToken);
+    throw err;
+  }
+}
+
+/**
  * Appel à l'endpoint /api/refresh
  */
-async function refreshAccessToken() {
+export async function refreshAccessToken(seenToken?: string | null) {
   console.log('🔄 [AUTH] Token refresh initiated at:', new Date().toISOString());
 
   if (isRefreshing) {
@@ -51,29 +104,18 @@ async function refreshAccessToken() {
   isRefreshing = true;
 
   refreshPromise = (async () => {
+    let sentRefreshToken: string | null = null;
     try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) {
-        console.warn('⚠️ [AUTH] No refresh token found');
-        return;
-      }
-
-      // Appel vers /api/refresh/ avec refresh_token
-      const response = await axios.post(`${ApiAdress}/api/refresh/`, {
-        refresh_token: refreshToken,
-      });
-
-      console.log('✅ [AUTH] Token refreshed successfully at:', new Date().toISOString());
-      console.log('📅 [AUTH] New token expires:', new Date(jwtDecode<DecodedToken>(response.data.access_token).exp * 1000).toISOString());
-
-      // On stocke les nouveaux tokens
-      localStorage.setItem('authToken', response.data.access_token);
-      localStorage.setItem('refreshToken', response.data.refresh_token);
+      await withRefreshLock(() =>
+        doRefresh(seenToken, (token) => {
+          sentRefreshToken = token;
+        })
+      );
     } catch (err) {
       console.error('❌ [AUTH] Token refresh failed:', err);
       console.log('🚪 [AUTH] Logging out user due to refresh failure');
-      localStorage.clear();
-      window.location.href = '/';
+      clearIfUnchanged(sentRefreshToken);
+      redirectToLogin();
     } finally {
       isRefreshing = false;
       refreshPromise = null;
@@ -93,7 +135,7 @@ api.interceptors.request.use(
     if (accessToken) {
       // Vérifier expiration proche et rafraîchir si nécessaire
       if (isTokenExpiringSoon(accessToken)) {
-        await refreshAccessToken();
+        await refreshAccessToken(accessToken);
       }
       // Mettre à jour le header Authorization
       const newToken = localStorage.getItem('authToken');
@@ -123,7 +165,8 @@ api.interceptors.response.use(
       originalRequest._retry = true; // Empêche boucle infinie
 
       try {
-        await refreshAccessToken();
+        const rejectedToken = String(originalRequest.headers?.Authorization ?? '').replace(/^Bearer /, '') || null;
+        await refreshAccessToken(rejectedToken);
 
         // Récupérer le nouveau token
         const newToken = localStorage.getItem('authToken');
@@ -137,7 +180,7 @@ api.interceptors.response.use(
         // Si le refresh a échoué => redirection
         console.error('Échec du refresh dans le response interceptor', err);
         localStorage.clear();
-        window.location.href = '/';
+        redirectToLogin();
         return Promise.reject(err);
       }
     }

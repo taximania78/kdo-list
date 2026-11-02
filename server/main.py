@@ -19,12 +19,13 @@ from models import GiftList, GiftListCreate, GiftListUpdate, GiftListResponse, G
 from database import get_db
 from auth import (
     create_access_token,
-    create_refresh_token,
     decode_jwt_of_type,
     hash_password,
     verify_password,
     verify_and_update_password,
+    burn_password_check,
 )
+from refresh_tokens import consume_refresh_token, issue_refresh_token, revoke_all_refresh_tokens, revoke_refresh_token
 from deps import CurrentUser, get_current_user, require_admin, require_megaadmin
 from image import KDOS_DIR, get_image, remove_image
 from config import MODE, URL_CONNECTION
@@ -38,7 +39,7 @@ app = FastAPI(
 )
 
 
-# Autoriser toutes les origines (⚠️ à limiter en production)
+# Origines autorisées : uniquement le frontend (URL de production, ou localhost en développement)
 if MODE == "production":
     origins = [
         URL_CONNECTION,  # Frontend Next.js en production
@@ -52,7 +53,7 @@ else:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,  # Autoriser les domaines spécifiés
-    allow_credentials=True,  # Autoriser l'envoi des cookies
+    allow_credentials=False,  # Pas de cookies : les jetons passent par l'en-tête Authorization
     allow_methods=["*"],  # Autoriser toutes les méthodes (GET, POST, PUT, DELETE, etc.)
     allow_headers=["*"],  # Autoriser tous les headers
 )
@@ -291,6 +292,8 @@ async def login_api(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncS
     user = result.scalars().first()
 
     if not user:
+        # Vérification factice pour que le temps de réponse ne révèle pas si le compte existe
+        burn_password_check(form_data.password)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Identifiants incorrects",
@@ -317,16 +320,14 @@ async def login_api(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncS
         await db.commit()
     
     # Générer un Access Token et un Refresh Token
-    access_token = create_access_token({"sub": str(user.id), "username": user.name, "isAdmin": user.isAdmin, "isMegaAdmin": user.isMegaAdmin})
-    refresh_token,expire = create_refresh_token({"sub": str(user.id)})
-    new_refresh_token = RefreshToken(
-        user_id=user.id,
-        refresh_token=refresh_token,
-        expires_at=expire
-    )
-    db.add(new_refresh_token)
+    access_token = _access_token_for(user)
+    refresh_token = await issue_refresh_token(db, user.id)
     await db.commit()
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer", "isAdmin": user.isAdmin, "username": user.name, "isMegaAdmin": user.isMegaAdmin, "firstConnection": user.firstConnection}
+
+def _access_token_for(user: User) -> str:
+    """Access token avec les claims communs (login, refresh, changement de mot de passe)."""
+    return create_access_token({"sub": str(user.id), "username": user.name, "isAdmin": user.isAdmin, "isMegaAdmin": user.isMegaAdmin})
 
 @app.post("/api/refresh/")
 async def refresh_token(data: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
@@ -340,43 +341,46 @@ async def refresh_token(data: RefreshTokenRequest, db: AsyncSession = Depends(ge
     if user_id is None:
         # Jeton invalide, expiré, de mauvais type (ex. ancien jeton sans claim type) ou mal formé :
         # on le supprime de la DB s'il y est.
-        await db.execute(delete(RefreshToken).where(RefreshToken.refresh_token == refresh_token))
+        await revoke_refresh_token(db, refresh_token)
         await db.commit()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh Token invalide ou expiré"
         )
 
-    # Vérifier que le token existe bien en DB pour s'assurer qu'il n'a pas été révoqué.
-    result = await db.execute(select(RefreshToken).filter(RefreshToken.refresh_token == refresh_token))
-    if not result.scalars().first():
+    # Consommation atomique : un seul appel peut échanger un jeton donné.
+    consumption = await consume_refresh_token(db, refresh_token)
+    if consumption == "reused":
+        # Jeton déjà échangé : probable vol, on révoque toutes les sessions de l'utilisateur.
+        await revoke_all_refresh_tokens(db, user_id)
+    if consumption != "ok":
+        # "unknown" (révoqué ou jamais émis) : 401 sans toucher aux autres sessions.
+        await db.commit()
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh Token non reconnu")
 
     result = await db.execute(select(User).filter(User.id == user_id))
     user = result.scalars().first()
     if not user:
+        await db.commit()  # conserve la consommation du jeton
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur non trouvé")
 
-    new_access_token = create_access_token({
-        "sub": str(user.id),
-        "username": user.name,
-        "isAdmin": user.isAdmin,
-        "isMegaAdmin": user.isMegaAdmin
-    })
-    new_refresh_token_raw, expire = create_refresh_token({"sub": str(user.id)})
+    new_access_token = _access_token_for(user)
 
-    # Supprimer l'ancien refresh token et les expirés AVANT d'insérer le nouveau :
-    # émis dans la même seconde, le nouveau peut être identique à l'ancien (contrainte unique).
-    await db.execute(delete(RefreshToken).where(or_(RefreshToken.refresh_token == refresh_token, RefreshToken.expires_at < datetime.now(timezone.utc))))
-    db.add(RefreshToken(user_id=user.id, refresh_token=new_refresh_token_raw, expires_at=expire))
+    # Purger les jetons expirés (y compris les anciens jetons échangés, conservés pour détecter un rejeu).
+    await db.execute(delete(RefreshToken).where(RefreshToken.expires_at < datetime.now(timezone.utc)))
+    new_refresh_token_raw = await issue_refresh_token(db, user.id)
     await db.commit()
 
     return {"access_token": new_access_token, "refresh_token": new_refresh_token_raw, "token_type": "bearer", "isAdmin": user.isAdmin, "username": user.name, "isMegaAdmin": user.isMegaAdmin}
 
 
-@app.get("/api/test_token/")
-def test_token():
-    return {"Hello": "World"}
+@app.post("/api/logout/")
+async def logout_api(data: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
+    # Posséder le jeton suffit à le révoquer : pas de décodage, toujours 204 (idempotent).
+    await revoke_refresh_token(db, data.refresh_token)
+    await db.commit()
+    return Response(status_code=204)
+
 
 @app.post("/api/add-item/", dependencies=[Depends(require_admin)])
 async def add_item_api(idea_data: IdeaCreate, db: AsyncSession = Depends(get_db)):
@@ -596,6 +600,8 @@ async def modify_password_api_admin(user_id: int, payload: PasswordChange, db: A
         .values(password=hashed_password, firstConnection=True)
     )
     await db.execute(stmt)
+    # Le mot de passe a changé : toutes les sessions de l'utilisateur sont révoquées.
+    await revoke_all_refresh_tokens(db, user_id)
     await db.commit()
 
     return {"success": True, "message": "Mot de passe mis à jour avec succès"}
@@ -635,9 +641,17 @@ async def modify_password_api(payload: PasswordChange, current_user: CurrentUser
         .values(password=hashed_password, firstConnection=False)
     )
     await db.execute(stmt)
+    # Révoque toutes les sessions (autres appareils), puis ouvre une session fraîche pour l'appareil courant.
+    await revoke_all_refresh_tokens(db, user_id)
+    new_refresh_token = await issue_refresh_token(db, user_id)
     await db.commit()
 
-    return {"success": True, "message": "Mot de passe mis à jour avec succès"}
+    return {
+        "success": True,
+        "message": "Mot de passe mis à jour avec succès",
+        "access_token": _access_token_for(user),
+        "refresh_token": new_refresh_token,
+    }
 
 @app.delete("/api/delete-user/{user_id}", dependencies=[Depends(require_megaadmin)])
 async def delete_user_api(user_id: int, db: AsyncSession = Depends(get_db)):
@@ -726,10 +740,6 @@ async def update_theme_api(data: ThemeUpdate, db: AsyncSession = Depends(get_db)
         setting.value = data.theme
     await db.commit()
     return {"theme": data.theme}
-
-@app.get("/api/auth/")
-def auth():
-    return {"Hello": "World"}
 
 @app.get("/api/kdos/{filename:path}")
 async def fetch_image(
