@@ -1,5 +1,11 @@
 import axios from 'axios';
 import { refreshAccessToken } from '@/lib/api';
+import { redirectToLogin } from '@/lib/auth';
+
+jest.mock('@/lib/auth', () => ({
+  ...jest.requireActual('@/lib/auth'),
+  redirectToLogin: jest.fn(),
+}));
 
 jest.mock('axios', () => {
   const instance = Object.assign(jest.fn().mockResolvedValue({ data: 'retried' }), {
@@ -21,11 +27,13 @@ const postMock = axios.post as jest.Mock;
 const instance = (axios.create as jest.Mock).mock.results[0].value;
 const onResponseError = instance.interceptors.response.use.mock.calls[0][1] as (e: unknown) => Promise<unknown>;
 const nav = navigator as unknown as { locks?: unknown };
+const redirectMock = redirectToLogin as jest.Mock;
 
 describe('refreshAccessToken (verrou entre onglets)', () => {
   beforeEach(() => {
     localStorage.clear();
     postMock.mockReset();
+    redirectMock.mockReset();
     jest.spyOn(console, 'log').mockImplementation(() => {});
     jest.spyOn(console, 'warn').mockImplementation(() => {});
     jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -85,6 +93,46 @@ describe('refreshAccessToken (verrou entre onglets)', () => {
     expect(request).toHaveBeenCalledWith('kdo-refresh', expect.any(Function));
     expect(postMock).toHaveBeenCalledTimes(1);
     expect(localStorage.getItem('refreshToken')).toBe('new-refresh');
+  });
+
+  it('failed refresh does not clear tokens written by another tab meanwhile', async () => {
+    const token = makeJwt(10);
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('refreshToken', 'old-refresh');
+    const otherAccess = makeJwt(30 * 60);
+    postMock.mockImplementation(async () => {
+      // Un autre onglet change le mot de passe : il stocke ses jetons pendant notre refresh
+      localStorage.setItem('authToken', otherAccess);
+      localStorage.setItem('refreshToken', 'other-refresh');
+      throw new Error('revoked');
+    });
+
+    await refreshAccessToken(token);
+
+    expect(postMock).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem('authToken')).toBe(otherAccess);
+    expect(localStorage.getItem('refreshToken')).toBe('other-refresh');
+  });
+
+  it('redirects to login when no refresh token is left', async () => {
+    const token = makeJwt(10);
+    localStorage.setItem('authToken', token);
+
+    await refreshAccessToken(token);
+
+    expect(postMock).not.toHaveBeenCalled();
+    expect(redirectMock).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem('authToken')).toBeNull();
+  });
+
+  it('sends the refresh with a timeout', async () => {
+    localStorage.setItem('authToken', makeJwt(10));
+    localStorage.setItem('refreshToken', 'old-refresh');
+    postMock.mockResolvedValue({ data: { access_token: makeJwt(30 * 60), refresh_token: 'new-refresh' } });
+
+    await refreshAccessToken();
+
+    expect(postMock.mock.calls[0][2]).toEqual({ timeout: 15000 });
   });
 
   describe('401 response interceptor', () => {

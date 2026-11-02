@@ -16,6 +16,9 @@ http:
         stsSeconds: 31536000
         stsIncludeSubdomains: false
         stsPreload: false
+        # cloudflared peut joindre Traefik en HTTP : sans ce drapeau, Traefik n'enverrait
+        # pas l'en-tête HSTS sur ces requêtes, alors que le navigateur, lui, est en HTTPS.
+        forceSTSHeader: true
         frameDeny: true
         contentTypeNosniff: true
         referrerPolicy: "same-origin"

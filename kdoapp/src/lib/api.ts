@@ -1,6 +1,7 @@
 // api.ts
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
+import { redirectToLogin, withRefreshLock } from '@/lib/auth';
 
 const ApiAdress = process.env.NEXT_PUBLIC_API_URL;
 
@@ -38,22 +39,21 @@ let isRefreshing = false;
 let refreshPromise: Promise<void> | null = null;
 
 /**
- * Exécute fn sous un verrou inter-onglets quand l'API existe.
- * Rejouer un refresh token déjà tourné révoque toutes les sessions : deux onglets
- * ne doivent donc jamais envoyer le même jeton en même temps.
+ * Vide le stockage seulement si le refresh token stocké est encore celui envoyé
+ * (null si aucun n'a été envoyé) : sinon un autre onglet vient d'y écrire des jetons
+ * frais (changement de mot de passe, refresh) qu'il ne faut pas effacer.
  */
-function withRefreshLock(fn: () => Promise<void>): Promise<void> {
-  if (typeof navigator !== 'undefined' && navigator.locks?.request) {
-    return navigator.locks.request('kdo-refresh', fn);
+function clearIfUnchanged(sentRefreshToken: string | null): void {
+  if (localStorage.getItem('refreshToken') === sentRefreshToken) {
+    localStorage.clear();
   }
-  return fn();
 }
 
 /**
  * Appel réseau vers /api/refresh/ (exécuté sous verrou).
  * seenToken : le jeton d'accès que l'appelant a vu (expirant ou rejeté en 401).
  */
-async function doRefresh(seenToken?: string | null): Promise<void> {
+async function doRefresh(seenToken: string | null | undefined, onSend: (refreshToken: string) => void): Promise<void> {
   // Si le jeton stocké diffère de celui de l'appelant, un autre onglet a déjà rafraîchi
   const currentAccess = localStorage.getItem('authToken');
   if (seenToken && currentAccess && currentAccess !== seenToken) {
@@ -64,15 +64,18 @@ async function doRefresh(seenToken?: string | null): Promise<void> {
   // Relu sous verrou : jamais de rejeu d'un refresh token déjà tourné
   const refreshToken = localStorage.getItem('refreshToken');
   if (!refreshToken) {
-    console.warn('⚠️ [AUTH] No refresh token found');
-    return;
+    // Plus de refresh token (ex. un autre onglet a échoué) : échec, l'appelant redirige
+    throw new Error('No refresh token found');
   }
 
+  onSend(refreshToken);
   try {
     // Appel vers /api/refresh/ avec refresh_token
-    const response = await axios.post(`${ApiAdress}/api/refresh/`, {
-      refresh_token: refreshToken,
-    });
+    const response = await axios.post(
+      `${ApiAdress}/api/refresh/`,
+      { refresh_token: refreshToken },
+      { timeout: 15000 }
+    );
 
     console.log('✅ [AUTH] Token refreshed successfully at:', new Date().toISOString());
     console.log('📅 [AUTH] New token expires:', new Date(jwtDecode<DecodedToken>(response.data.access_token).exp * 1000).toISOString());
@@ -82,7 +85,7 @@ async function doRefresh(seenToken?: string | null): Promise<void> {
     localStorage.setItem('refreshToken', response.data.refresh_token);
   } catch (err) {
     // Nettoyage sous verrou : un onglet en attente ne doit pas rejouer ce refresh token
-    localStorage.clear();
+    clearIfUnchanged(refreshToken);
     throw err;
   }
 }
@@ -101,13 +104,18 @@ export async function refreshAccessToken(seenToken?: string | null) {
   isRefreshing = true;
 
   refreshPromise = (async () => {
+    let sentRefreshToken: string | null = null;
     try {
-      await withRefreshLock(() => doRefresh(seenToken));
+      await withRefreshLock(() =>
+        doRefresh(seenToken, (token) => {
+          sentRefreshToken = token;
+        })
+      );
     } catch (err) {
       console.error('❌ [AUTH] Token refresh failed:', err);
       console.log('🚪 [AUTH] Logging out user due to refresh failure');
-      localStorage.clear();
-      window.location.href = '/';
+      clearIfUnchanged(sentRefreshToken);
+      redirectToLogin();
     } finally {
       isRefreshing = false;
       refreshPromise = null;
@@ -172,7 +180,7 @@ api.interceptors.response.use(
         // Si le refresh a échoué => redirection
         console.error('Échec du refresh dans le response interceptor', err);
         localStorage.clear();
-        window.location.href = '/';
+        redirectToLogin();
         return Promise.reject(err);
       }
     }

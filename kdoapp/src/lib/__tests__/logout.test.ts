@@ -10,7 +10,53 @@ describe('logout', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  afterEach(() => jest.restoreAllMocks());
+  afterEach(() => {
+    jest.restoreAllMocks();
+    delete (navigator as unknown as { locks?: unknown }).locks;
+  });
+
+  it('logout runs under the kdo-refresh lock', async () => {
+    localStorage.setItem('authToken', 'access');
+    localStorage.setItem('refreshToken', 'refresh-abc');
+    let insideLock = false;
+    let fetchedInLock = false;
+    let clearedInLock = false;
+    fetchMock.mockImplementation(async () => {
+      fetchedInLock = insideLock;
+      return { status: 204 };
+    });
+    const request = jest.fn(async (_name: string, cb: () => Promise<unknown>) => {
+      insideLock = true;
+      try {
+        return await cb();
+      } finally {
+        clearedInLock = localStorage.getItem('refreshToken') === null;
+        insideLock = false;
+      }
+    });
+    (navigator as unknown as { locks?: unknown }).locks = { request };
+
+    await logout();
+
+    expect(request).toHaveBeenCalledWith('kdo-refresh', expect.any(Function));
+    expect(fetchedInLock).toBe(true);
+    expect(clearedInLock).toBe(true);
+  });
+
+  it('logout clears storage when the request times out', async () => {
+    localStorage.setItem('authToken', 'access');
+    localStorage.setItem('refreshToken', 'refresh-abc');
+    const signal = new AbortController().signal;
+    const timeoutSpy = jest.spyOn(AbortSignal, 'timeout').mockReturnValue(signal);
+    fetchMock.mockRejectedValue(new DOMException('The operation timed out.', 'AbortError'));
+
+    await logout();
+
+    expect(timeoutSpy).toHaveBeenCalledWith(5000);
+    expect(fetchMock.mock.calls[0][1].signal).toBe(signal);
+    expect(localStorage.getItem('refreshToken')).toBeNull();
+    expect(localStorage.getItem('authToken')).toBeNull();
+  });
 
   it('posts refresh token to /api/logout/ then clears storage', async () => {
     localStorage.setItem('authToken', 'access');
