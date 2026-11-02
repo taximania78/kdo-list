@@ -19,13 +19,12 @@ from models import GiftList, GiftListCreate, GiftListUpdate, GiftListResponse, G
 from database import get_db
 from auth import (
     create_access_token,
-    create_refresh_token,
     decode_jwt_of_type,
     hash_password,
     verify_password,
     verify_and_update_password,
 )
-from refresh_tokens import hash_refresh_token, issue_refresh_token, revoke_refresh_token
+from refresh_tokens import consume_refresh_token, issue_refresh_token, revoke_all_refresh_tokens, revoke_refresh_token
 from deps import CurrentUser, get_current_user, require_admin, require_megaadmin
 from image import KDOS_DIR, get_image, remove_image
 from config import MODE, URL_CONNECTION
@@ -342,14 +341,20 @@ async def refresh_token(data: RefreshTokenRequest, db: AsyncSession = Depends(ge
             detail="Refresh Token invalide ou expiré"
         )
 
-    # Vérifier que le token existe bien en DB pour s'assurer qu'il n'a pas été révoqué.
-    result = await db.execute(select(RefreshToken).filter(RefreshToken.token_hash == hash_refresh_token(refresh_token)))
-    if not result.scalars().first():
+    # Consommation atomique : un seul appel peut échanger un jeton donné.
+    consumption = await consume_refresh_token(db, refresh_token)
+    if consumption == "reused":
+        # Jeton déjà échangé : probable vol, on révoque toutes les sessions de l'utilisateur.
+        await revoke_all_refresh_tokens(db, user_id)
+    if consumption != "ok":
+        # "unknown" (révoqué ou jamais émis) : 401 sans toucher aux autres sessions.
+        await db.commit()
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh Token non reconnu")
 
     result = await db.execute(select(User).filter(User.id == user_id))
     user = result.scalars().first()
     if not user:
+        await db.commit()  # conserve la consommation du jeton
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Utilisateur non trouvé")
 
     new_access_token = create_access_token({
@@ -358,12 +363,10 @@ async def refresh_token(data: RefreshTokenRequest, db: AsyncSession = Depends(ge
         "isAdmin": user.isAdmin,
         "isMegaAdmin": user.isMegaAdmin
     })
-    new_refresh_token_raw, expire = create_refresh_token({"sub": str(user.id)})
 
-    # Supprimer l'ancien refresh token et les expirés AVANT d'insérer le nouveau :
-    # émis dans la même seconde, le nouveau peut être identique à l'ancien (contrainte unique).
-    await db.execute(delete(RefreshToken).where(or_(RefreshToken.token_hash == hash_refresh_token(refresh_token), RefreshToken.expires_at < datetime.now(timezone.utc))))
-    db.add(RefreshToken(user_id=user.id, token_hash=hash_refresh_token(new_refresh_token_raw), expires_at=expire))
+    # Purger les jetons expirés (y compris les anciens jetons échangés, conservés pour détecter un rejeu).
+    await db.execute(delete(RefreshToken).where(RefreshToken.expires_at < datetime.now(timezone.utc)))
+    new_refresh_token_raw = await issue_refresh_token(db, user.id)
     await db.commit()
 
     return {"access_token": new_access_token, "refresh_token": new_refresh_token_raw, "token_type": "bearer", "isAdmin": user.isAdmin, "username": user.name, "isMegaAdmin": user.isMegaAdmin}

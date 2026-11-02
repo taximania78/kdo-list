@@ -10,7 +10,7 @@ from config import SECRET_KEY, ALGORITHM
 from database import get_db
 from main import app
 from models import RefreshToken, User
-from refresh_tokens import hash_refresh_token
+from refresh_tokens import hash_refresh_token, revoke_refresh_token
 
 
 @pytest_asyncio.fixture
@@ -93,3 +93,57 @@ async def test_refresh_rejects_non_numeric_sub(client: AsyncClient):
     res = await client.post("/api/refresh/", json={"refresh_token": token})
     assert res.status_code == 401
     assert res.json()["detail"] == "Refresh Token invalide ou expiré"
+
+
+async def _refresh(client: AsyncClient, token: str):
+    return await client.post("/api/refresh/", json={"refresh_token": token})
+
+
+async def test_reused_refresh_token_revokes_all_sessions(client: AsyncClient, normal_user):
+    """Rejouer un jeton déjà échangé révoque toutes les sessions de l'utilisateur."""
+    a = (await _login(client))["refresh_token"]
+    b = (await _login(client))["refresh_token"]
+    first = await _refresh(client, a)
+    assert first.status_code == 200
+    a2 = first.json()["refresh_token"]
+
+    replay = await _refresh(client, a)
+    assert replay.status_code == 401
+    assert replay.json()["detail"] == "Refresh Token non reconnu"
+
+    assert (await _refresh(client, b)).status_code == 401
+    assert (await _refresh(client, a2)).status_code == 401
+    assert await _stored_tokens() == []
+
+
+async def test_revoked_token_does_not_revoke_other_sessions(client: AsyncClient, normal_user):
+    """Un jeton révoqué (logout) n'est pas une réutilisation : les autres sessions survivent."""
+    a = (await _login(client))["refresh_token"]
+    b = (await _login(client))["refresh_token"]
+    async_gen = app.dependency_overrides[get_db]()
+    session = await anext(async_gen)
+    await revoke_refresh_token(session, a)
+    await session.commit()
+    await async_gen.aclose()
+
+    assert (await _refresh(client, a)).status_code == 401
+    assert (await _refresh(client, b)).status_code == 200
+
+
+async def test_refresh_purges_expired_tokens(client: AsyncClient, normal_user):
+    """Un refresh réussi purge les jetons expirés (y compris ceux d'autres utilisateurs)."""
+    expired_hash = hash_refresh_token("jeton-expire")
+    async_gen = app.dependency_overrides[get_db]()
+    session = await anext(async_gen)
+    other = User(name="autre", password=hash_password("Autre@12345"), isAdmin=False, isMegaAdmin=False, firstConnection=False)
+    session.add(other)
+    await session.commit()
+    await session.refresh(other)
+    session.add(RefreshToken(user_id=other.id, token_hash=expired_hash, expires_at=datetime.now(timezone.utc) - timedelta(days=1)))
+    await session.commit()
+    await async_gen.aclose()
+
+    tokens = await _login(client)
+    assert expired_hash in await _stored_tokens()
+    assert (await _refresh(client, tokens["refresh_token"])).status_code == 200
+    assert expired_hash not in await _stored_tokens()
