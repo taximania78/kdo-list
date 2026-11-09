@@ -1,6 +1,13 @@
 # Dockerfile for FastAPI application
 FROM python:3.13-slim-trixie
 
+# Applique les correctifs de sécurité Debian publiés après la construction de
+# l'image de base (ex. zlib1g 1+deb13u1). Exécuté en root, avant USER appuser.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # Set the working directory
 WORKDIR /app
 
